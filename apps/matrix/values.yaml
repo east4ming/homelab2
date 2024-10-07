@@ -4,10 +4,10 @@ elementweb:
     className: nginx
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt-prod
-      external-dns.alpha.kubernetes.io/target: "homelab-tunnel.khuedoan.com"
+      external-dns.alpha.kubernetes.io/target: "homelab-tunnel.e-whisper.com"
       external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
     hosts:
-      - host: &frontend_host chat.khuedoan.com
+      - host: &frontend_host chat.e-whisper.com
         paths:
           - path: /
             pathType: Prefix
@@ -17,22 +17,22 @@ elementweb:
           - *frontend_host
   config:
     default:
-      base_url: https://matrix.khuedoan.com
-      server_name: khuedoan.com
+      base_url: https://matrix.e-whisper.com
+      server_name: e-whisper.com
 
 dendrite:
   dendrite_config:
     global:
-      server_name: matrix.khuedoan.com
+      server_name: matrix.e-whisper.com
   ingress:
     enabled: true
     className: nginx
     annotations:
       cert-manager.io/cluster-issuer: letsencrypt-prod
-    hostName: matrix.khuedoan.com
+    hostName: matrix.e-whisper.com
     tls:
       - hosts:
-          - matrix.khuedoan.com
+          - matrix.e-whisper.com
         secretName: matrix-tls-certificate
   postgresql:
     enabled: true
