@@ -37,6 +37,7 @@ tools:
 		--volume $(shell pwd):$(shell pwd) \
 		--volume ${HOME}/.ssh:/root/.ssh \
 		--volume ${HOME}/.terraform.d:/root/.terraform.d \
+		--volume ${HOME}/.gitconfig:/root/.gitconfig \
 		--volume homelab-tools-cache:/root/.cache \
 		--volume homelab-tools-nix:/nix \
 		--workdir $(shell pwd) \
