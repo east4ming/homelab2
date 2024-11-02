@@ -14,11 +14,11 @@ import sys
 from rich.prompt import Confirm, Prompt
 
 upstream_config = {
-    "seed_repo": "https://github.com/khuedoan/homelab",
-    "domain": "khuedoan.com",
-    "timezone": "Asia/Ho_Chi_Minh",
-    "terraform_workspace": "khuedoan",
-    "loadbalancer_ip_range": "192.168.1.224/27",
+    "seed_repo": "https://github.com/east4ming/homelab",
+    "domain": "e-whisper.com",
+    "timezone": "Asia/Shanghai",
+    "terraform_workspace": "example-org-5dfb85",
+    "loadbalancer_ip_range": "192.168.3.224/27",
 }
 
 
