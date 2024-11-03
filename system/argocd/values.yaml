@@ -10,6 +10,9 @@ argo-cd:
       resource.customizations.ignoreResourceUpdates.all: |
         jsonPointers:
           - /status
+  redis:
+    image:
+      repository: docker.e-whisper.com/redis
   server:
     ingress:
       enabled: true
