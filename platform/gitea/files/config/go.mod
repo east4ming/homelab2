@@ -1,4 +1,4 @@
-module git.e-whisper.com/khuedoan/homelab/gitea/config
+module git.khuedoan.com/khuedoan/homelab/gitea/config
 
 go 1.19
 

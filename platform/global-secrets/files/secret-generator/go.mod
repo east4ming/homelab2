@@ -1,4 +1,4 @@
-module git.e-whisper.com/khuedoan/homelab/platform/secret-generator
+module git.khuedoan.com/khuedoan/homelab/platform/secret-generator
 
 go 1.19
 
