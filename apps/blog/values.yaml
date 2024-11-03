@@ -21,7 +21,7 @@ app-template:
         external-dns.alpha.kubernetes.io/target: homelab-tunnel.e-whisper.com
         external-dns.alpha.kubernetes.io/cloudflare-proxied: 'true'
       hosts:
-        - host: &host www.e-whisper.com
+        - host: &host blog.e-whisper.com
           paths:
             - path: /
               pathType: Prefix
