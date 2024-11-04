@@ -18,7 +18,7 @@ upstream_config = {
     "domain": "e-whisper.com",
     "timezone": "Asia/Shanghai",
     "terraform_workspace": "example-org-5dfb85",
-    "loadbalancer_ip_range": "192.168.3.224/27",
+    "loadbalancer_ip_range": "192.168.3.32/27",
 }
 
 
