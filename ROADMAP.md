@@ -52,8 +52,8 @@
 ### Grafana
 
 - [ ] More Dashboards
-- [ ] Add more dashboards
-- [ ] grafana-sso default role to `admin`
+- [x] PV
+- [x] grafana-sso default role to `admin`
 
 ## Security
 

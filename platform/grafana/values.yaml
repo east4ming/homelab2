@@ -24,6 +24,7 @@ grafana:
     auth.generic_oauth:
       enabled: true
       allow_sign_up: true
+      auto_assign_org_role: Admin
       name: Dex
       client_id: grafana-sso
       client_secret: $__env{GRAFANA_SSO_CLIENT_SECRET}
@@ -31,3 +32,6 @@ grafana:
       auth_url: https://dex.e-whisper.com/auth
       token_url: https://dex.e-whisper.com/token
       api_url: https://dex.e-whisper.com/userinfo
+  persistence:
+    enabled: true
+    size: 1Gi
