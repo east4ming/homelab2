@@ -9,23 +9,23 @@ metal:
       hosts:
         n100-jumper-0:
           ansible_host: 192.168.3.226
-          mac: '00:e0:4c:72:37:9f'
+          mac: "00:e0:4c:72:37:9f"
           disk: nvme0n1
           network_interface: enp3s0
         n100-jumper-1:
           ansible_host: 192.168.3.174
-          mac: '00:e0:4c:72:37:6b'
+          mac: "00:e0:4c:72:37:6b"
           disk: nvme0n1
           network_interface: enp3s0
         n100-jumper-2:
           ansible_host: 192.168.3.158
-          mac: '00:e0:4c:72:37:5b'
+          mac: "00:e0:4c:72:37:5b"
           disk: nvme0n1
           network_interface: enp3s0
     workers:
       hosts:
         n100-cheshi-0:
           ansible_host: 192.168.3.154
-          mac: '00:f0:4d:00:0c:7d'
-          disk: nvme0n1p4
+          mac: "00:f0:4d:00:0c:7d"
+          disk: nvme0n1
           network_interface: enp2s0
