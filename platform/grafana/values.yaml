@@ -31,3 +31,6 @@ grafana:
       auth_url: https://dex.e-whisper.com/auth
       token_url: https://dex.e-whisper.com/token
       api_url: https://dex.e-whisper.com/userinfo
+  persistence:
+    enabled: true
+    size: 1Gi
