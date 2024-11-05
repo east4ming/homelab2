@@ -24,6 +24,7 @@ grafana:
     auth.generic_oauth:
       enabled: true
       allow_sign_up: true
+      allow_assign_grafana_admin: true
       auto_assign_org_role: Admin
       name: Dex
       client_id: grafana-sso
