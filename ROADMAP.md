@@ -40,7 +40,7 @@
 
 ### Logs
 
-- [ ] Add journald logs
+- [x] Add journald logs
 
 ### Metrics
 
