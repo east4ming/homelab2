@@ -40,7 +40,7 @@
 
 ### Logs
 
-- [ ] Add journald logs
+- [x] Add journald logs
 
 ### Metrics
 
@@ -53,7 +53,6 @@
 
 - [ ] More Dashboards
 - [x] PV
-- [x] grafana-sso default role to `admin`
 
 ## Security
 
