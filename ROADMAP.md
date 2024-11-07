@@ -44,7 +44,7 @@
 
 ### Metrics
 
-- [ ] PV
+- [x] PV
 - [ ] More Alerts
 - [ ] More ServiceMonitor
 - [ ] More PrometheusRules
