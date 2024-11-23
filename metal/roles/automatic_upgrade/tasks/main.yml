@@ -1,17 +1,21 @@
 - name: Install packages for automatic upgrade
-  ansible.builtin.dnf:
+  ansible.builtin.apt:
     name:
-      - dnf-automatic
-      - dnf-utils
+      - apt-utils
+      - unattended-upgrades
+      - update-notifier-common
 
-- name: Copy automatic upgrade config file
+- name: Copy unattended-upgrades config file
   ansible.builtin.copy:
-    src: automatic.conf
-    dest: /etc/dnf/automatic.conf
+    src: "{{ item }}"
+    dest: /etc/apt/apt.conf.d/{{ item }}
     mode: 0644
+  loop:
+    - 20auto-upgrades
+    - 50unattended-upgrades
 
-- name: Enable automatic upgrade service
+- name: Enable unattended-upgrades service
   ansible.builtin.systemd:
-    name: dnf-automatic.timer
+    name: unattended-upgrades.service
     state: started
     enabled: true

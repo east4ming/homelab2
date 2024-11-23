@@ -16,27 +16,72 @@
     mode: 0644
   register: iso
 
-- name: Extract boot image
-  ansible.builtin.command:
-    cmd: "xorriso -osirrox on -indev {{ iso.dest }} -extract / {{ role_path }}/files/data/os"
-    creates: "{{ role_path }}/files/data/os/.treeinfo"
+- name: Extract netboot.xyz asssets directory path from URL
+  set_fact:
+    download_dir: "{{ role_path }}/files/data/netbootxyz-config/assets/{{ ubuntu_24041_initrd_url | regex_replace('https://.*/([^/]+/[^/]+/[^/]+/[^/]+)/.*', '\\1') }}"
+
+- name: Ensure netboot.xyz asssets download directory exists
+  file:
+    path: "{{ download_dir }}"
+    state: directory
+    mode: "0755"
+
+# Hardcoded for now
+# TODO:
+- name: Download netboot.xyz ubuntu 24.04.1 initrd file
+  ansible.builtin.get_url:
+    url: "{{ ubuntu_24041_initrd_url }}"
+    dest: "{{ download_dir }}/{{ ubuntu_24041_initrd_url | basename }}"
+    checksum: "{{ ubuntu_24041_initrd_checksum }}"
+    mode: 0644
+
+- name: Download netboot.xyz ubuntu 24.04.1 vmlinuz file
+  ansible.builtin.get_url:
+    url: "{{ ubuntu_24041_vmlinuz_url }}"
+    dest: "{{ download_dir }}/{{ ubuntu_24041_vmlinuz_url | basename }}"
+    checksum: "{{ ubuntu_24041_vmlinuz_checksum }}"
+    mode: 0644
 
 - name: Generate dnsmasq config
   ansible.builtin.template:
     src: dnsmasq.conf.j2
-    dest: "{{ role_path }}/files/data/pxe-config/dnsmasq.conf"
+    dest: "{{ role_path }}/files/data/netbootxyz-config/root/etc/dnsmasq.conf"
     mode: 0644
 
-- name: Generate GRUB config
-  ansible.builtin.template:
-    src: grub.cfg.j2
-    dest: "{{ role_path }}/files/data/pxe-config/grub.cfg"
-    mode: 0644
+- name: Ensure cloud-init directory exists
+  file:
+    path: "{{ role_path }}/files/data/init-config/{{ hostvars[item]['mac'] }}"
+    state: directory
+    mode: "0755"
+  loop: "{{ groups['metal'] }}"
 
-- name: Generate init config for each machine
+- name: Copy cloud-init meta-data for each machine
+  ansible.builtin.copy:
+    src: "{{ role_path }}/files/data/init-config/meta-data"
+    dest: "{{ role_path }}/files/data/init-config/{{ hostvars[item]['mac'] }}/meta-data"
+    mode: 0644
+  loop: "{{ groups['metal'] }}"
+
+- name: Set ipv4 net_mask variable
+  set_fact:
+    ipv4_net_mask: "{{ ansible_default_ipv4.network }}/{{ ansible_default_ipv4.netmask }}"
+
+- name: Display the ipv4 net_mask variable
+  debug:
+    msg: "ipv4 net_mask: {{ ipv4_net_mask }}"
+
+- name: Set ipv4 prefix variable
+  set_fact:
+    ipv4_prefix: "{{ ipv4_net_mask | ansible.utils.ipaddr('prefix') }}"
+
+- name: Display the ipv4 prefix variable
+  debug:
+    msg: "ipv4 prefix: {{ ipv4_prefix }}"
+
+- name: Generate cloud-init user-data for each machine
   ansible.builtin.template:
-    src: kickstart.ks.j2
-    dest: "{{ role_path }}/files/data/init-config/{{ hostvars[item]['mac'] }}.ks"
+    src: user-data.j2
+    dest: "{{ role_path }}/files/data/init-config/{{ hostvars[item]['mac'] }}/user-data"
     mode: 0644
   loop: "{{ groups['metal'] }}"
 
@@ -44,4 +89,41 @@
   community.docker.docker_compose_v2:
     project_src: "{{ role_path }}/files"
     state: present
+    build: always
+
+# TODO: Generate netboot.xyz custom config
+
+- name: Wait for boot.cfg file to exist
+  wait_for:
+    path: "{{ role_path }}/files/data/netbootxyz-config/config/menus/boot.cfg"
+    state: present
+    timeout: 300
+  register: file_check_result
+
+- name: Continue with other tasks after file is found
+  debug:
+    msg: "boot.cfg file found, continuing with other tasks"
+  when: file_check_result.state == 'present'
+
+- name: Change netboot.xyz boot.cfg live_endpoint config
+  become: true
+  ansible.builtin.lineinfile:
+    path: "{{ item }}"
+    regexp: "^set live_endpoint http"
+    line: "set live_endpoint http://{{ ansible_default_ipv4.address }}"
+  loop:
+    - "{{ role_path }}/files/data/netbootxyz-config/config/menus/boot.cfg"
+    - "{{ role_path }}/files/data/netbootxyz-config/config/menus/remote/boot.cfg"
+
+- name: Generate netboot.xyz ubuntu.ipxe config
+  become: true
+  ansible.builtin.template:
+    src: ubuntu.ipxe.j2
+    dest: "{{ role_path }}/files/data/netbootxyz-config/config/menus/ubuntu.ipxe"
+    mode: 0644
+
+- name: Restart the ephemeral PXE server
+  community.docker.docker_compose_v2:
+    project_src: "{{ role_path }}/files"
+    state: restarted
     build: always

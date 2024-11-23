@@ -1,5 +1,6 @@
 - name: Create Kubernetes cluster
   hosts: metal
+  become: true
   roles:
     - prerequisites
     - k3s
@@ -9,3 +10,8 @@
   hosts: localhost
   roles:
     - cilium
+
+- name: Install tailscale-operator
+  hosts: localhost
+  roles:
+    - tailscale

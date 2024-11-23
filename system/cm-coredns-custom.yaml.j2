@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-custom
+  namespace: kube-system
+data:
+  tailscale.server: |
+    ts.net {
+      errors
+      cache 30
+      forward . {{ cr_info.resources[0].spec.clusterIP }}
+    }

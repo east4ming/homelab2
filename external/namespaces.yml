@@ -7,9 +7,8 @@
         name: "{{ item }}"
         state: present
       loop:
-        - cert-manager
-        - cloudflared
+        - tailscale
         - external-dns
         - global-secrets
-        - k8up-operator
+        - grafana
         - monitoring-system

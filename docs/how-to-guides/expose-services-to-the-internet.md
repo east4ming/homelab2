@@ -12,7 +12,6 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    external-dns.alpha.kubernetes.io/target: "homelab-tunnel.example.com"
-    external-dns.alpha.kubernetes.io/cloudflare-proxied: "true"
+    tailscale.com/funnel: "true"
 # ...
 ```

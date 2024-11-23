@@ -1,3 +1,15 @@
+- name: Enforce minimum Ansible version
+  ansible.builtin.assert:
+    that:
+      - ansible_version.full is version('2.14', '>=')
+    msg: "Minimum ansible-core version required is 2.14"
+
+- name: Install Dependent Ubuntu Packages
+  when: ansible_distribution in ['Ubuntu']
+  ansible.builtin.apt:
+    name: policycoreutils  # Used by install script to restore SELinux context
+    update_cache: true
+
 - name: Adjust kernel parameters
   ansible.posix.sysctl:
     name: "{{ item.name }}"
@@ -6,3 +18,168 @@
     - {name: "fs.inotify.max_queued_events", value: 16384}
     - {name: "fs.inotify.max_user_instances", value: 8192}
     - {name: "fs.inotify.max_user_watches", value: 524288}
+
+- name: Enable IPv4 forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    state: present
+    reload: true
+
+- name: Enable IPv6 forwarding
+  sysctl:
+    name: net.ipv6.conf.all.forwarding
+    value: '1'
+    state: present
+    reload: true
+  when: ansible_all_ipv6_addresses
+
+- name: Enable IPv6 router advertisements
+  ansible.posix.sysctl:
+    name: net.ipv6.conf.all.accept_ra
+    value: "2"
+    state: present
+    reload: true
+  tags: sysctl
+
+- name: Populate service facts
+  ansible.builtin.service_facts:
+
+- name: Allow UFW Exceptions
+  when:
+    - ansible_facts.services['ufw'] is defined
+    - ansible_facts.services['ufw'].state == 'running'
+  block:
+    - name: Get ufw status
+      ansible.builtin.command:
+        cmd: ufw status
+      changed_when: false
+      register: ufw_status
+
+    - name: If ufw enabled, open api port
+      when:
+        - ufw_status['stdout'] == "Status':' active"
+      community.general.ufw:
+        rule: allow
+        port: "{{ api_port }}"
+        proto: tcp
+
+    - name: If ufw enabled, open etcd ports
+      when:
+        - ufw_status['stdout'] == "Status':' active"
+        - groups[server_group] | length > 1
+      community.general.ufw:
+        rule: allow
+        port: "2379:2381"
+        proto: tcp
+
+    - name: If ufw enabled, allow default CIDRs
+      when:
+        - ufw_status['stdout'] == "Status':' active"
+      community.general.ufw:
+        rule: allow
+        src: '{{ item }}'
+      loop: "{{ (cluster_cidr + ',' + service_cidr) | split(',') }}"
+
+- name: Allow Firewalld Exceptions
+  when:
+    - ansible_facts.services['firewalld.service'] is defined
+    - ansible_facts.services['firewalld.service'].state == 'running'
+  block:
+    - name: If firewalld enabled, open api port
+      ansible.posix.firewalld:
+        port: "{{ api_port }}/tcp"
+        zone: internal
+        state: enabled
+        permanent: true
+        immediate: true
+
+    - name: If firewalld enabled, open etcd ports
+      when: groups[masters] | length > 1
+      ansible.posix.firewalld:
+        port: "2379-2381/tcp"
+        zone: internal
+        state: enabled
+        permanent: true
+        immediate: true
+
+    - name: If firewalld enabled, open inter-node ports
+      ansible.posix.firewalld:
+        port: "{{ item }}"
+        zone: internal
+        state: enabled
+        permanent: true
+        immediate: true
+      with_items:
+        - 5001/tcp   # Spegel (Embedded distributed registry)
+        - 8472/udp   # Flannel VXLAN
+        - 10250/tcp  # Kubelet metrics
+        - 51820/udp  # Flannel Wireguard (IPv4)
+        - 51821/udp  # Flannel Wireguard (IPv6)
+
+    - name: If firewalld enabled, allow node CIDRs
+      ansible.posix.firewalld:
+        source: "{{ item }}"
+        zone: internal
+        state: enabled
+        permanent: true
+        immediate: true
+      loop: >-
+        {{
+          (
+            groups[server_group] | default([])
+            + groups[agent_group] | default([])
+          )
+          | map('extract', hostvars, ['ansible_default_ipv4', 'address'])
+          | flatten | unique | list
+        }}
+
+    - name: If firewalld enabled, allow default CIDRs
+      ansible.posix.firewalld:
+        source: "{{ item }}"
+        zone: trusted
+        state: enabled
+        permanent: true
+        immediate: true
+      loop: "{{ (cluster_cidr + ',' + service_cidr) | split(',') }}"
+
+- name: Check for Apparmor existence
+  ansible.builtin.stat:
+    path: /sys/module/apparmor/parameters/enabled
+  register: apparmor_enabled
+
+- name: Check if Apparmor is enabled
+  when: apparmor_enabled.stat.exists
+  ansible.builtin.command: cat /sys/module/apparmor/parameters/enabled
+  register: apparmor_status
+  changed_when: false
+
+- name: Gather the package facts
+  ansible.builtin.package_facts:
+    manager: auto
+
+# Iptables v1.8.0-1.8.4 have a specific bug with K3s. https://github.com/k3s-io/k3s/issues/3117
+- name: If iptables v1.8.0-1.8.4, warn user  # noqa ignore-errors
+  when:
+    - ansible_facts.packages['iptables'] is defined
+    - ansible_facts.packages['iptables'][0]['version'] is version('1.8.5', '<')
+    - ansible_facts.packages['iptables'][0]['version'] is version('1.7.9', '>')
+  ansible.builtin.fail:
+    msg:
+      - "Warning: Iptables {{ ansible_facts.packages['iptables'][0]['version'] }} found."
+      - "Add '--prefer-bundled-bin' to extra_server_args variable to use the bundled iptables binary."
+  ignore_errors: true
+
+- name: Setup optional private registry configuration
+  when: registries_config_yaml is defined
+  block:
+    - name: Make k3s config directory
+      ansible.builtin.file:
+        path: "/etc/rancher/k3s"
+        mode: "0755"
+        state: directory
+    - name: Copy config values
+      ansible.builtin.copy:
+        content: "{{ registries_config_yaml }}"
+        dest: "/etc/rancher/k3s/registries.yaml"
+        mode: "0644"

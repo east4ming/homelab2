@@ -7,7 +7,7 @@ app-template:
       containers:
         main:
           image:
-            repository: docker.io/jellyfin/jellyfin
+            repository: registry-mirror.e-whisper.com/jellyfin/jellyfin
             tag: 10.8.13
         transmission:
           image:
@@ -27,7 +27,7 @@ app-template:
             tag: 4.0.2
         jellyseerr:
           image:
-            repository: docker.io/fallenbagel/jellyseerr
+            repository: registry-mirror.e-whisper.com/fallenbagel/jellyseerr
             tag: 1.7.0
   service:
     main:
@@ -53,61 +53,18 @@ app-template:
   ingress:
     main:
       enabled: true
-      className: nginx
-      annotations:
-        cert-manager.io/cluster-issuer: letsencrypt-prod
+      className: tailscale
       hosts:
-        - host: &jellyfinHost jellyfin.e-whisper.com
+        - host: &jellyfinHost jellyfin.west-beta.ts.net
           paths:
             - path: /
               pathType: Prefix
               service:
                 name: main
                 port: http
-        - host: &transmissionHost transmission.e-whisper.com
-          paths:
-            - path: /
-              pathType: Prefix
-              service:
-                name: main
-                port: transmission
-        - host: &prowlarrHost prowlarr.e-whisper.com
-          paths:
-            - path: /
-              pathType: Prefix
-              service:
-                name: main
-                port: prowlarr
-        - host: &radarrHost radarr.e-whisper.com
-          paths:
-            - path: /
-              pathType: Prefix
-              service:
-                name: main
-                port: radarr
-        - host: &sonarrHost sonarr.e-whisper.com
-          paths:
-            - path: /
-              pathType: Prefix
-              service:
-                name: main
-                port: sonarr
-        - host: &jellyseerrHost jellyseerr.e-whisper.com
-          paths:
-            - path: /
-              pathType: Prefix
-              service:
-                name: main
-                port: jellyseerr
       tls:
-        - secretName: jellyfin-tls-certificate
-          hosts:
+        - hosts:
             - *jellyfinHost
-            - *transmissionHost
-            - *prowlarrHost
-            - *radarrHost
-            - *sonarrHost
-            - *jellyseerrHost
   persistence:
     data:
       accessMode: ReadWriteOnce

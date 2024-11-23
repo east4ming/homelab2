@@ -1,19 +1,90 @@
 cilium_repo_url: https://helm.cilium.io
-cilium_version: 1.16.1
+cilium_version: 1.16.4
 cilium_namespace: kube-system
 cilium_values:
   operator:
     replicas: 1
+    prometheus:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+    dashboards:
+      enabled: true
+      namespace: monitoring-system
+      annotations:
+        grafana_folder: "Cilium"
   kubeProxyReplacement: true
   l2announcements:
     enabled: true
+  externalIPs:
+    enabled: false
   # TODO the host and port are k3s-specific, generic solution is in progress
   # https://github.com/cilium/cilium/issues/19038
   # https://github.com/cilium/cilium/pull/28741
   k8sServiceHost: 127.0.0.1
   k8sServicePort: 6444
   hubble:
+    enabled: true
     relay:
       enabled: true
     ui:
       enabled: true
+    # Hubble Grafana dashboard
+    metrics:
+      enabled:
+        - dns:query;ignoreAAAA
+        - drop:sourceContext=identity;destinationContext=identity
+        - tcp
+        - flow
+        - port-distribution
+        - icmp
+        # Enable additional labels for L7 flows
+        - "httpV2:exemplars=true;labelsContext=source_ip,source_namespace,source_workload,destination_ip,destination_namespace,destination_workload,traffic_direction;sourceContext=workload-name|reserved-identity;destinationContext=workload-name|reserved-identity"
+        - "kafka:sourceContext=workload-name|pod-name|reserved-identity;destinationContext=workload-name|pod-name|reserved-identity;labelsContext=source_namespace,destination_namespace,traffic_direction"
+      enableOpenMetrics: true
+      dashboards:
+        enabled: true
+        namespace: monitoring-system
+        annotations:
+          grafana_folder: "Hubble"
+      serviceMonitor:
+        enabled: true
+  # native routing mode
+  routingMode: native
+  autoDirectNodeRoutes: true
+  ipv4NativeRoutingCIDR: "{{ ipv4_net_mask | ansible.utils.ipaddr('network/prefix') }}"
+  # bpf masquerade
+  bpf:
+    masquerade: true
+    # netkit
+    datapathMode: netkit
+  ipam:
+    mode: kubernetes
+  # enable DSR
+  loadBalancer:
+    mode: dsr
+    # XDP Acceleration
+    acceleration: native
+  # 🐛error="attaching XDP program to interface tailscale0
+  devices: "e+"
+  # Bypass iptables Connection Tracking
+  installNoConntrackIptablesRules: true
+  # enable bandwidthManager
+  bandwidthManager:
+    enabled: true
+    # enable pod BBR
+    bbr: true
+  # https://tailscale.com/kb/1236/kubernetes-operator?q=operator#cilium-in-kube-proxy-replacement-mode
+  socketLB:
+    hostNamespaceOnly: true
+  # enable metrics - cilium agent
+  prometheus:
+    enabled: true
+    serviceMonitor:
+      enabled: true
+  # -- Grafana dashboards for cilium-agent
+  dashboards:
+    enabled: true
+    namespace: monitoring-system
+    annotations:
+      grafana_folder: "Cilium"

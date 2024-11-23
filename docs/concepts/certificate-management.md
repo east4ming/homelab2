@@ -9,8 +9,6 @@ cert-manager watches `Ingress` resources across the cluster. When you create an 
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  annotations:
-    cert-manager.io/cluster-issuer: letsencrypt-prod
   name: foo
 spec:
   rules:
@@ -19,7 +17,6 @@ spec:
   tls:
     - hosts:
         - foo.example.com
-      secretName: foo-tls-certificate
 ```
 
 ```mermaid

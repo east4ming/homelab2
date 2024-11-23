@@ -1,0 +1,15 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: transmission
+  namespace: {{ .Release.Namespace }}
+spec:
+  defaultBackend:
+    service:
+      name: jellyfin
+      port:
+        name: transmission
+  ingressClassName: tailscale
+  tls:
+    - hosts:
+        - transmission.west-beta.ts.net

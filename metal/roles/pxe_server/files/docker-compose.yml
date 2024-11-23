@@ -1,20 +1,15 @@
 services:
-  dnsmasq:
-    build: ./dnsmasq
+  netbootxyz:
+    image: ghcr.e-whisper.com/netbootxyz/netbootxyz
+    container_name: netbootxyz
     volumes:
-      - ./data/pxe-config/dnsmasq.conf:/etc/dnsmasq.conf
-      - ./data/pxe-config/grub.cfg:/tftp/grub.cfg
-      - ./data/os/EFI/BOOT/grubx64.efi:/tftp/grubx64.efi
-      - ./data/os/images/pxeboot/initrd.img:/tftp/initrd.img
-      - ./data/os/images/pxeboot/vmlinuz:/tftp/vmlinuz
+      - ./data/netbootxyz-config/root/etc/supervisor.conf:/etc/supervisor.conf
+      - ./data/netbootxyz-config/root/etc/dnsmasq.conf:/etc/dnsmasq.conf
+      - ./data/netbootxyz-config/config:/config
+      - ./data/netbootxyz-config/assets:/assets
+      - ./data/iso:/assets/iso
+      - ./data/init-config:/assets/init-config
     network_mode: host
     cap_add:
       - NET_ADMIN
-  http:
-    build: ./http
-    network_mode: host
-    volumes:
-      - ./data/os:/usr/share/nginx/html/os
-      - ./data/init-config/:/usr/share/nginx/html/init-config
-    environment:
-      NGINX_PORT: 80
+    restart: unless-stopped

@@ -9,12 +9,12 @@ app-template:
           env:
             PAPERLESS_PORT: 8000
             PAPERLESS_ADMIN_USER: admin
-            PAPERLESS_URL: https://paperless.e-whisper.com
+            PAPERLESS_URL: https://paperless.west-beta.ts.net
           envFrom:
             - secret: "{{ .Release.Name }}-secret"
         redis:
           image:
-            repository: docker.io/library/redis
+            repository: registry-mirror.e-whisper.com/library/redis
             tag: 7.2.4
   service:
     main:
@@ -25,11 +25,9 @@ app-template:
   ingress:
     main:
       enabled: true
-      className: nginx
-      annotations:
-        cert-manager.io/cluster-issuer: letsencrypt-prod
+      className: tailscale
       hosts:
-        - host: &host paperless.e-whisper.com
+        - host: &host paperless.west-beta.ts.net
           paths:
             - path: /
               pathType: Prefix
@@ -39,7 +37,6 @@ app-template:
       tls:
         - hosts:
             - *host
-          secretName: paperless-tls-certificate
   persistence:
     data:
       accessMode: ReadWriteOnce
