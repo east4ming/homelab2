@@ -1,17 +1,13 @@
 zot:
   ingress:
     enabled: true
-    annotations:
-      cert-manager.io/cluster-issuer: letsencrypt-prod
-      nginx.ingress.kubernetes.io/proxy-body-size: "0"
-    className: nginx
+    className: tailscale
     hosts:
-      - host: &host registry.e-whisper.com
+      - host: &host registry.west-beta.ts.net
         paths:
           - path: /
     tls:
-      - secretName: zot-tls-certificate
-        hosts:
+      - hosts:
           - *host
   # TODO enable auth
   persistence: true

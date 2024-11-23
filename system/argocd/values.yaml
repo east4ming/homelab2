@@ -1,6 +1,6 @@
 argo-cd:
   global:
-    domain: argocd.e-whisper.com
+    domain: argocd.west-beta.ts.net
   configs:
     params:
       server.insecure: true
@@ -13,9 +13,7 @@ argo-cd:
   server:
     ingress:
       enabled: true
-      ingressClassName: nginx
-      annotations:
-        cert-manager.io/cluster-issuer: letsencrypt-prod
+      ingressClassName: tailscale
       tls: true
     metrics: &metrics
       enabled: true
@@ -30,14 +28,15 @@ argo-cd:
   redis:
     metrics: *metrics
     image:
-      repository: docker.e-whisper.com/redis
+      repository: registry-mirror.e-whisper.com/redis
 argocd-apps:
   applicationsets:
     root:
       namespace: argocd
       generators:
         - git:
-            repoURL: &repoURL http://gitea-http.gitea:3000/ops/homelab
+            # TODO:
+            repoURL: &repoURL http://gitea-http.gitea:3000/ops/homelab2
             revision: &revision master
             directories:
               - path: system/*
@@ -45,15 +44,15 @@ argocd-apps:
               - path: apps/*
       template:
         metadata:
-          name: '{{path.basename}}'
+          name: "{{path.basename}}"
         spec:
           destination:
             name: in-cluster
-            namespace: '{{path.basename}}'
-          project: default  # TODO
+            namespace: "{{path.basename}}"
+          project: default # TODO
           source:
             repoURL: *repoURL
-            path: '{{path}}'
+            path: "{{path}}"
             targetRevision: *revision
           syncPolicy:
             automated:

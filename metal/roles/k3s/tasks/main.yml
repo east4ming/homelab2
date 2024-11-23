@@ -52,6 +52,14 @@
     dest: "{{ k3s_token_file }}"
     mode: 0600
 
+- name: Get tailscale ipv4 address
+  shell: tailscale ip --4
+  register: tailscale_ip
+
+- name: Set fact tailscale_ipv4
+  set_fact:
+    tailscale_ipv4: "{{ tailscale_ip.stdout }}"
+
 - name: Copy k3s config files
   ansible.builtin.template:
     src: "{{ item.src }}"
@@ -93,5 +101,6 @@
     content: "{{ kubeconfig_base64.content | b64decode | replace('127.0.0.1', control_plane_endpoint) }}"
     dest: "{{ playbook_dir }}/kubeconfig.yaml"
     mode: 0600
+    owner: "{{ ansible_user }}"
   delegate_to: localhost
   run_once: true

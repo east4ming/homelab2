@@ -4,7 +4,7 @@ app-template:
       containers:
         main:
           image:
-            repository: docker.io/excalidraw/excalidraw
+            repository: registry-mirror.e-whisper.com/excalidraw/excalidraw
             tag: latest
   service:
     main:
@@ -15,13 +15,11 @@ app-template:
   ingress:
     main:
       enabled: true
-      className: nginx
+      className: tailscale
       annotations:
-        cert-manager.io/cluster-issuer: letsencrypt-prod
-        external-dns.alpha.kubernetes.io/target: homelab-tunnel.e-whisper.com
-        external-dns.alpha.kubernetes.io/cloudflare-proxied: 'true'
+        tailscale.com/funnel: "true"
       hosts:
-        - host: &host draw.e-whisper.com
+        - host: &host draw.west-beta.ts.net
           paths:
             - path: /
               pathType: Prefix
@@ -31,4 +29,3 @@ app-template:
       tls:
         - hosts:
             - *host
-          secretName: excalidraw-tls-certificate

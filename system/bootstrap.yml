@@ -34,3 +34,27 @@
         apply: true
         server_side_apply:
           field_manager: argocd-controller
+
+    - name: Wait for Tailscale CRDs
+      kubernetes.core.k8s_info:
+        kind: CustomResourceDefinition
+        name: dnsconfigs.tailscale.com
+      register: crd_ts
+      until: crd_ts.resources | length > 0
+      retries: 30
+      delay: 10
+
+    - name: Get information about the CR ts-dns
+      kubernetes.core.k8s_info:
+        kind: Service
+        name: nameserver
+        namespace: tailscale
+      register: cr_info
+
+    - name: Print CR ts-dns info
+      debug:
+        msg: "{{ cr_info.resources[0].spec.clusterIP }}"
+
+    - name: Apply Tailscale coredns configs
+      kubernetes.core.k8s:
+        template: ./cm-coredns-custom.yaml.j2

@@ -15,7 +15,7 @@ You can use the default Docker wrapper, or use Nix if you have Nix installed:
 === "Nix"
 
     ```sh
-    nix develop
+    nix develop --extra-experimental-features nix-command --extra-experimental-features flakes
     ```
 
     !!! tip

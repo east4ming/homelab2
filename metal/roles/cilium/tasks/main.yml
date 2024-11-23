@@ -1,3 +1,23 @@
+# Duplicate tasks, same as ./metal/roles/pxe_server/tasks/main.yml
+# TODO:
+- name: Set ipv4 net_mask variable
+  set_fact:
+    ipv4_net_mask: "{{ ansible_default_ipv4.network }}/{{ ansible_default_ipv4.netmask }}"
+
+- name: Display the ipv4 net_mask variable
+  debug:
+    msg: "ipv4 net_mask: {{ ipv4_net_mask }}"
+
+# Make sure the hubble grafana dashboards can install
+- name: Create the monitoring-system namespace
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: monitoring-system
+
 - name: Install Cilium
   kubernetes.core.helm:
     name: cilium

@@ -11,7 +11,7 @@ Open the [tools container](../../concepts/tools-container.md), which includes al
 === "Nix"
 
     ```sh
-    nix develop
+    nix develop --extra-experimental-features nix-command --extra-experimental-features flakes
     ```
 
 !!! note

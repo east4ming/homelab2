@@ -4,7 +4,7 @@ app-template:
       containers:
         main:
           image:
-            repository: docker.io/ollama/ollama
+            repository: registry-mirror.e-whisper.com/ollama/ollama
             tag: 0.1.29
     ui:
       containers:
@@ -29,18 +29,23 @@ app-template:
   ingress:
     main:
       enabled: true
-      className: nginx
-      annotations:
-        cert-manager.io/cluster-issuer: letsencrypt-prod
+      className: tailscale
       hosts:
-        - host: &ollamaHost ollama.e-whisper.com
+        - host: &ollamaHost ollama.west-beta.ts.net
           paths:
             - path: /
               pathType: Prefix
               service:
                 name: main
                 port: http
-        - host: &uiHost ai.e-whisper.com
+      tls:
+        - hosts:
+            - *ollamaHost
+    ui:
+      enabled: true
+      className: tailscale
+      hosts:
+        - host: &uiHost ai.west-beta.ts.net
           paths:
             - path: /
               pathType: Prefix
@@ -49,9 +54,7 @@ app-template:
                 port: http
       tls:
         - hosts:
-            - *ollamaHost
             - *uiHost
-          secretName: ollama-tls-certificate
   persistence:
     data:
       accessMode: ReadWriteOnce

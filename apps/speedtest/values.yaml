@@ -4,7 +4,7 @@ app-template:
       containers:
         main:
           image:
-            repository: docker.io/openspeedtest/latest
+            repository: registry-mirror.e-whisper.com/openspeedtest/latest
             tag: latest
   service:
     main:
@@ -15,12 +15,9 @@ app-template:
   ingress:
     main:
       enabled: true
-      className: nginx
-      annotations:
-        nginx.ingress.kubernetes.io/proxy-body-size: 50m
-        cert-manager.io/cluster-issuer: letsencrypt-prod
+      className: tailscale
       hosts:
-        - host: &host speedtest.e-whisper.com
+        - host: &host speedtest.west-beta.ts.net
           paths:
             - path: /
               pathType: Prefix
@@ -30,4 +27,3 @@ app-template:
       tls:
         - hosts:
             - *host
-          secretName: speedtest-tls-certificate

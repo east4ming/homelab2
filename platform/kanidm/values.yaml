@@ -5,7 +5,7 @@ app-template:
       containers:
         main:
           image:
-            repository: docker.io/kanidm/server
+            repository: registry-mirror.e-whisper.com/kanidm/server
             tag: 1.3.3
       statefulset:
         volumeClaimTemplates:
@@ -25,8 +25,8 @@ app-template:
           db_path = "/data/kanidm.db"
           tls_chain = "/data/ca.crt"
           tls_key = "/data/tls.key"
-          domain = "auth.e-whisper.com"
-          origin = "https://auth.e-whisper.com"
+          domain = "auth.west-beta.ts.net"
+          origin = "https://auth.west-beta.ts.net"
   service:
     main:
       ports:
@@ -41,12 +41,11 @@ app-template:
   ingress:
     main:
       enabled: true
-      className: nginx
+      className: tailscale
       annotations:
-        cert-manager.io/cluster-issuer: letsencrypt-prod
-        nginx.ingress.kubernetes.io/backend-protocol: HTTPS
+        tailscale.com/experimental-forward-cluster-traffic-via-ingress: "true"
       hosts:
-        - host: &host auth.e-whisper.com
+        - host: &host auth.west-beta.ts.net
           paths:
             - path: /
               pathType: Prefix
@@ -56,7 +55,6 @@ app-template:
       tls:
         - hosts:
             - *host
-          secretName: kanidm-tls-certificate
   persistence:
     config:
       enabled: true

@@ -1,0 +1,176 @@
+#cloud-config
+autoinstall:
+  version: 1
+  locale: en_US.UTF-8
+  timezone: {{ timezone }}
+  early-commands: []
+  keyboard:
+    layout: us
+  shutdown: poweroff
+  storage:
+    config:
+      - id: {{ hostvars[item]['disk'] }}
+        type: disk
+        ptable: gpt
+        wipe: superblock-recursive
+        preserve: false
+        path: /dev/{{ hostvars[item]['disk'] }}
+      - id: partition-1
+        type: partition
+        size: 512M
+        number: 1
+        device: {{ hostvars[item]['disk'] }}
+        wipe: superblock
+        flag: boot
+        preserve: false
+        grub_device: true
+      - id: partition-2
+        type: partition
+        size: 64G
+        number: 2
+        device: {{ hostvars[item]['disk'] }}
+        wipe: superblock
+        preserve: false
+      - id: partition-3
+        type: partition
+        size: -1
+        number: 3
+        device: {{ hostvars[item]['disk'] }}
+        wipe: superblock
+        preserve: false
+      - id: format-1
+        type: format
+        fstype: vfat
+        volume: partition-1
+        label: ESP
+        preserve: false
+      - id: format-2
+        type: format
+        fstype: ext4
+        volume: partition-2
+        label: ROOT
+        preserve: false
+      - id: format-1-efi
+        type: mount
+        path: /boot/efi
+        device: format-1
+      - id: format-2-root
+        type: mount
+        path: /
+        device: format-2
+  network:
+    version: 2
+    ethernets:
+      {{ hostvars[item]['network_interface'] }}:
+        wakeonlan: true
+        dhcp4: no
+        addresses:
+          - "{{ hostvars[item]['ansible_host'] }}/{{ ipv4_prefix }}"
+        gateway4: {{ ansible_default_ipv4.gateway }}
+        nameservers:
+          addresses:
+            - {{ dns_server }}
+        dhcp6: yes
+  identity:
+    hostname: {{ hostvars[item]['inventory_hostname'] }}
+    username: {{ username }}
+    # password: "secret" ($ openssl passwd -6 -salt $(openssl rand -hex 8) "secret")
+    password: "$6$e55a97f8d2675909$RLIVoZfzn6BD8YgrjXFC5Ji.3wnbS1x7AY6lzV1jGMhPT7.YcUkYdymKNdG94WCVPcIvoYME90HpkP11WWn28/"
+  ssh:
+    install-server: true
+    allow-pw: false
+    authorized-keys:
+      - {{ ssh_public_key }}
+{% if proxy is defined  %}
+  proxy: {{ proxy }}
+{% endif %}
+  packages:
+    - aptitude
+    - apt-transport-https
+    - software-properties-common
+    - curl
+    - git
+    - ssh
+    - python3
+    - python3-pip
+    - python3-setuptools
+    - python3-virtualenv
+    - python3-psutil
+    - shfmt
+    - at
+    - bash-completion
+    - bat
+    - ca-certificates
+    - curl
+    - direnv
+    - dnsutils
+    - expect
+    - fd-find
+    - fio
+    - fzf
+    - gnupg-agent
+    - gpg
+    - htop
+    - hyperfine
+    - iotop
+    - ipset
+    - iproute2
+    - iptables
+    - ipvsadm
+    - jq
+    - libpcre3
+    - libpcre3-dev
+    - lm-sensors
+    - lsof
+    - ncdu
+    - net-tools
+    - nfs-common
+    - nmap
+    - ntpsec-ntpdate
+    - openssl
+    - powertop
+    - rename
+    - rclone
+    - restic
+    - ripgrep
+    - rsync
+    - s3fs
+    - screen
+    - sysstat
+    - traceroute
+    - tree
+    - unzip
+    - vim-nox
+    - wget
+    - whois
+    - zlib1g
+    - zlib1g-dev
+    - zsh
+    - zsh-autosuggestions
+    - zsh-syntax-highlighting
+  apt:
+    preserve_sources_list: false
+  user-data:
+    users:
+      - name: {{ username }}
+        shell: /usr/bin/zsh
+        sudo: "ALL=(ALL) NOPASSWD:ALL"
+    package_update: true
+    package_upgrade: true
+  late-commands:
+  # Tailscale
+  - curl -fsSL https://tailscale.com/install.sh | sh
+  - tailscale up --accept-dns=false --authkey {{ tailscale_auth_key }} --force-reauth=true --timeout 30s --reset --operator={{ username }} --ssh --hostname {{ hostvars[item]['inventory_hostname'] }}
+  - tailscale set --auto-update
+  # Starship
+  - curl -sS https://starship.rs/install.sh | sh -s -- -y
+  - touch /home/{{ username }}/.zshrc
+  - chown {{ username }}:{{ username }} /home/{{ username }}/.zshrc
+  - echo 'HISTSIZE=1000' >> /home/{{ username }}/.zshrc
+  - echo 'SAVEHIST=1000' >> /home/{{ username }}/.zshrc
+  - echo 'HISTFILE=~/.zsh_history' >> /home/{{ username }}/.zshrc
+  - echo 'autoload -Uz compinit' >> /home/{{ username }}/.zshrc
+  - echo 'compinit' >> /home/{{ username }}/.zshrc
+  - echo 'eval "$(starship init zsh)"' >> /home/{{ username }}/.zshrc
+  # modprobe ceph rbd
+  - echo "rbd" >> /etc/modules-load.d/rbd.conf

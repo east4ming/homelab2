@@ -1,17 +1,24 @@
 gitea:
+  strategy:
+    type: Recreate
+  # default clusterIP is None
+  service:
+    http:
+      clusterIP: ""
+    ssh:
+      clusterIP: ""
   ingress:
     enabled: true
-    className: nginx
+    className: tailscale
     annotations:
-      cert-manager.io/cluster-issuer: letsencrypt-prod
+      tailscale.com/experimental-forward-cluster-traffic-via-ingress: "true"
     hosts:
-      - host: &host git.e-whisper.com
+      - host: &host git.west-beta.ts.net
         paths:
           - path: /
             pathType: Prefix
     tls:
-      - secretName: gitea-tls-certificate
-        hosts:
+      - hosts:
           - *host
   gitea:
     admin:
@@ -19,7 +26,7 @@ gitea:
     config:
       server:
         LANDING_PAGE: explore
-        ROOT_URL: https://git.e-whisper.com
+        ROOT_URL: https://git.west-beta.ts.net
         OFFLINE_MODE: true
       repository:
         DISABLED_REPO_UNITS: repo.wiki,repo.projects,repo.packages
@@ -37,3 +44,7 @@ gitea:
         ENABLED: false
       webhook:
         ALLOWED_HOST_LIST: private
+      migrations:
+        ALLOWED_DOMAINS: ""
+        ALLOW_LOCALNETWORKS: true
+        BLOCKED_DOMAINS: ""

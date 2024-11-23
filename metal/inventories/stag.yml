@@ -1,7 +1,29 @@
+all:
+  vars:
+    control_plane_endpoint: 172.21.112.3
+    load_balancer_ip_pool:
+      - 172.21.112.64/27
+    tailscale_auth_key: "tskey-auth-..."
+    # TODO:
+    registries_config_yaml: |
+      mirrors:
+        "*":
+        docker.io:
+          endpoint:
+            - "https://registry.cn-hangzhou.aliyuncs.com"
 metal:
   children:
     masters:
       hosts:
-        proxmox0: {ansible_host: 192.168.1.169, mac: 'c2:f5:cf:1f:3e:c0', disk: sda, network_interface: ens18}
+        homelab-dev-master:
+          ansible_host: 172.21.112.4
+          mac: "00:15:5d:02:20:2f"
+          disk: sda
+          network_interface: eth0
     workers:
-      hosts: {}
+      hosts:
+        homelab-dev-node:
+          ansible_host: 172.21.112.5
+          mac: "00:15:5d:02:20:2e"
+          disk: sda
+          network_interface: eth0

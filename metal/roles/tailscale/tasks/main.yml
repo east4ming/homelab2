@@ -1,0 +1,27 @@
+- name: Install tailscale-operator
+  kubernetes.core.helm:
+    name: tailscale-operator
+    chart_ref: tailscale-operator
+    chart_repo_url: "{{ tailscale_repo_url }}"
+    chart_version: "{{ tailscale_version }}"
+    release_namespace: "{{ tailscale_namespace }}"
+    values: "{{ tailscale_values }}"
+
+- name: Wait for Tailscale CRDs
+  kubernetes.core.k8s_info:
+    kind: CustomResourceDefinition
+    name: "{{ item }}"
+  loop:
+    - dnsconfigs.tailscale.com
+    - proxygroups.tailscale.com
+  register: crd
+  until: crd.resources | length > 0
+  retries: 5
+  delay: 10
+
+- name: Apply Tailscale resources
+  kubernetes.core.k8s:
+    template: "{{ item }}"
+  loop:
+    - dnsconfig.yaml
+    - proxygroup.yaml

@@ -14,10 +14,12 @@ import sys
 from rich.prompt import Confirm, Prompt
 
 upstream_config = {
-    "seed_repo": "https://github.com/east4ming/homelab",
-    "domain": "e-whisper.com",
+    # TODO:
+    "seed_repo": "https://github.com/east4ming/homelab2",
+    "domain": "west-beta.ts.net",
     "timezone": "Asia/Shanghai",
     "terraform_workspace": "example-org-5dfb85",
+    # TODO: remove
     "loadbalancer_ip_range": "192.168.3.32/27",
 }
 
@@ -45,6 +47,7 @@ def main() -> None:
         required_version='3.10.0'
     )
 
+    env = Prompt.ask("Enter your domain", default='prod')
     editor = Prompt.ask("Select text editor", default='nvim')
     domain = Prompt.ask("Enter your domain", default=upstream_config['domain'])
     seed_repo = Prompt.ask("Enter seed repo", default=upstream_config['seed_repo'])
@@ -86,14 +89,13 @@ def main() -> None:
         pattern=upstream_config['loadbalancer_ip_range'],
         replacement=loadbalancer_ip_range,
         paths=[
-            "metal/inventories/prod.yml",
-            "apps/tailscale/values.yaml",
+            f"metal/inventories/{env}.yml",
         ]
     )
 
     if Confirm.ask("Update server list?", default=True):
         subprocess.run(
-            [editor, 'metal/inventories/prod.yml']
+            [editor, f'metal/inventories/{env}.yml']
         )
 
 

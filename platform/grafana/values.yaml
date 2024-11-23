@@ -1,14 +1,14 @@
 grafana:
+  # Hardcoded password because of ArgoCD's behavior
+  # TODO:
+  adminPassword: crse4zLTjCrds8PxdOlTRgcs2jh4QP1AgNM350IG
   ingress:
     enabled: true
-    ingressClassName: nginx
-    annotations:
-      cert-manager.io/cluster-issuer: letsencrypt-prod
+    ingressClassName: tailscale
     hosts:
-      - &host grafana.e-whisper.com
+      - &host grafana.west-beta.ts.net
     tls:
-      - secretName: grafana-general-tls
-        hosts:
+      - hosts:
           - *host
   sidecar:
     dashboards:
@@ -20,7 +20,7 @@ grafana:
   envFromSecret: grafana-secrets
   grafana.ini:
     server:
-      root_url: https://grafana.e-whisper.com
+      root_url: https://grafana.west-beta.ts.net
     auth.generic_oauth:
       enabled: true
       allow_sign_up: true
@@ -28,9 +28,10 @@ grafana:
       client_id: grafana-sso
       client_secret: $__env{GRAFANA_SSO_CLIENT_SECRET}
       scopes: openid profile email groups
-      auth_url: https://dex.e-whisper.com/auth
-      token_url: https://dex.e-whisper.com/token
-      api_url: https://dex.e-whisper.com/userinfo
+      auth_url: https://dex.west-beta.ts.net/auth
+      token_url: https://dex.west-beta.ts.net/token
+      api_url: https://dex.west-beta.ts.net/userinfo
   persistence:
     enabled: true
     size: 1Gi
+  useStatefulSet: true

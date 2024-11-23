@@ -1,0 +1,15 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: sonarr
+  namespace: {{ .Release.Namespace }}
+spec:
+  defaultBackend:
+    service:
+      name: jellyfin
+      port:
+        name: sonarr
+  ingressClassName: tailscale
+  tls:
+    - hosts:
+        - sonarr.west-beta.ts.net

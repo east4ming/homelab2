@@ -7,4 +7,5 @@ token-file: {{ k3s_token_file }}
 {% if 'masters' in group_names %}
 {{ k3s_server_config | to_nice_yaml }}
 {% endif %}
+{{ k3s_agent_config | to_nice_yaml }}
 snapshotter: stargz

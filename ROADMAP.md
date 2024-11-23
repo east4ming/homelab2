@@ -2,39 +2,60 @@
 
 ## Optimized for China
 
-- [ ] YUM Repo
+- [ ] YUM/APT Repo
 - [ ] Docker Registry
 - [ ] NTP Server
 - [ ] Add domains to `/etc/hosts` and coredns configmap
 
 ## Change OS To Ubuntu 24.04
 
-- [ ] pxe
-- [ ] dnf
-- [ ] sysctl
-- [ ] automatic
-- [ ] kured: `rebootSentinelCommand`
+- [x] pxe - use netboot.xyz
+- [x] cloud-init - use **subiquity autoinstall**
+- [x] dnf
+- [x] sysctl
+- [x] automatic
+- [x] kured: `rebootSentinelCommand`
 
 ## Non-PXE Install
 
 ## K3s
 
-- [ ] kubevip/control_plane_endpoint change
-- [ ] Version
-- [ ] prerequisites
+- [x] Version
+- [x] prerequisites
 - [ ] k3s config
     - [ ] more tls-sans
-    - [ ] disable cloud provider
-- [ ] tailscale?
-- [ ] `embedded-registry: true`
+    - [x] disable cloud provider
+- [x] tailscale
+- [x] `embedded-registry: true`
+
+## Cilium Tuning
+
+- [x] update cilium version
+- [x] enable native routing mode
+- [x] bpf masquerade
+- [x] enable DSR
+- [x] Bypass iptables connection tracking
+- [x] bandwidthManager
+- [x] pod BBR
+- [x] enable XDPAcceleration
+- [x] envoy DaemonSet (cilium 1.16 default)
+- [x] hubble grafana dashboards
+- [x] netkit
 
 ## System
 
-- [ ] cert-manager/ingress-nginx -> traefik
+### Add Tailscale Operator
 
-## VPN
-
-- [ ] Tailscale
+- [ ] external terraform tailscale
+    - [ ] ACL
+    - [ ] OAuth
+- [x] tailscale operator helm
+- [x] tailscale ingress - replace nginx ingress
+- [x] tailscale k8s api server
+- [x] tailscale cert - replace cert-manager
+- [x] tailscale funnel - replace cloudflared
+- [x] tailscale dns - replace external-dns
+- [x] tailscale proxygroup
 
 ## Observability
 
@@ -47,24 +68,25 @@
 - [x] PV
 - [ ] More Alerts
 - [ ] More ServiceMonitor
+  - [x] Cilium
 - [ ] More PrometheusRules
 
 ### Grafana
 
 - [ ] More Dashboards
+  - [x] Cilium
 - [x] PV
 
 ## Security
 
 - [ ] Fail2Ban
-- [ ] Disable root login
+- [x] Disable root login
 
 ## My Apps
 
 ## 🐛Bug Fix
 
-- [ ] Increase the timeout seconds of `Wait for the machines to come online`
-- [ ] Fix PXE HTTP Server 403 - `user: root`
+- [x] Increase the timeout seconds of `Wait for the machines to come online`
 - [ ] Grafana query loki error
     - [ ] `too many outstanding requests`
     - [ ] `parse error at line 1, col 71: syntax error: unexpected IDENTIFIER`
@@ -76,5 +98,16 @@
 - [ ] ping
 - [ ] nslookup
 - [ ] starship
+- [ ] krew
 
 ## Makefile to GoTask
+
+## Public Repo
+
+- [ ] Modify TODO:
+- [ ] Remove hard codes
+- [ ] Remove secrets
+- [ ] Add more docs
+- [ ] Add more examples
+- [ ] Add more templates
+- [ ] Modify code/configuration/documentation related to the git repo

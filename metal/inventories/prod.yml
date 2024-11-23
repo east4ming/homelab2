@@ -3,6 +3,18 @@ all:
     control_plane_endpoint: 192.168.3.100
     load_balancer_ip_pool:
       - 192.168.3.32/27
+    # Used for tailscale k8s node
+    tailscale_auth_key: "tskey-auth-..."
+    # Used for tailscale-operator
+    tailscale_client_id: "xxxxx"
+    tailscale_client_secret: "tskey-client-..."
+    # TODO:
+    registries_config_yaml: |
+      mirrors:
+        "*":
+        docker.io:
+          endpoint:
+            - "https://registry.cn-hangzhou.aliyuncs.com"
 metal:
   children:
     masters:

@@ -41,7 +41,7 @@ tools:
 		--volume homelab-tools-cache:/root/.cache \
 		--volume homelab-tools-nix:/nix \
 		--workdir $(shell pwd) \
-		docker.io/nixos/nix nix --experimental-features 'nix-command flakes' develop
+		registry-mirror.e-whisper.com/nixos/nix nix --experimental-features 'nix-command flakes' develop
 
 test:
 	make -C test

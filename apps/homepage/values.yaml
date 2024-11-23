@@ -15,11 +15,9 @@ app-template:
   ingress:
     main:
       enabled: true
-      className: nginx
-      annotations:
-        cert-manager.io/cluster-issuer: letsencrypt-prod
+      className: tailscale
       hosts:
-        - host: &host home.e-whisper.com
+        - host: &host home.west-beta.ts.net
           paths:
             - path: /
               pathType: Prefix
@@ -29,7 +27,6 @@ app-template:
       tls:
         - hosts:
             - *host
-          secretName: homepage-tls-certificate
   persistence:
     config:
       enabled: true
@@ -61,81 +58,84 @@ app-template:
         services.yaml: |
           - Popular:
             - Matrix:
-                href: https://chat.e-whisper.com
+                href: https://chat.west-beta.ts.net
                 description: Chat client
                 icon: element.svg
             - Jellyfin:
-                href: https://jellyfin.e-whisper.com
+                href: https://jellyfin.west-beta.ts.net
                 description: Media system (movies, music, etc.)
                 icon: jellyfin.svg
             - Jellyseerr:
-                href: https://jellyseerr.e-whisper.com
+                href: https://jellyseerr.west-beta.ts.net
                 description: Request media
                 icon: jellyseerr.svg
             - Paperless:
-                href: https://paperless.e-whisper.com
+                href: https://paperless.west-beta.ts.net
                 description: Document management system
                 icon: paperless.svg
           - Management:
             - Transmission:
-                href: https://transmission.e-whisper.com
+                href: https://transmission.west-beta.ts.net
                 description: Bittorrent client
                 icon: transmission.svg
             - Prowlarr:
-                href: https://prowlarr.e-whisper.com
+                href: https://prowlarr.west-beta.ts.net
                 description: Indexer manager
                 icon: prowlarr.svg
             - Radarr:
-                href: https://radarr.e-whisper.com
+                href: https://radarr.west-beta.ts.net
                 description: Movie manager
                 icon: radarr.svg
             - Sonarr:
-                href: https://sonarr.e-whisper.com
+                href: https://sonarr.west-beta.ts.net
                 description: TV show manager
                 icon: sonarr.svg
             - Kanidm:
-                href: https://auth.e-whisper.com
+                href: https://auth.west-beta.ts.net
                 description: Identity management
-                icon: https://auth.e-whisper.com/pkg/img/logo-square.svg
+                icon: https://auth.west-beta.ts.net/pkg/img/logo-square.svg
           - Development:
             - Gitea:
-                href: https://git.e-whisper.com
+                href: https://git.west-beta.ts.net
                 description: Git forge
                 icon: gitea.svg
             - Woodpecker:
-                href: https://ci.e-whisper.com
+                href: https://ci.west-beta.ts.net
                 description: Continuous integration
                 icon: woodpecker-ci.svg
             - ArgoCD:
-                href: https://argocd.e-whisper.com
+                href: https://argocd.west-beta.ts.net
                 description: Continuous deployment
                 icon: argocd.svg
             - Registry:
-                href: https://registry.e-whisper.com
+                href: https://registry.west-beta.ts.net
                 description: Container registry
                 icon: docker.svg
             - Grafana:
-                href: https://grafana.e-whisper.com
+                href: https://grafana.west-beta.ts.net
                 description: Observability dashboards
                 icon: grafana.svg
           - Utilities:
             - Excalidraw:
-                href: https://draw.e-whisper.com
+                href: https://draw.west-beta.ts.net
                 description: Virtual whiteboard
                 icon: excalidraw.svg
             - Speedtest:
-                href: https://speedtest.e-whisper.com
+                href: https://speedtest.west-beta.ts.net
                 description: Internal network speed test
                 icon: openspeedtest.png
         bookmarks.yaml: |
           - Homelab:
             - Documentation:
-              - href: https://homelab.e-whisper.com
+              - href: https://homelab.west-beta.ts.net
                 icon: google-docs.svg
             - Public homelab repository:
-              - href: https://github.com/khuedoan/homelab
+              - href: https://github.com/east4ming/homelab2
                 icon: github.svg
           - Managed services:
+            - Tailscale:
+              - href: https://login.tailscale.com/admin/machines
+                icon: tailscale.svg
             - Cloudflare:
               - href: https://dash.cloudflare.com
                 icon: cloudflare.svg
@@ -143,15 +143,18 @@ app-template:
               - href: https://app.terraform.io
                 icon: terraform.svg
           - Infrastructure:
+            - Modem:
+              - href: https://192.168.2.1
+                icon: huawei.svg
             - Router:
-              - href: https://192.168.1.1
+              - href: https://192.168.3.1
                 icon: router.svg
-            - Proxmox:
-              - href: https://proxmox:8006
-                icon: proxmox.svg
-            - Google Cloud:
-              - href: https://console.cloud.google.com
-                icon: google-cloud-platform.svg
-            - Oracle Cloud:
-              - href: https://cloud.oracle.com
-                icon: oracle-cloud.svg
+            - Crash:
+              - href: http://192.168.3.1:9090/ui/yacd/
+                icon: clash.png
+            - Switch:
+              - href: http://192.168.3.254/
+                icon: unifi.svg
+            - NAS:
+              - href: https://nas.west-beta.ts.net:5001
+                icon: qnap-alt.svg

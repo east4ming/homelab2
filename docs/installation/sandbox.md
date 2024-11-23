@@ -37,7 +37,7 @@ Open the tools container, which includes all the tools needed:
 === "Nix"
 
     ```sh
-    nix develop
+    nix develop --extra-experimental-features nix-command --extra-experimental-features flakes
     ```
 
 Build a development cluster and bootstrap it:
