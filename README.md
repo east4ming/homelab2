@@ -55,7 +55,7 @@ More information can be found in [the roadmap](#roadmap) below.
 - [x] Distributed storage
 - [x] Support multiple environments (dev, prod)
 - [x] Monitoring and alerting
-- [ ] Automated offsite backups 🚧
+- [x] Automated backup and restore
 - [x] Single sign-on
 - [x] Infrastructure testing
 
@@ -135,7 +135,7 @@ They can't capture all the project's features, but they are sufficient to get a 
     <tr>
         <td><img width="32" src="https://www.docker.com/wp-content/uploads/2022/03/Moby-logo.png"></td>
         <td><a href="https://www.docker.com">Docker</a></td>
-        <td>Ephemeral PXE server and convenient tools container</td>
+        <td>Ephemeral PXE server</td>
     </tr>
     <tr>
         <td><img width="32" src="https://github.com/kubernetes-sigs/external-dns/raw/master/docs/img/external-dns.png"></td>
@@ -186,6 +186,11 @@ They can't capture all the project's features, but they are sufficient to get a 
         <td><img width="32" src="https://avatars.githubusercontent.com/u/1412239?s=200&v=4"></td>
         <td><a href="https://www.nginx.com">NGINX</a></td>
         <td>Kubernetes Ingress Controller</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://raw.githubusercontent.com/NixOS/nixos-artwork/refs/heads/master/logo/nix-snowflake-colours.svg"></td>
+        <td><a href="https://nixos.org">Nix</a></td>
+        <td>Convenient development shell</td>
     </tr>
     <tr>
         <td><img width="32" src="https://ntfy.sh/_next/static/media/logo.077f6a13.svg"></td>
@@ -278,7 +283,7 @@ Big shout-out to them!
 - ![](https://github.com/MatthewJohn.png?size=24) [@MatthewJohn](https://github.com/MatthewJohn)
 - ![](https://github.com/karpfediem.png?size=24) [@karpfediem](https://github.com/karpfediem)
 - ![](https://github.com/linhng98.png?size=24) [@linhng98](https://github.com/linhng98)
-- ![](https://github.com/BlueHatbRit.png?size=24) [@BlueHatbRit](https://github.com/BlueHatbRit)
+- ![](https://github.com/elliotblackburn.png?size=24) [@elliotblackburn](https://github.com/elliotblackburn)
 - ![](https://github.com/dotdiego.png?size=24) [@dotdiego](https://github.com/dotdiego)
 - ![](https://github.com/Crimrose.png?size=24) [@Crimrose](https://github.com/Crimrose)
 - ![](https://github.com/eventi.png?size=24) [@eventi](https://github.com/eventi)

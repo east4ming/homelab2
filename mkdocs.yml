@@ -19,8 +19,8 @@ theme:
 
 markdown_extensions:
   - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - attr_list
   - admonition
   - pymdownx.details
@@ -54,11 +54,12 @@ nav:
     - concepts/pxe-boot.md
     - concepts/secrets-management.md
     - concepts/certificate-management.md
-    - concepts/tools-container.md
+    - concepts/development-shell.md
     - concepts/testing.md
   - How-to guides:
     - how-to-guides/alternate-dns-setup.md
     - how-to-guides/expose-services-to-the-internet.md
+    - how-to-guides/backup-and-restore.md
     - how-to-guides/use-both-github-and-gitea.md
     - how-to-guides/add-or-remove-nodes.md
     - how-to-guides/run-commands-on-multiple-nodes.md
