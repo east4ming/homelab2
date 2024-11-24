@@ -12,7 +12,7 @@ organizations:
         members:
           - renovate
 repositories:
-  - name: homelab
+  - name: homelab2
     owner: ops
     private: false
     migrate:
