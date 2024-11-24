@@ -157,20 +157,26 @@ autoinstall:
         sudo: "ALL=(ALL) NOPASSWD:ALL"
     package_update: true
     package_upgrade: true
-  late-commands:
-  # Tailscale
-  - curl -fsSL https://tailscale.com/install.sh | sh
-  - tailscale up --accept-dns=false --authkey {{ tailscale_auth_key }} --force-reauth=true --timeout 30s --reset --operator={{ username }} --ssh --hostname {{ hostvars[item]['inventory_hostname'] }}
-  - tailscale set --auto-update
-  # Starship
-  - curl -sS https://starship.rs/install.sh | sh -s -- -y
-  - touch /home/{{ username }}/.zshrc
-  - chown {{ username }}:{{ username }} /home/{{ username }}/.zshrc
-  - echo 'HISTSIZE=1000' >> /home/{{ username }}/.zshrc
-  - echo 'SAVEHIST=1000' >> /home/{{ username }}/.zshrc
-  - echo 'HISTFILE=~/.zsh_history' >> /home/{{ username }}/.zshrc
-  - echo 'autoload -Uz compinit' >> /home/{{ username }}/.zshrc
-  - echo 'compinit' >> /home/{{ username }}/.zshrc
-  - echo 'eval "$(starship init zsh)"' >> /home/{{ username }}/.zshrc
-  # modprobe ceph rbd
-  - echo "rbd" >> /etc/modules-load.d/rbd.conf
+    write_files:
+      - path: /etc/modules-load.d/rbd.conf
+        permissions: "0o644"
+        content: |
+          rbd
+      - path: /home/casey/.zshrc
+        owner: casey:casey
+        permissions: "0o644"
+        defer: true
+        content: |
+          HISTSIZE=1000
+          SAVEHIST=1000
+          HISTFILE=~/.zsh_history
+          autoload -Uz compinit
+          compinit
+          eval "$(starship init zsh)"
+    runcmd:
+      # Tailscale
+      - curl -fsSL https://tailscale.com/install.sh | sh
+      - tailscale up --accept-dns=false --authkey {{ tailscale_auth_key }} --force-reauth=true --timeout 30s --reset --operator={{ username }} --ssh --hostname {{ hostvars[item]['inventory_hostname'] }}
+      - tailscale set --auto-update
+      # Starship
+      - curl -sS https://starship.rs/install.sh | sh -s -- -y
