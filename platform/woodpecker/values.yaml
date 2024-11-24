@@ -18,6 +18,8 @@ woodpecker:
     ingress:
       enabled: true
       ingressClassName: tailscale
+      annotations:
+        tailscale.com/experimental-forward-cluster-traffic-via-ingress: "true"
       hosts:
         - host: &host ci.west-beta.ts.net
           paths:
