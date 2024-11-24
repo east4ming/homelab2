@@ -50,6 +50,9 @@
         name: nameserver
         namespace: tailscale
       register: cr_info
+      until: cr_info.resources | length > 0
+      retries: 30
+      delay: 10
 
     - name: Print CR ts-dns info
       debug:
