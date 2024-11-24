@@ -6,4 +6,4 @@ tailscale_values:
     clientId: "{{ tailscale_client_id }}"
     clientSecret: "{{ tailscale_client_secret }}"
   apiServerProxyConfig:
-    mode: noauth
+    mode: true
