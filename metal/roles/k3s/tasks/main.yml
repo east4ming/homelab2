@@ -102,5 +102,6 @@
     dest: "{{ playbook_dir }}/kubeconfig.yaml"
     mode: 0600
     owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
   delegate_to: localhost
   run_once: true
