@@ -6,8 +6,9 @@ cilium_values:
     replicas: 1
     prometheus:
       enabled: true
-      serviceMonitor:
-        enabled: true
+      # TODO: after install kube-prometheus-stack, re-configure this
+      # serviceMonitor:
+      #   enabled: true
     dashboards:
       enabled: true
       namespace: monitoring-system
@@ -47,8 +48,8 @@ cilium_values:
         namespace: monitoring-system
         annotations:
           grafana_folder: "Hubble"
-      serviceMonitor:
-        enabled: true
+      # serviceMonitor:
+      #   enabled: true
   # native routing mode
   routingMode: native
   autoDirectNodeRoutes: true
@@ -63,8 +64,9 @@ cilium_values:
   # enable DSR
   loadBalancer:
     mode: dsr
+    # my mini-host n100 jumper enp3s0's driver doesn't support XDP
     # XDP Acceleration
-    acceleration: native
+    # acceleration: native
   # 🐛error="attaching XDP program to interface tailscale0
   devices: "e+"
   # Bypass iptables Connection Tracking
@@ -80,8 +82,8 @@ cilium_values:
   # enable metrics - cilium agent
   prometheus:
     enabled: true
-    serviceMonitor:
-      enabled: true
+    # serviceMonitor:
+    #   enabled: true
   # -- Grafana dashboards for cilium-agent
   dashboards:
     enabled: true
