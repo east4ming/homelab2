@@ -79,6 +79,7 @@
     msg: "ipv4 prefix: {{ ipv4_prefix }}"
 
 - name: Generate cloud-init user-data for each machine
+  become: true
   ansible.builtin.template:
     src: user-data.j2
     dest: "{{ role_path }}/files/data/init-config/{{ hostvars[item]['mac'] }}/user-data"
