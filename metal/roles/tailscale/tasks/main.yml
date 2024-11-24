@@ -1,3 +1,12 @@
+- name: Create the tailscale namespace
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: "{{ tailscale_namespace }}"
+
 - name: Install tailscale-operator
   kubernetes.core.helm:
     name: tailscale-operator
