@@ -68,3 +68,7 @@ argocd-apps:
               - CreateNamespace=true
               - ApplyOutOfSyncOnly=true
               - ServerSideApply=true
+          ignoreDifferences:
+            - kind: Service
+              jsonPointers:
+                - /spec/externalName

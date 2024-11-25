@@ -7,7 +7,7 @@ metadata:
   name: egress-ci
   namespace: {{ .Release.Namespace }}
 spec:
-  externalName: ""
+  externalName: unused
   type: ExternalName
   ports:
     - port: 443
