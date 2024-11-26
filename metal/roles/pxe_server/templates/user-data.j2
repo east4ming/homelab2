@@ -158,6 +158,11 @@ autoinstall:
     package_update: true
     package_upgrade: true
     write_files:
+      - path: /etc/systemd/timesyncd.conf
+        permissions: "0o644"
+        content: |
+          [Time]
+          NTP={{ ntp_server }}
       - path: /etc/modules-load.d/rbd.conf
         permissions: "0o644"
         content: |

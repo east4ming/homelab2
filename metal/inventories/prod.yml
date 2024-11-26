@@ -3,6 +3,7 @@ all:
     control_plane_endpoint: 192.168.3.100
     load_balancer_ip_pool:
       - 192.168.3.32/27
+    ntp_server: "ntp.ubuntu.com"
     # Used for tailscale k8s node
     tailscale_auth_key: "tskey-auth-..."
     # Used for tailscale-operator
