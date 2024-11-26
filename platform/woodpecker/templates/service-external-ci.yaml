@@ -3,12 +3,8 @@ kind: Service
 metadata:
   annotations:
     tailscale.com/tailnet-fqdn: ci.west-beta.ts.net
-    tailscale.com/proxy-group: ts-proxies
   name: egress-ci
   namespace: {{ .Release.Namespace }}
 spec:
   externalName: unused
   type: ExternalName
-  ports:
-    - port: 443
-      protocol: TCP
