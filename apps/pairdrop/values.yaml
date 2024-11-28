@@ -5,7 +5,7 @@ app-template:
         main:
           image:
             repository: lscr.io/linuxserver/pairdrop
-            tag: 1.10.7
+            tag: 1.10.10
   service:
     main:
       ports:
