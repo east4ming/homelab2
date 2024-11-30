@@ -19,6 +19,90 @@ They are not permanent, we can change them in the future if better alternatives 
 
     - CHANGEME
 
+## OS Changed To Ubuntu 24.04
+
+**Context**
+
+Personal preference.
+
+**Decision**
+
+OS Changed To Ubuntu 24.04
+
+**Consequences**
+
+- No fedora server
+
+## PXE Use Netboot.xyz
+
+**Context**
+
+I tried to look up the official ubuntu 24.04 netboot pxe documentation, but the results were a mess, and none of my attempts were successful. This is very frustrating.
+
+Then, I stumbled upon netboot.xyz, which worked once, and the documentation is clear and up-to-date. So I decided to stand on the shoulders of giants.
+
+**Decision**
+
+PXE Use Netboot.xyz
+
+**Consequences**
+
+- The possibilities are endless.
+- Currently there are manual steps.
+
+## Cilium Tuning
+
+**Context**
+
+I am a Cloud Native/Observability Architect by profession. I've earned a bunch of Cilium course/exam badges. I really like Cilium, and would like to hone my skills with homelab2. One of the best things about Cilium is its performance, but it needs to be tuned for extreme performance.
+
+**Decision**
+
+So I've been doing a lot of performance tuning with my hardware and network configuration. These include, but are not limited to:
+
+- update version
+- native routing mode
+- bpf masquerade
+- DSR
+- Bypass iptables connection tracking
+- bandwidthManager/pod BBR
+- ~~XDPAcceleration~~
+- netkit
+- servicemonitor
+- grafana dashboards
+- ...
+
+**Consequences**
+
+However, the compatibility is relatively lower, and the network/hardware/OS requirements are higher.
+
+## Use Tailscale Operator Replace nginx ingress/cert-manager/cloudflared/external-dns
+
+**Context**
+
+I am a Cloud Native/Observability Architect by profession. But I still think kubernetes is complicated, and for upstream homelab, I tried it, and my feeling is: as an expert, I wouldn't want to install so many complex components on top of the complexity of kubernetes. It's crazy!
+
+Another reason, I need to be offsite, because of the New Crown outbreak, it changed my life forever, offsite/remote work became a necessity for me.
+
+Third reason, I'm a fan of Tailscale. It's a VPN, but it integrates so many features that are perfect for homelab, such as DNS/domain/certificates/ssh/tunnel/file transfer/file sharing/k8s operator and so on.
+
+In summary, after evaluation and practice, Tailscale is a perfect replacement for nginx ingress/cert-manager/cloudflared/external-dns. So, why not?
+
+**Decision**
+
+Use Tailscale Operator Replace these addons:
+
+- nginx ingress replaced by Tailscale Operator Ingress
+- cert-manager replaced by Tailscale HTTPS Certs
+- cloudflared replaced by Tailscale Funnel
+- external-dns replaced by Tailscale MagicDNS
+
+**Consequences**
+
+In order to achieve the same effect as upstream, you need to configure some additional Tailscale components, such as: tailscale nameserver and tailscale proxygroup in the tailscale operator; and tailscale ACL (which is out of the scope of this project).
+
+Moreover, Tailscale Operator is still in a relatively early stage, many features are not yet perfect, and may be adjusted at any time in the future.
+
 ## Remove the Docker wrapper for Nix shell
 
 **Context**

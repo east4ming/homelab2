@@ -4,22 +4,22 @@
 
 ```
 +--------------+
-|    ./apps    |
-|--------------|
-|  ./platform  |
-|--------------|       +------------+
-|   ./system   |- - - -| ./external |
-|--------------|       +------------+
-|   ./metal    |
-|--------------|
-|   HARDWARE   |
+| ./apps         |
+| -------------- |
+| ./platform     |
+| -------------- | +------------+ |
+| ./system       | - - - -        | ./external |
+| -------------- | +------------+ |
+| ./metal        |
+| -------------- |
+| HARDWARE       |
 +--------------+
 ```
 
 Main components:
 
-- `./metal`: bare metal management, install Linux and Kubernetes
-- `./system`: critical system components for the cluster (load balancer, storage, ingress, operation tools...)
+- `./metal`: bare metal management, install Linux and Kubernetes, cilium and tailscale operator
+- `./system`: critical system components for the cluster (storage, monitoring, operation tools...)
 - `./platform`: essential components for service hosting platform (git, build runners, dashboards...)
 - `./apps`: user facing applications
 - `./external` (optional): externally managed services
@@ -46,32 +46,32 @@ Everything is automated, after you edit the configuration files, you just need t
 ```mermaid
 flowchart TD
   subgraph metal[./metal]
-    pxe[PXE Server] -.-> linux[Fedora Server] --> k3s
+    pxe[PXE Server] -.-> linux[Ubuntu Server] --> k3s --> cilium --> tailscale operator
   end
 
   subgraph system[./system]
     argocd[ArgoCD and root app]
-    nginx[NGINX]
+    kured[Kured]
+    loki[Loki]
+    monitoring-system[Kube Prometheus Stack]
     rook-ceph[Rook Ceph]
-    cert-manager
-    external-dns[External DNS]
-    cloudflared
+    volsync-system[VolSync]
   end
 
   subgraph external[./external]
-    letsencrypt[Let's Encrypt]
-    cloudflare[Cloudflare]
+    othersecrets[Secrets]
   end
 
-  letsencrypt -.-> cert-manager
-  cloudflare -.-> cert-manager
-  cloudflare -.-> external-dns
-  cloudflare -.-> cloudflared
-
   subgraph platform[./platform]
+    Dex
+    ExternalSecrets
     Gitea
-    Woodpecker
+    GlobalSecrets
     Grafana
+    Kanidm
+    Renovate
+    Woodpecker
+    Zot
   end
 
   subgraph apps[./apps]
