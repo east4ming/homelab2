@@ -24,7 +24,7 @@ Router that support configuration of static routes, because Cilium is performanc
 
 (Optional) It would be better if the router supports DHCP/DNS -> PXE/TFTP function, which can easily work with netboot.xyz for PXE based on dhcp proxy. Like below:
 
-![OpenWrt -> DHCP/DNS -> PXE/TFTP](TODO:)
+![OpenWrt -> DHCP/DNS -> PXE/TFTP](https://github.com/user-attachments/assets/fd0b8216-44ce-48be-8235-9dc195b5f6ea)
 
 ### Initial controller
 
