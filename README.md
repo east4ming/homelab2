@@ -42,15 +42,7 @@ More information can be found in [the roadmap](#roadmap) below.
 
 ### Hardware
 
-![Hardware](https://user-images.githubusercontent.com/27996771/98970963-25137200-2543-11eb-8f2d-f9a2d45756ef.JPG)
-
-- 4 × NEC SFF `PC-MK26ECZDR` (Japanese version of the ThinkCentre M700):
-    - CPU: `Intel Core i5-6600T @ 2.70GHz`
-    - RAM: `16GB`
-    - SSD: `128GB`
-- TP-Link `TL-SG108` switch:
-    - Ports: `8`
-    - Speed: `1000Mbps`
+![Hardware](https://github.com/user-attachments/assets/e48caa3e-00c6-460f-87e9-71814faa9888)
 
 - 4 × Intel N100 Mini-hosts(3 x Jumper N100 Pro II + 1 x Cheshi N100):
   - CPU: `Intel(R) N100`
@@ -95,6 +87,9 @@ They can't capture all the project's features, but they are sufficient to get a 
 |                      Deploy with a single command (after updating the configuration files)                      |
 |                          [![][pxe-demo]](https://www.youtube.com/watch?v=y-d7btNNAT8)                           |
 |                                                    PXE boot                                                     |
+|                          [![][tailscale-demo1]][tailscale-demo1]                                                |
+|                          [![][tailscale-demo2]][tailscale-demo2]                                                |
+|                Tailscale Kubernetes Operator, VPN/Tunnel/DNS/HTTPS/Certs/...                                    |
 |                                         [![][hubble-demo]][hubble-demo]                                         |
 |            Observe network traffic with Hubble, built on top of [Cilium](https://cilium.io) and eBPF            |
 |                                       [![][homepage-demo]][homepage-demo]                                       |
@@ -116,15 +111,17 @@ They can't capture all the project's features, but they are sufficient to get a 
 
 [deploy-demo]: https://asciinema.org/a/xkBRkwC6e9RAzVuMDXH3nGHp7.svg
 [pxe-demo]: https://user-images.githubusercontent.com/27996771/157303477-df2e7410-8f02-4648-a86c-71e6b7e89e35.png
-[hubble-demo]: https://github.com/east4ming/homelab2/assets/27996771/9c6677d0-3564-47c0-852b-24b6a554b4a3
-[homepage-demo]: https://github.com/east4ming/homelab2/assets/27996771/d0eaf620-be08-48d8-8420-40bcaa86093b
-[grafana-demo]: https://github.com/east4ming/homelab2/assets/27996771/ad937b26-e9bc-4761-83ae-1c7f512ea97f
-[gitea-demo]: https://github.com/east4ming/homelab2/assets/27996771/c245534f-88d9-4565-bde8-b39f60ccee9e
+[tailscale-demo1]: https://github.com/user-attachments/assets/674e2a2e-e258-46c5-9b22-584ea6ed8b9a
+[tailscale-demo2]: https://github.com/user-attachments/assets/23770a79-f48b-402f-b715-9f7a3a7fd451
+[hubble-demo]: https://github.com/khuedoan/homelab/assets/27996771/9c6677d0-3564-47c0-852b-24b6a554b4a3
+[homepage-demo]: https://github.com/user-attachments/assets/457b5be9-7dc6-4963-802d-5b2220ccd331
+[grafana-demo]: https://github.com/khuedoan/homelab/assets/27996771/ad937b26-e9bc-4761-83ae-1c7f512ea97f
+[gitea-demo]: https://github.com/khuedoan/homelab/assets/27996771/c245534f-88d9-4565-bde8-b39f60ccee9e
 [matrix-demo]: https://user-images.githubusercontent.com/27996771/149448510-7163310c-2049-4ccd-901d-f11f605bfc32.png
-[woodpecker-demo]: https://github.com/east4ming/homelab2/assets/27996771/5d887688-d20a-44c8-8f77-0c625527dfe4
-[argocd-demo]: https://github.com/east4ming/homelab2/assets/27996771/527e2529-4fe1-4664-ab8a-b9eb3c492d20
-[alert-demo]: https://github.com/east4ming/homelab2/assets/27996771/c922f755-e911-4ca0-9d4a-6e552d387f18
-[ai-demo]: https://github.com/east4ming/homelab2/assets/27996771/d77ba511-00b7-47c3-9032-55679a099e70
+[woodpecker-demo]: https://github.com/khuedoan/homelab/assets/27996771/5d887688-d20a-44c8-8f77-0c625527dfe4
+[argocd-demo]: https://github.com/khuedoan/homelab/assets/27996771/527e2529-4fe1-4664-ab8a-b9eb3c492d20
+[alert-demo]: https://github.com/user-attachments/assets/64be9415-582f-4893-b37e-59b6bce525b2
+[ai-demo]: https://github.com/khuedoan/homelab/assets/27996771/d77ba511-00b7-47c3-9032-55679a099e70
 
 ### Tech stack
 
