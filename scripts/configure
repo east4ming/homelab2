@@ -25,7 +25,7 @@ upstream_config = {
 
 
 def check_python_version(required_version: str) -> None:
-    if sys.version_info < tuple(map(int, required_version.split('.'))):
+    if sys.version_info < tuple(map(int, required_version.split("."))):
         raise Exception(f"Must be using Python >= {required_version}")
 
 
@@ -33,83 +33,68 @@ def find_and_replace(pattern: str, replacement: str, paths: list[str]) -> None:
     files_with_matches = subprocess.run(
         ["git", "grep", "--files-with-matches", pattern, "--"] + paths,
         capture_output=True,
-        text=True
+        text=True,
     ).stdout.splitlines()
 
     for file_with_maches in files_with_matches:
         with fileinput.FileInput(file_with_maches, inplace=True) as file:
             for line in file:
-                print(line.replace(pattern, replacement), end='')
+                print(line.replace(pattern, replacement), end="")
 
 
 def main() -> None:
-    check_python_version(
-        required_version='3.10.0'
+    check_python_version(required_version="3.10.0")
+
+    env = Prompt.ask("Enter your env", default="prod")
+    editor = Prompt.ask("Select text editor", default="nvim")
+    domain = Prompt.ask("Enter your domain", default=upstream_config["domain"])
+    seed_repo = Prompt.ask("Enter seed repo", default=upstream_config["seed_repo"])
+    timezone = Prompt.ask("Enter time zone", default=upstream_config["timezone"])
+    loadbalancer_ip_range = Prompt.ask(
+        "Enter IP range for load balancer",
+        default=upstream_config["loadbalancer_ip_range"],
     )
 
-    env = Prompt.ask("Enter your domain", default='prod')
-    editor = Prompt.ask("Select text editor", default='nvim')
-    domain = Prompt.ask("Enter your domain", default=upstream_config['domain'])
-    seed_repo = Prompt.ask("Enter seed repo", default=upstream_config['seed_repo'])
-    timezone = Prompt.ask("Enter time zone", default=upstream_config['timezone'])
-    loadbalancer_ip_range = Prompt.ask("Enter IP range for load balancer", default=upstream_config['loadbalancer_ip_range'])
-
     find_and_replace(
-        pattern=upstream_config['domain'],
+        pattern=upstream_config["domain"],
         replacement=domain,
-        paths=[
-            ".ci",
-            "apps",
-            "platform",
-            "system",
-            "external"
-        ]
+        paths=[".ci", "apps", "platform", "system", "external"],
     )
 
     find_and_replace(
-        pattern=upstream_config['seed_repo'],
+        pattern=upstream_config["seed_repo"],
         replacement=seed_repo,
-        paths=[
-            "system",
-            "platform"
-        ]
+        paths=["system", "platform"],
     )
 
     find_and_replace(
-        pattern=upstream_config['timezone'],
+        pattern=upstream_config["timezone"],
         replacement=timezone,
-        paths=[
-            "apps",
-            "system",
-            "metal"
-        ]
+        paths=["apps", "system", "metal"],
     )
 
     find_and_replace(
-        pattern=upstream_config['loadbalancer_ip_range'],
+        pattern=upstream_config["loadbalancer_ip_range"],
         replacement=loadbalancer_ip_range,
         paths=[
             f"metal/inventories/{env}.yml",
-        ]
+        ],
     )
 
     if Confirm.ask("Update server list?", default=True):
-        subprocess.run(
-            [editor, f'metal/inventories/{env}.yml']
-        )
-
+        subprocess.run([editor, f"metal/inventories/{env}.yml"])
 
     if Confirm.ask("Do you want to use managed services?"):
-        terraform_workspace = Prompt.ask("Enter Terraform Workspace", default=upstream_config['terraform_workspace'])
+        terraform_workspace = Prompt.ask(
+            "Enter Terraform Workspace", default=upstream_config["terraform_workspace"]
+        )
 
         find_and_replace(
-            pattern=upstream_config['terraform_workspace'],
+            pattern=upstream_config["terraform_workspace"],
             replacement=terraform_workspace,
-            paths=[
-                "external/versions.tf"
-            ]
+            paths=["external/versions.tf"],
         )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
