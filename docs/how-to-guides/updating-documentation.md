@@ -28,4 +28,4 @@ To deploy, see this documentation: [MkDocs · Cloudflare Pages docs](https://dev
 
 Steps like below:
 
-![MkDocs Deploy On Cloudflare Pages](TODO:)
+![MkDocs Deploy On Cloudflare Pages](https://github.com/user-attachments/assets/5d9f3e21-bfd0-487f-85d4-469ab2196c5c)
