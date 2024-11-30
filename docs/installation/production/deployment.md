@@ -51,7 +51,7 @@ route add -net 10.42.3.0 netmask 255.255.255.0 gw <pod cidr is the k8s node inte
 
 Alternatively, it can be configured through the router UI, as shown in the following example.
 
-![Route UI Add Static Routes](TODO:)
+![Route UI Add Static Routes](https://github.com/user-attachments/assets/e2e20ad7-154d-42db-badd-070779e05c84)
 
 > 🐾**Warning**:
 >
