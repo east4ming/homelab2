@@ -12,19 +12,19 @@ app-template:
         transmission:
           image:
             repository: lscr.io/linuxserver/transmission
-            tag: 4.0.5
+            tag: 4.0.6
         prowlarr:
           image:
             repository: lscr.io/linuxserver/prowlarr
-            tag: 1.13.3
+            tag: 1.27.0
         radarr:
           image:
             repository: lscr.io/linuxserver/radarr
-            tag: 5.3.6
+            tag: 5.15.1
         sonarr:
           image:
             repository: lscr.io/linuxserver/sonarr
-            tag: 4.0.2
+            tag: 4.0.11
         jellyseerr:
           image:
             repository: registry-mirror.e-whisper.com/fallenbagel/jellyseerr
