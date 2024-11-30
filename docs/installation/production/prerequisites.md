@@ -75,7 +75,7 @@ Add the following:
 config boot
 	option filename 'netboot.xyz.efi'
 	option servername 'netbootxyz'
-	option serveraddress '192.168.3.225
+	option serveraddress '192.168.3.225'
 ```
 
 > ✍**Notes**:
@@ -85,6 +85,17 @@ config boot
 Then reboot service:
 
 ```sh
+/etc/init.d/dnsmasq restart
+```
+
+Or, you can use the following command(for openwrt):
+
+```sh
+uci set dhcp.linux="boot"
+uci set dhcp.linux.filename="netboot.xyz.efi"
+uci set dhcp.linux.serveraddress="192.168.3.225"
+uci set dhcp.linux.servername="netbootxyz"
+uci commit dhcp
 /etc/init.d/dnsmasq restart
 ```
 

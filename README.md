@@ -87,9 +87,11 @@ They can't capture all the project's features, but they are sufficient to get a 
 |                      Deploy with a single command (after updating the configuration files)                      |
 |                          [![][pxe-demo]](https://www.youtube.com/watch?v=y-d7btNNAT8)                           |
 |                                                    PXE boot                                                     |
-|                          [![][tailscale-demo1]][tailscale-demo1]                                                |
-|                          [![][tailscale-demo2]][tailscale-demo2]                                                |
-|                Tailscale Kubernetes Operator, VPN/Tunnel/DNS/HTTPS/Certs/...                                    |
+|                                    [![][netboot.xyz-demo]][netboot.xyz-demo]                                    |
+|                                                   netboot.xyz                                                   |
+|                                     [![][tailscale-demo1]][tailscale-demo1]                                     |
+|                                     [![][tailscale-demo2]][tailscale-demo2]                                     |
+|                          Tailscale Kubernetes Operator, VPN/Tunnel/DNS/HTTPS/Certs/...                          |
 |                                         [![][hubble-demo]][hubble-demo]                                         |
 |            Observe network traffic with Hubble, built on top of [Cilium](https://cilium.io) and eBPF            |
 |                                       [![][homepage-demo]][homepage-demo]                                       |
@@ -111,6 +113,7 @@ They can't capture all the project's features, but they are sufficient to get a 
 
 [deploy-demo]: https://asciinema.org/a/xkBRkwC6e9RAzVuMDXH3nGHp7.svg
 [pxe-demo]: https://user-images.githubusercontent.com/27996771/157303477-df2e7410-8f02-4648-a86c-71e6b7e89e35.png
+[netboot.xyz-demo]: https://netboot.xyz/assets/images/netboot.xyz-d976acd5e46c61339230d38e767fbdc2.gif
 [tailscale-demo1]: https://github.com/user-attachments/assets/674e2a2e-e258-46c5-9b22-584ea6ed8b9a
 [tailscale-demo2]: https://github.com/user-attachments/assets/23770a79-f48b-402f-b715-9f7a3a7fd451
 [hubble-demo]: https://github.com/khuedoan/homelab/assets/27996771/9c6677d0-3564-47c0-852b-24b6a554b4a3
@@ -135,6 +138,11 @@ They can't capture all the project's features, but they are sufficient to get a 
         <td><img width="32" src="https://simpleicons.org/icons/ansible.svg"></td>
         <td><a href="https://www.ansible.com">Ansible</a></td>
         <td>Automate bare metal provisioning and configuration</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://netboot.xyz/img/nbxyz-laptop.gif"></td>
+        <td><a href="https://netboot.xyz">Netboot.xyz</a></td>
+        <td>Netboot your favorite operating systems in one place</td>
     </tr>
     <tr>
         <td><img width="32" src="https://avatars.githubusercontent.com/u/30269780"></td>
