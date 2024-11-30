@@ -1,11 +1,26 @@
-# Khue's Homelab
+# East4Ming's Homelab2
 
-**[Features](#features) • [Get Started](#get-started) • [Documentation](https://homelab.khuedoan.com)**
+**[Features](#features) • [Get Started](#get-started) • [Documentation](https://homelab2.e-whisper.com)**
 
-[![tag](https://img.shields.io/github/v/tag/khuedoan/homelab?style=flat-square&logo=semver&logoColor=white)](https://github.com/khuedoan/homelab/tags)
-[![document](https://img.shields.io/website?label=document&logo=gitbook&logoColor=white&style=flat-square&url=https%3A%2F%2Fhomelab.khuedoan.com)](https://homelab.khuedoan.com)
-[![license](https://img.shields.io/github/license/khuedoan/homelab?style=flat-square&logo=gnu&logoColor=white)](https://www.gnu.org/licenses/gpl-3.0.html)
-[![stars](https://img.shields.io/github/stars/khuedoan/homelab?logo=github&logoColor=white&color=gold&style=flat-square)](https://github.com/khuedoan/homelab)
+[![tag](https://img.shields.io/github/v/tag/east4ming/homelab2?style=flat-square&logo=semver&logoColor=white)](https://github.com/east4ming/homelab2/tags)
+[![document](https://img.shields.io/website?label=document&logo=gitbook&logoColor=white&style=flat-square&url=https%3A%2F%2Fhomelab2.e-whisper.com)](https://homelab2.e-whisper.com)
+[![license](https://img.shields.io/github/license/east4ming/homelab2?style=flat-square&logo=gnu&logoColor=white)](https://www.gnu.org/licenses/gpl-3.0.html)
+[![stars](https://img.shields.io/github/stars/east4ming/homelab2?logo=github&logoColor=white&color=gold&style=flat-square)](https://github.com/east4ming/homelab2)
+
+The project forked from [khuedoan/homelab](https://github.com/khuedoan/homelab), 99% of the credit goes to him. Thanks Khuedoan.
+
+✨**HighLight**:
+
+Compared to the [khuedoan/homelab](https://github.com/khuedoan/homelab) project, the following adjustments have been made to this project:
+
+- 🥾 Automated bare metal provisioning with [netboot.xyz](https://netboot.xyz/)
+- 🐧 OS changed to Ubuntu 24.04
+- 🕸 Use [Tailscale Operator](https://tailscale.com/kb/1236/kubernetes-operator) replace nginx ingress/cert-manager/cloudflared/external-dns...; Install tailscale on node
+- 🐝Cilium Tuning
+
+**Ubuntu**: Kured adapts to ubuntu; The relevant packages are modified to ubuntu's; ubuntu sysctl tuning; automatic adapts to ubuntu; Disable root login and use normal user
+
+**Cilium Tuning**: include: update version/native routing mode/bpf masquerade/DSR/Bypass iptables connection tracking/bandwidthManager/pod BBR/~~XDPAcceleration~~/netkit/servicemonitor/grafana dashboards...(However, the compatibility is relatively lower, and the network/hardware/OS requirements are higher.)
 
 This project utilizes [Infrastructure as Code](https://en.wikipedia.org/wiki/Infrastructure_as_code) and [GitOps](https://www.weave.works/technologies/gitops) to automate provisioning, operating, and updating self-hosted services in my homelab.
 It can be used as a highly customizable framework to build your own homelab.
@@ -27,29 +42,29 @@ More information can be found in [the roadmap](#roadmap) below.
 
 ### Hardware
 
-![Hardware](https://user-images.githubusercontent.com/27996771/98970963-25137200-2543-11eb-8f2d-f9a2d45756ef.JPG)
+![Hardware](https://github.com/user-attachments/assets/e48caa3e-00c6-460f-87e9-71814faa9888)
 
-- 4 × NEC SFF `PC-MK26ECZDR` (Japanese version of the ThinkCentre M700):
-    - CPU: `Intel Core i5-6600T @ 2.70GHz`
-    - RAM: `16GB`
-    - SSD: `128GB`
-- TP-Link `TL-SG108` switch:
-    - Ports: `8`
-    - Speed: `1000Mbps`
+- 4 × Intel N100 Mini-hosts(3 x Jumper N100 Pro II + 1 x Cheshi N100):
+  - CPU: `Intel(R) N100`
+  - RAM: `16GB`(Jumper) or `32GB`(Cheshi)
+  - SSD: `1TB`
+- XikeStor `SKS3200M-8GPY1XF` switch:
+  - Ports: `8+1`
+  - Speed: 8 x `2.5Gbps` twisted pair ports and 1 x 10G fiber optic port
 
 ### Features
 
+- [x] VPN (Tailscale) Interconnection, Offsite Office, Home Office, Anytime, Anywhere Intranet Access
 - [x] Common applications: Gitea, Jellyfin, Paperless...
-- [x] Automated bare metal provisioning with PXE boot
+- [x] Automated bare metal provisioning with PXE boot - [netboot.xyz](https://netboot.xyz/)
 - [x] Automated Kubernetes installation and management
 - [x] Installing and managing applications using GitOps
 - [x] Automatic rolling upgrade for OS and Kubernetes
 - [x] Automatically update apps (with approval)
 - [x] Modular architecture, easy to add or remove features/components
-- [x] Automated certificate management
-- [x] Automatically update DNS records for exposed services
-- [x] VPN (Tailscale or Wireguard)
-- [x] Expose services to the internet securely with [Cloudflare Tunnel](https://www.cloudflare.com/products/tunnel/)
+- [x] Automated certificate management ([Tailscale HTTPS](https://tailscale.com/kb/1153/enabling-https/))
+- [x] Automatically update DNS records for exposed services ([Tailscale MagicDNS](https://tailscale.com/kb/1217/tailnet-name))
+- [x] Expose services to the internet securely with [Tailscale Funnel](https://tailscale.com/kb/1223/tailscale-funnel)
 - [x] CI/CD platform
 - [x] Private container registry
 - [x] Distributed storage
@@ -62,41 +77,53 @@ More information can be found in [the roadmap](#roadmap) below.
 Some demo videos and screenshots are shown here.
 They can't capture all the project's features, but they are sufficient to get a concept of it.
 
-| Demo                                                                                                            |
-| :--:                                                                                                            |
-| [![][deploy-demo]](https://asciinema.org/a/xkBRkwC6e9RAzVuMDXH3nGHp7)                                           |
-| Deploy with a single command (after updating the configuration files)                                           |
-| [![][pxe-demo]](https://www.youtube.com/watch?v=y-d7btNNAT8)                                                    |
-| PXE boot                                                                                                        |
-| [![][hubble-demo]][hubble-demo]                                                                                 |
-| Observe network traffic with Hubble, built on top of [Cilium](https://cilium.io) and eBPF                       |
-| [![][homepage-demo]][homepage-demo]                                                                             |
-| Homepage powered by... [Homepage](https://gethomepage.dev)                                                      |
-| [![][grafana-demo]][grafana-demo]                                                                               |
-| Monitoring dashboard powered by [Grafana](https://grafana.com)                                                  |
-| [![][gitea-demo]][gitea-demo]                                                                                   |
-| Git server powered by [Gitea](https://gitea.io/en-us)                                                           |
-| [![][matrix-demo]][matrix-demo]                                                                                 |
-| [Matrix](https://matrix.org/) chat server                                                                       |
-| [![][woodpecker-demo]][woodpecker-demo]                                                                         |
-| Continuous integration with [Woodpecker CI](https://woodpecker-ci.org)                                          |
-| [![][argocd-demo]][argocd-demo]                                                                                 |
-| Continuous deployment with [ArgoCD](https://argoproj.github.io/cd)                                              |
-| [![][alert-demo]][alert-demo]                                                                                   |
-| [ntfy](https://ntfy.sh) displaying received alerts                                                              |
-| [![][ai-demo]][ai-demo]                                                                                         |
+> 🐾**Notes**
+>
+> My own demo videos haven't been recorded yet.
+
+|                                                      Demo                                                       |
+| :-------------------------------------------------------------------------------------------------------------: |
+|                      [![][deploy-demo]](https://asciinema.org/a/xkBRkwC6e9RAzVuMDXH3nGHp7)                      |
+|                      Deploy with a single command (after updating the configuration files)                      |
+|                          [![][pxe-demo]](https://www.youtube.com/watch?v=y-d7btNNAT8)                           |
+|                                                    PXE boot                                                     |
+|                                    [![][netboot.xyz-demo]][netboot.xyz-demo]                                    |
+|                                                   netboot.xyz                                                   |
+|                                     [![][tailscale-demo1]][tailscale-demo1]                                     |
+|                                     [![][tailscale-demo2]][tailscale-demo2]                                     |
+|                          Tailscale Kubernetes Operator, VPN/Tunnel/DNS/HTTPS/Certs/...                          |
+|                                         [![][hubble-demo]][hubble-demo]                                         |
+|            Observe network traffic with Hubble, built on top of [Cilium](https://cilium.io) and eBPF            |
+|                                       [![][homepage-demo]][homepage-demo]                                       |
+|                           Homepage powered by... [Homepage](https://gethomepage.dev)                            |
+|                                        [![][grafana-demo]][grafana-demo]                                        |
+|                         Monitoring dashboard powered by [Grafana](https://grafana.com)                          |
+|                                          [![][gitea-demo]][gitea-demo]                                          |
+|                              Git server powered by [Gitea](https://gitea.io/en-us)                              |
+|                                         [![][matrix-demo]][matrix-demo]                                         |
+|                                    [Matrix](https://matrix.org/) chat server                                    |
+|                                     [![][woodpecker-demo]][woodpecker-demo]                                     |
+|                     Continuous integration with [Woodpecker CI](https://woodpecker-ci.org)                      |
+|                                         [![][argocd-demo]][argocd-demo]                                         |
+|                       Continuous deployment with [ArgoCD](https://argoproj.github.io/cd)                        |
+|                                          [![][alert-demo]][alert-demo]                                          |
+|                               [ntfy](https://ntfy.sh) displaying received alerts                                |
+|                                             [![][ai-demo]][ai-demo]                                             |
 | Self-hosted AI powered by [Ollama](https://ollama.com) (experimental, not very fast because I don't have a GPU) |
 
 [deploy-demo]: https://asciinema.org/a/xkBRkwC6e9RAzVuMDXH3nGHp7.svg
 [pxe-demo]: https://user-images.githubusercontent.com/27996771/157303477-df2e7410-8f02-4648-a86c-71e6b7e89e35.png
+[netboot.xyz-demo]: https://netboot.xyz/assets/images/netboot.xyz-d976acd5e46c61339230d38e767fbdc2.gif
+[tailscale-demo1]: https://github.com/user-attachments/assets/674e2a2e-e258-46c5-9b22-584ea6ed8b9a
+[tailscale-demo2]: https://github.com/user-attachments/assets/23770a79-f48b-402f-b715-9f7a3a7fd451
 [hubble-demo]: https://github.com/khuedoan/homelab/assets/27996771/9c6677d0-3564-47c0-852b-24b6a554b4a3
-[homepage-demo]: https://github.com/khuedoan/homelab/assets/27996771/d0eaf620-be08-48d8-8420-40bcaa86093b
+[homepage-demo]: https://github.com/user-attachments/assets/457b5be9-7dc6-4963-802d-5b2220ccd331
 [grafana-demo]: https://github.com/khuedoan/homelab/assets/27996771/ad937b26-e9bc-4761-83ae-1c7f512ea97f
 [gitea-demo]: https://github.com/khuedoan/homelab/assets/27996771/c245534f-88d9-4565-bde8-b39f60ccee9e
 [matrix-demo]: https://user-images.githubusercontent.com/27996771/149448510-7163310c-2049-4ccd-901d-f11f605bfc32.png
 [woodpecker-demo]: https://github.com/khuedoan/homelab/assets/27996771/5d887688-d20a-44c8-8f77-0c625527dfe4
 [argocd-demo]: https://github.com/khuedoan/homelab/assets/27996771/527e2529-4fe1-4664-ab8a-b9eb3c492d20
-[alert-demo]: https://github.com/khuedoan/homelab/assets/27996771/c922f755-e911-4ca0-9d4a-6e552d387f18
+[alert-demo]: https://github.com/user-attachments/assets/64be9415-582f-4893-b37e-59b6bce525b2
 [ai-demo]: https://github.com/khuedoan/homelab/assets/27996771/d77ba511-00b7-47c3-9032-55679a099e70
 
 ### Tech stack
@@ -113,14 +140,19 @@ They can't capture all the project's features, but they are sufficient to get a 
         <td>Automate bare metal provisioning and configuration</td>
     </tr>
     <tr>
+        <td><img width="32" src="https://netboot.xyz/img/nbxyz-laptop.gif"></td>
+        <td><a href="https://netboot.xyz">Netboot.xyz</a></td>
+        <td>Netboot your favorite operating systems in one place</td>
+    </tr>
+    <tr>
         <td><img width="32" src="https://avatars.githubusercontent.com/u/30269780"></td>
         <td><a href="https://argoproj.github.io/cd">ArgoCD</a></td>
         <td>GitOps tool built to deploy applications to Kubernetes</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://github.com/jetstack/cert-manager/raw/master/logo/logo.png"></td>
-        <td><a href="https://cert-manager.io">cert-manager</a></td>
-        <td>Cloud native certificate management</td>
+        <td><img width="32" src="https://decagon.ai/_next/image?url=%2Favatars%2Ftailscale.png&w=48&q=88"></td>
+        <td><a href="https://tailscale.com/kb/1153/enabling-https/">Tailscale HTTPS Certs</a></td>
+        <td>Tailscale HTTPS Certificates</td>
     </tr>
     <tr>
         <td><img width="32" src="https://avatars.githubusercontent.com/u/21054566?s=200&v=4"></td>
@@ -128,9 +160,14 @@ They can't capture all the project's features, but they are sufficient to get a 
         <td>eBPF-based Networking, Observability and Security (CNI, LB, Network Policy, etc.)</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://avatars.githubusercontent.com/u/314135?s=200&v=4"></td>
-        <td><a href="https://www.cloudflare.com">Cloudflare</a></td>
-        <td>DNS and Tunnel</td>
+        <td><img width="32" src="https://decagon.ai/_next/image?url=%2Favatars%2Ftailscale.png&w=48&q=88"></td>
+        <td><a href="https://tailscale.com/kb/1217/tailnet-name">Tailscale MagicDNS</a></td>
+        <td>DNS</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://decagon.ai/_next/image?url=%2Favatars%2Ftailscale.png&w=48&q=88"></td>
+        <td><a href="https://tailscale.com/kb/1223/tailscale-funnel">Tailscale Funnel</a></td>
+        <td>Tunnel</td>
     </tr>
     <tr>
         <td><img width="32" src="https://www.docker.com/wp-content/uploads/2022/03/Moby-logo.png"></td>
@@ -138,13 +175,13 @@ They can't capture all the project's features, but they are sufficient to get a 
         <td>Ephemeral PXE server</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://github.com/kubernetes-sigs/external-dns/raw/master/docs/img/external-dns.png"></td>
-        <td><a href="https://github.com/kubernetes-sigs/external-dns">ExternalDNS</a></td>
-        <td>Synchronizes exposed Kubernetes Services and Ingresses with DNS providers</td>
+        <td><img width="32" src="https://decagon.ai/_next/image?url=%2Favatars%2Ftailscale.png&w=48&q=88"></td>
+        <td><a href="https://tailscale.com/kb/1236/kubernetes-operator">Tailscale Kubernetes Operator</a></td>
+        <td>Tailscale Kubernetes Operator lets you: K8s API Server Proxy; Ingress; Egress; DNS; Certs...</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/Fedora_logo.svg/267px-Fedora_logo.svg.png"></td>
-        <td><a href="https://getfedora.org/en/server">Fedora Server</a></td>
+        <td><img width="32" src="https://assets.ubuntu.com/v1/8114528b-picto-ubuntu-orange.png"></td>
+        <td><a href="https://ubuntu.com/server">Ubuntu Server</a></td>
         <td>Base OS for Kubernetes nodes</td>
     </tr>
     <tr>
@@ -183,11 +220,6 @@ They can't capture all the project's features, but they are sufficient to get a 
         <td>Log aggregation system</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://avatars.githubusercontent.com/u/1412239?s=200&v=4"></td>
-        <td><a href="https://www.nginx.com">NGINX</a></td>
-        <td>Kubernetes Ingress Controller</td>
-    </tr>
-    <tr>
         <td><img width="32" src="https://raw.githubusercontent.com/NixOS/nixos-artwork/refs/heads/master/logo/nix-snowflake-colours.svg"></td>
         <td><a href="https://nixos.org">Nix</a></td>
         <td>Convenient development shell</td>
@@ -213,16 +245,6 @@ They can't capture all the project's features, but they are sufficient to get a 
         <td>Cloud-Native Storage for Kubernetes</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://avatars.githubusercontent.com/u/48932923?s=200&v=4"></td>
-        <td><a href="https://tailscale.com">Tailscale</a></td>
-        <td>VPN without port forwarding</td>
-    </tr>
-    <tr>
-        <td><img width="32" src="https://avatars.githubusercontent.com/u/13991055?s=200&v=4"></td>
-        <td><a href="https://www.wireguard.com">Wireguard</a></td>
-        <td>Fast, modern, secure VPN tunnel</td>
-    </tr>
-    <tr>
         <td><img width="32" src="https://avatars.githubusercontent.com/u/84780935?s=200&v=4"></td>
         <td><a href="https://woodpecker-ci.org">Woodpecker CI</a></td>
         <td>Simple yet powerful CI/CD engine with great extensibility</td>
@@ -236,30 +258,31 @@ They can't capture all the project's features, but they are sufficient to get a 
 
 ## Get Started
 
-- [Try it out locally](https://homelab.khuedoan.com/installation/sandbox) without any hardware (just 4 commands!)
-- [Deploy on real hardware](https://homelab.khuedoan.com/installation/production/prerequisites) for production workload
+- [Try it out locally](https://homelab2.e-whisper.com/installation/sandbox) without any hardware (just 4 commands!)
+- [Deploy on real hardware](https://homelab2.e-whisper.com/installation/production/prerequisites) for production workload
 
 ## Roadmap
 
-See [roadmap](https://homelab.khuedoan.com/reference/roadmap) and [open issues](https://github.com/khuedoan/homelab/issues) for a list of proposed features and known issues.
+See [roadmap](https://homelab2.e-whisper.com/reference/roadmap) and [open issues](https://github.com/east4ming/homelab2/issues) for a list of proposed features and known issues.
 
 ## Contributing
 
 Any contributions you make are greatly appreciated.
 
-Please see [contributing guide](https://homelab.khuedoan.com/reference/contributing) for more information.
+Please see [contributing guide](https://homelab2.e-whisper.com/reference/contributing) for more information.
 
 ## License
 
-Copyright &copy; 2020 - 2024 Khue Doan
+Copyright &copy; 2020 - 2024 East4Ming
 
 Distributed under the GPLv3 License.
-See [license page](https://homelab.khuedoan.com/reference/license) or `LICENSE.md` file for more information.
+See [license page](https://homelab2.e-whisper.com/reference/license) or `LICENSE.md` file for more information.
 
 ## Acknowledgements
 
 References:
 
+- [Khue's Homelab](https://homelab.khuedoan.com/)
 - [Ephemeral PXE server inspired by Minimal First Machine in the DC](https://speakerdeck.com/amcguign/minimal-first-machine-in-the-dc)
 - [ArgoCD usage and monitoring configuration in locmai/humble](https://github.com/locmai/humble)
 - [README template](https://github.com/othneildrew/Best-README-Template)
@@ -299,4 +322,4 @@ If you feel you're missing from this list, please feel free to add yourself in a
 
 ## Stargazers over time
 
-[![Stargazers over time](https://starchart.cc/khuedoan/homelab.svg)](https://starchart.cc/khuedoan/homelab)
+[![Stargazers over time](https://starchart.cc/east4ming/homelab2.svg)](https://starchart.cc/east4ming/homelab2)

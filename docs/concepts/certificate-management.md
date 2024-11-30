@@ -1,53 +1,48 @@
 # Certificate management
 
-Certificates are generated and managed by [cert-manager](https://cert-manager.io) with [Let's Encrypt](https://letsencrypt.org).
-By default certificates are valid for 90 days and will be renewed after 60 days.
+Certificates are generated and managed by [Tailscale HTTPS](https://tailscale.com/kb/1153/enabling-https) with [Let's Encrypt](https://letsencrypt.org).
 
-cert-manager watches `Ingress` resources across the cluster. When you create an `Ingress` with a [supported annotation](https://cert-manager.io/docs/usage/ingress/#supported-annotations):
+- To enable HTTPS for Tailscale, you need a TLS certificate from a public Certificate Authority (CA), which can be obtained through the Tailscale admin console.
+- To provision TLS certificates for devices in your tailnet, you need to enable MagicDNS and HTTPS Certificates in the admin console, then run tailscale cert on each machine to obtain a certificate.
+- TLS certificates are issued based on your tailnet name and are recorded in the Certificate Transparency (CT) public ledger, which includes the fully qualified domain name of your devices.
+- Certificates provided by Let's Encrypt have a 90-day expiry and require periodic renewal, which can be done automatically or manually depending on the integration used.
+- You can disable HTTPS for your tailnet, but this will break all links and connections that relied on HTTPS, and certificates will not be revoked.
 
-```yaml hl_lines="5 13 14"
+## [ Exposing cluster workloads using a Kubernetes `Ingress`](https://tailscale.com/kb/1439/kubernetes-operator-cluster-ingress#exposing-cluster-workloads-using-a-kubernetes-ingress)
+
+You can expose cluster workloads either to your tailnet or the public internet over TLS using an`Ingress` resource. When using an `Ingress` resource, you also get the ability to identify callers using [HTTP headers](https://tailscale.com/kb/1312/serve#identity-headers) injected by the `Ingress` proxy.
+
+`Ingress` resources only support TLS, and are only exposed over HTTPS using a [MagicDNS](https://tailscale.com/kb/1081/magicdns) name and publicly trusted certificates from LetsEncrypt. You must [enable HTTPS](https://tailscale.com/kb/1153/enabling-https) and [MagicDNS](https://tailscale.com/kb/1081/magicdns) on your tailnet.
+
+Edit the `Ingress` resource you want to expose to use the `Ingress` class `tailscale`:
+
+1. Set `spec.ingressClassName` to `tailscale`.
+2. Set `tls.hosts` to the desired host name of the Tailscale node. Only the first label is used. See [custom machine names](https://tailscale.com/kb/1445/kubernetes-operator-customization#custom-machine-names) for more details.
+
+For example, to expose an `Ingress` resource `nginx` to your tailnet:
+
+```yaml hl_lines="11 14"
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: foo
 spec:
-  rules:
-    - host: foo.example.com
-      # ...
+  defaultBackend:
+    service:
+      name: foo
+      port:
+        number: 80
+  ingressClassName: tailscale
   tls:
     - hosts:
-        - foo.example.com
+        - foo
 ```
 
-```mermaid
-flowchart LR
-  User -- 6 --> Ingress
+Currently the only supported [`Ingress` path type](https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types) is `Prefix`. Requests for paths with other path types will be routed according to `Prefix` rules.
 
-  subgraph cluster[Homelab cluster]
-    Ingress --- Secret
-    Ingress -. 1 .-> Certificate
-    Certificate -. 5 .-> Secret
-    Certificate -- 2 --> CertificateRequest -- 3 --> Order -- 4 --> Challenge
-  end
+A Tailscale `Ingress` can **only** be accessed on port 443.
 
-  Order -.- ACMEServer[ACME server]
+A much more detailed diagram can be found in the official documentation under:
 
-  subgraph dnsprovider[DNS provider]
-    TXT
-  end
-
-  Challenge -- 4.a --> TXT
-  ACMEServer -.- Challenge
-  ACMEServer -. 4.b .-> TXT
-```
-
-1. cert-manager creates a corresponding `Certificate` resources
-2. Based on the `Certificate` resource, cert-manager creates a `CertificateRequest` resource to request a signed certificate from the configured `ClusterIssuer`
-3. The `CertificateRequest` will create an order with an ACME server (we use Let's Encrypt), which is represented by the `Order` resource
-4. Then cert-manager will perform a [DNS-01](https://cert-manager.io/docs/configuration/acme/dns01) `Challenge`:
-    1. Create a DNS TXT record (contains a computed key)
-    2. The ACME server retrieve this key via a DNS lookup and validate that we own the domain for the requested certificate
-7. cert-manager stores the certificate (typically `tls.crt` and `tls.key`) in the `Secret` specified in the `Ingress` configuration
-8. Now you can access the HTTPS website with a valid certificate
-
-A much more detailed diagram can be found in the official documentation under [certificate lifecycle](https://cert-manager.io/docs/concepts/certificate/#certificate-lifecycle).
+- [Enabling HTTPS · Tailscale Docs](https://tailscale.com/kb/1153/enabling-https)
+- [Kubernetes operator · Tailscale Docs](https://tailscale.com/kb/1439/kubernetes-operator-cluster-ingress)
