@@ -14,3 +14,5 @@ zot:
   pvc:
     create: true
     storage: 10Gi
+  strategy:
+    type: Recreate
