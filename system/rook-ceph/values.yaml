@@ -11,6 +11,7 @@ rook-ceph-cluster:
     mgr:
       count: 2
     dashboard:
+      enabled: true
       ssl: false
     logCollector:
       enabled: false
@@ -92,3 +93,12 @@ rook-ceph-cluster:
     enabled: true
     isDefault: false
   cephObjectStores: []
+  ingress:
+    dashboard:
+      host:
+        name: rook-ceph-dashboard.west-beta.ts.net
+        path: "/"
+      tls:
+        - hosts:
+            - rook-ceph-dashboard.west-beta.ts.net
+      ingressClassName: tailscale
