@@ -11,5 +11,5 @@ dependencies:
   # TODO switch to official chart when there is one
   # https://github.com/kubernetes-csi/external-snapshotter/issues/812
   - name: snapshot-controller
-    version: 2.2.2
+    version: 3.0.6
     repository: https://piraeus.io/helm-charts
