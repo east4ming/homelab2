@@ -27,3 +27,6 @@ woodpecker:
       tls:
         - hosts:
             - *host
+    createAgentSecret: false
+    extraSecretNamesForEnvFrom:
+      - woodpecker-secret
