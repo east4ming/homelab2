@@ -1,12 +1,26 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/app-template-3.2.0/charts/other/app-template/values.schema.json
 app-template:
+  defaultPodOptions:
+    enableServiceLinks: true
   controllers:
     main:
       type: statefulset
+      replicas: 1
       containers:
         main:
           image:
             repository: registry-mirror.e-whisper.com/kanidm/server
             tag: 1.3.3
+          probes:
+            liveness:
+              enabled: true
+            readiness:
+              enabled: true
+            startup:
+              enabled: true
+              spec:
+                failureThreshold: 30
+                periodSeconds: 5
       statefulset:
         volumeClaimTemplates:
           - name: data
@@ -29,12 +43,12 @@ app-template:
           origin = "https://auth.west-beta.ts.net"
   service:
     main:
+      controller: main
       ports:
-        http:
-          enabled: false
         https:
           port: 443
           protocol: HTTPS
+          primary: true
         ldap:
           port: 636
           protocol: TCP
@@ -50,7 +64,7 @@ app-template:
             - path: /
               pathType: Prefix
               service:
-                name: main
+                identifier: main
                 port: https
       tls:
         - hosts:

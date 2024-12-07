@@ -1,4 +1,7 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/app-template-3.2.0/charts/other/app-template/values.schema.json
 app-template:
+  defaultPodOptions:
+    enableServiceLinks: true
   controllers:
     main:
       containers:
@@ -6,8 +9,19 @@ app-template:
           image:
             repository: registry-mirror.e-whisper.com/excalidraw/excalidraw
             tag: latest
+          probes:
+            liveness:
+              enabled: true
+            readiness:
+              enabled: true
+            startup:
+              enabled: true
+              spec:
+                failureThreshold: 30
+                periodSeconds: 5
   service:
     main:
+      controller: main
       ports:
         http:
           port: 80
@@ -24,7 +38,7 @@ app-template:
             - path: /
               pathType: Prefix
               service:
-                name: main
+                identifier: main
                 port: http
       tls:
         - hosts:
