@@ -34,8 +34,6 @@ app-template:
     main:
       controller: main
       ports:
-        http:
-          enabled: false
         https:
           port: 443
           protocol: HTTPS
