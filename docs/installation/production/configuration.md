@@ -16,9 +16,10 @@ sudo apt install -y nix
 sudo usermod -aG nixbld $USER
 sudo usermod -aG nix-users $USER
 
-# Reboot(or re-login?) to apply the changes
-sudo systemctl restart nix-daemon.service
-sudo reboot now
+# Re-login to apply the changes
+# You can also run the following command to activate the changes to groups:
+newgrp nixbld      
+newgrp nix-user
 
 # nix develop
 nix develop --extra-experimental-features nix-command --extra-experimental-features flakes
