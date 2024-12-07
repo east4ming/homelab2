@@ -32,6 +32,7 @@ app-template:
           origin = "https://auth.west-beta.ts.net"
   service:
     main:
+      controller: main
       ports:
         http:
           enabled: false

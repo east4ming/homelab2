@@ -19,6 +19,7 @@ app-template:
             OLLAMA_BASE_URL: http://ollama:11434
   service:
     main:
+      controller: main
       ports:
         http:
           port: 11434

@@ -11,6 +11,7 @@ app-template:
             tag: 24.2.0-alpine
   service:
     main:
+      controller: main
       ports:
         http:
           port: 5006

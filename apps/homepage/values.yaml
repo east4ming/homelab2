@@ -11,6 +11,7 @@ app-template:
             tag: v0.9.13
   service:
     main:
+      controller: main
       ports:
         http:
           port: 3000

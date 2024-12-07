@@ -21,6 +21,7 @@ app-template:
             tag: 7.2.4
   service:
     main:
+      controller: main
       ports:
         http:
           port: 8000
