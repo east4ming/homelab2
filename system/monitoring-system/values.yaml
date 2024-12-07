@@ -20,6 +20,17 @@ kube-prometheus-stack:
             resources:
               requests:
                 storage: 30Gi
+    ingress:
+      enabled: true
+      ingressClassName: tailscale
+      hosts:
+        - prometheus.west-beta.ts.net
+      paths:
+        - /
+      pathType: Prefix
+      tls:
+        - hosts:
+            - prometheus.west-beta.ts.net
   alertmanager:
     alertmanagerSpec:
       containers:
@@ -39,6 +50,13 @@ kube-prometheus-stack:
         - name: config
           configMap:
             name: webhook-transformer
+      storage:
+        volumeClaimTemplate:
+          spec:
+            accessModes: ["ReadWriteOnce"]
+            resources:
+              requests:
+                storage: 10Mi
     config:
       route:
         receiver: ntfy
@@ -56,3 +74,14 @@ kube-prometheus-stack:
           webhook_configs:
             - url: http://localhost:8081
               send_resolved: true
+    ingress:
+      enabled: true
+      ingressClassName: tailscale
+      hosts:
+        - alertmanager.west-beta.ts.net
+      paths:
+        - /
+      pathType: Prefix
+      tls:
+        - hosts:
+            - alertmanager.west-beta.ts.net
