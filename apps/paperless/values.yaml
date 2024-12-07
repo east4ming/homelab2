@@ -15,6 +15,16 @@ app-template:
             PAPERLESS_URL: https://paperless.west-beta.ts.net
           envFrom:
             - secret: "{{ .Release.Name }}-secret"
+          probes:
+            liveness:
+              enabled: true
+            readiness:
+              enabled: true
+            startup:
+              enabled: true
+              spec:
+                failureThreshold: 30
+                periodSeconds: 5
         redis:
           image:
             repository: registry-mirror.e-whisper.com/library/redis

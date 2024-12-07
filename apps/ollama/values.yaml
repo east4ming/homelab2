@@ -9,6 +9,16 @@ app-template:
           image:
             repository: registry-mirror.e-whisper.com/ollama/ollama
             tag: 0.1.29
+          probes:
+            liveness:
+              enabled: true
+            readiness:
+              enabled: true
+            startup:
+              enabled: true
+              spec:
+                failureThreshold: 30
+                periodSeconds: 5
     ui:
       containers:
         main:
@@ -17,8 +27,19 @@ app-template:
             tag: latest
           env:
             OLLAMA_BASE_URL: http://ollama:11434
+          probes:
+            liveness:
+              enabled: true
+            readiness:
+              enabled: true
+            startup:
+              enabled: true
+              spec:
+                failureThreshold: 30
+                periodSeconds: 5
   service:
     main:
+      primary: true
       controller: main
       ports:
         http:

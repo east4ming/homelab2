@@ -11,6 +11,16 @@ app-template:
           image:
             repository: registry-mirror.e-whisper.com/jellyfin/jellyfin
             tag: 10.8.13
+          probes:
+            liveness:
+              enabled: true
+            readiness:
+              enabled: true
+            startup:
+              enabled: true
+              spec:
+                failureThreshold: 30
+                periodSeconds: 5
         transmission:
           image:
             repository: lscr.io/linuxserver/transmission
@@ -38,6 +48,7 @@ app-template:
         http:
           port: 8096
           protocol: HTTP
+          primary: true
         transmission:
           port: 9091
           protocol: HTTP
