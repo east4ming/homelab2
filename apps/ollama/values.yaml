@@ -40,7 +40,7 @@ app-template:
             - path: /
               pathType: Prefix
               service:
-                name: main
+                identifier: main
                 port: http
       tls:
         - hosts:
@@ -54,7 +54,7 @@ app-template:
             - path: /
               pathType: Prefix
               service:
-                name: ui
+                identifier: ui
                 port: http
       tls:
         - hosts:
