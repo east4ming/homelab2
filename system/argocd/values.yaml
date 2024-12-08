@@ -22,7 +22,12 @@ argo-cd:
   dex:
     enabled: false
   controller:
-    metrics: *metrics
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
+      rules:
+        enabled: true
   repoServer:
     metrics: *metrics
   redis:
