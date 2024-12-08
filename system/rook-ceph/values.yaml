@@ -1,6 +1,9 @@
 rook-ceph:
   monitoring:
     enabled: true
+  csi:
+    serviceMonitor:
+      enabled: true
 rook-ceph-cluster:
   monitoring:
     enabled: true
