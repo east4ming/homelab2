@@ -50,3 +50,5 @@ dex:
     tls:
       - hosts:
           - *host
+  serviceMonitor:
+    enabled: true

@@ -2,3 +2,7 @@ kured:
   configuration:
     annotateNodes: true
     timeZone: Asia/Shanghai
+  metrics:
+    create: true
+    labels:
+      release: kube-prometheus-stack

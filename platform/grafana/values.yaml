@@ -17,6 +17,8 @@ grafana:
     datasources:
       enabled: true
       searchNamespace: monitoring-system
+    plugins:
+      enabled: true
   envFromSecret: grafana-secrets
   grafana.ini:
     server:
@@ -36,3 +38,5 @@ grafana:
     enabled: true
     size: 1Gi
   useStatefulSet: true
+  serviceMonitor:
+    enabled: true

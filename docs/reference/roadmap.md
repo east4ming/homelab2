@@ -72,15 +72,30 @@
 #### Metrics
 
 - [x] PV
-- [ ] More Alerts
-- [ ] More ServiceMonitor
+- [x] More ServiceMonitor
   - [x] Cilium
-- [ ] More PrometheusRules
+  - [x] Volsync
+  - [x] K3s kubeControllerManager/kubeScheduler/kubeEtcd and disable kube-proxy(because not used)
+  - [x] ArgoCD
+  - [x] Kured
+  - [x] Loki/Promtail
+  - [x] Rook Ceph CSI
+  - [x] Gitea
+  - [x] Woodpecker(PodMonitor)
+  - [x] Dex
+  - [x] external-secrets
+  - [x] Grafana
+  - [x] Zot
+- [ ] More PrometheusRules/Alerts
+  - [x] ArgoCD
+  - [x] Loki/Promtail
+  - [x] Woodpecker
 
 #### Grafana
 
 - [ ] More Dashboards
   - [x] Cilium
+  - [x] Woodpecker
 - [x] PV
 
 ### Security
