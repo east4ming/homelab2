@@ -33,3 +33,13 @@ woodpecker:
     createAgentSecret: false
     extraSecretNamesForEnvFrom:
       - woodpecker-secret
+    prometheus:
+      podmonitor:
+        enabled: true
+      rules:
+        enabled: true
+    grafana:
+      dashboards:
+        enabled: true
+        labels:
+          grafana_dashboard: "1"
