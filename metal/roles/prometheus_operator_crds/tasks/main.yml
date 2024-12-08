@@ -1,0 +1,17 @@
+# Make sure the hubble grafana dashboards can install
+- name: Create the monitoring-system namespace
+  kubernetes.core.k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Namespace
+      metadata:
+        name: monitoring-system
+
+- name: Install prometheus-operator-crds
+  kubernetes.core.helm:
+    name: prometheus-operator-crds
+    chart_ref: prometheus-operator-crds
+    chart_repo_url: "{{ prometheus_community_repo_url }}"
+    chart_version: "{{ prometheus_operator_crds_version }}"
+    release_namespace: ""

@@ -6,6 +6,11 @@
     - k3s
     - automatic_upgrade
 
+- name: Install prometheus-operator-crds
+  hosts: localhost
+  roles:
+    - prometheus_operator_crds
+
 - name: Install Kubernetes addons
   hosts: localhost
   roles:
