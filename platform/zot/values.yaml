@@ -20,3 +20,18 @@ zot:
     enabled: true
     serviceMonitor:
       enabled: true
+  configFiles:
+    config.json: |-
+      {
+        "storage": { "rootDirectory": "/var/lib/registry" },
+        "http": { "address": "0.0.0.0", "port": "5000" },
+        "log": { "level": "info" },
+        "extensions": {
+          "metrics": {
+            "enable": true,
+            "prometheus": {
+                "path": "/metrics"
+            }
+          }
+        }
+      }
