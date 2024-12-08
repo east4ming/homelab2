@@ -43,3 +43,5 @@ woodpecker:
         enabled: true
         labels:
           grafana_dashboard: "1"
+    metrics:
+      enabled: true
