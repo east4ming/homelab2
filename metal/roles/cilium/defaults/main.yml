@@ -11,8 +11,6 @@ cilium_values:
     dashboards:
       enabled: true
       namespace: monitoring-system
-      annotations:
-        grafana_folder: "Cilium"
   kubeProxyReplacement: true
   l2announcements:
     enabled: true
@@ -27,6 +25,10 @@ cilium_values:
     enabled: true
     relay:
       enabled: true
+      prometheus:
+        enabled: true
+        serviceMonitor:
+          enabled: true
     ui:
       enabled: true
     # Hubble Grafana dashboard
@@ -45,8 +47,6 @@ cilium_values:
       dashboards:
         enabled: true
         namespace: monitoring-system
-        annotations:
-          grafana_folder: "Hubble"
       serviceMonitor:
         enabled: true
   # native routing mode
@@ -87,5 +87,8 @@ cilium_values:
   dashboards:
     enabled: true
     namespace: monitoring-system
-    annotations:
-      grafana_folder: "Cilium"
+  envoy:
+    prometheus:
+      enabled: true
+      serviceMonitor:
+        enabled: true
