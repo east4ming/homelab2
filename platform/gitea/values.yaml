@@ -48,3 +48,7 @@ gitea:
         ALLOWED_DOMAINS: ""
         ALLOW_LOCALNETWORKS: true
         BLOCKED_DOMAINS: ""
+    metrics:
+      enabled: true
+      serviceMonitor:
+        enabled: true
