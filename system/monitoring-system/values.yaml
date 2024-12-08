@@ -85,3 +85,33 @@ kube-prometheus-stack:
       tls:
         - hosts:
             - alertmanager.west-beta.ts.net
+  defaultRules:
+    rules:
+      kubeProxy: false
+  kubeApiServer:
+    enabled: true
+  kubeControllerManager:
+    enabled: true
+    # TODO: fix hardcoded IPs
+    endpoints:
+      - 192.168.3.226
+      - 192.168.3.174
+      - 192.168.3.158
+  kubeScheduler:
+    enabled: true
+    endpoints:
+      - 192.168.3.226
+      - 192.168.3.174
+      - 192.168.3.158
+  kubeProxy:
+    enabled: false
+  kubeEtcd:
+    enabled: true
+    endpoints:
+      - 192.168.3.226
+      - 192.168.3.174
+      - 192.168.3.158
+    service:
+      enabled: true
+      port: 2381
+      targetPort: 2381

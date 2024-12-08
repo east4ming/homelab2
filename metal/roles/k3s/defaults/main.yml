@@ -19,6 +19,12 @@ k3s_server_config:
   secrets-encryption: true
   embedded-registry: true
   etcd-expose-metrics: true
+  kube-controller-manager-arg:
+  - "address=0.0.0.0"
+  - "bind-address=0.0.0.0"
+  kube-scheduler-arg:
+  - "address=0.0.0.0"
+  - "bind-address=0.0.0.0"
   # TODO:
   # if truely needed
   advertise-address: "{{ control_plane_endpoint }}"
