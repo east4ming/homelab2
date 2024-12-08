@@ -16,3 +16,7 @@ zot:
     storage: 10Gi
   strategy:
     type: Recreate
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: true
