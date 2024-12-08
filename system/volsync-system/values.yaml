@@ -1,0 +1,4 @@
+volsync:
+  metrics:
+    # Disable auth checks when scraping metrics (allow anyone to scrape)
+    disableAuth: true
