@@ -65,6 +65,7 @@ app-template:
           theme: dark
           headerStyle: boxed
           hideVersion: true
+          fiveColumns: true
         widgets.yaml: |
           - search:
               provider: google
@@ -138,10 +139,35 @@ app-template:
                 href: https://speedtest.west-beta.ts.net
                 description: Internal network speed test
                 icon: openspeedtest.png
+            - Actualbudget:
+                href: https://budget.west-beta.ts.net
+                description: Personal budget
+                icon: https://images.opencollective.com/actual/166430d/logo/256.png
+            - OpenWebUI:
+                href: https://ai.west-beta.ts.net
+                description: Self-hosted AI interface
+                icon: https://docs.openwebui.com/img/logo.png
+          - Ops:
+            - Hubble:
+                href: https://hubble.west-beta.ts.net
+                description: Cilium network observer
+                icon: cilium.svg
+            - Rook:
+                href: https://rook-ceph-dashboard.west-beta.ts.net
+                description: Storage manager
+                icon: rook.svg
+            - Prometheus:
+                href: https://prometheus.west-beta.ts.net
+                description: Cloud native metrics
+                icon: prometheus.svg
+            - AlertManager:
+                href: https://alertmanager.west-beta.ts.net
+                description: Alert manager
+                icon: alertmanager.svg
         bookmarks.yaml: |
           - Homelab:
             - Documentation:
-              - href: https://homelab.west-beta.ts.net
+              - href: https://homelab2.e-whisper.com
                 icon: google-docs.svg
             - Public homelab repository:
               - href: https://github.com/east4ming/homelab2
