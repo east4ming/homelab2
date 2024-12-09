@@ -31,6 +31,14 @@ cilium_values:
           enabled: true
     ui:
       enabled: true
+      ingress:
+        enabled: true
+        className: "tailscale"
+        hosts:
+          - hubble.west-beta.ts.net
+        tls:
+          - hosts:
+              - hubble.west-beta.ts.net
     # Hubble Grafana dashboard
     metrics:
       enabled:
