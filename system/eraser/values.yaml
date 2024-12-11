@@ -1,0 +1,6 @@
+eraser:
+  runtimeConfig:
+    components:
+      scanner:
+        request:
+          cpu: 100m
