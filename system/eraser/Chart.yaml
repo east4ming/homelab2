@@ -1,0 +1,7 @@
+apiVersion: v2
+name: eraser
+version: 0.0.0
+dependencies:
+  - name: eraser
+    version: 1.5.0-beta.0
+    repository: https://eraser-dev.github.io/eraser/charts

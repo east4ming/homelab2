@@ -1,0 +1,10 @@
+eraser:
+  runtimeConfig:
+    manager:
+      runtime:
+        name: containerd
+        address: unix:///run/k3s/containerd/containerd.sock
+    components:
+      scanner:
+        request:
+          cpu: 100m
