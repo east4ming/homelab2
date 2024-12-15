@@ -4,6 +4,7 @@ rook-ceph:
   csi:
     serviceMonitor:
       enabled: true
+  enableDiscoveryDaemon: true
 rook-ceph-cluster:
   monitoring:
     enabled: true
@@ -13,6 +14,12 @@ rook-ceph-cluster:
       count: 3
     mgr:
       count: 2
+      modules:
+        - name: rook
+          enabled: true
+        # Rook mgr module crashes due to missing mgr.nfs
+        - name: nfs
+          enabled: false
     dashboard:
       enabled: true
       ssl: false
