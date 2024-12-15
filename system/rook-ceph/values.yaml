@@ -112,3 +112,5 @@ rook-ceph-cluster:
         - hosts:
             - rook-ceph-dashboard.west-beta.ts.net
       ingressClassName: tailscale
+  toolbox:
+    enabled: true
