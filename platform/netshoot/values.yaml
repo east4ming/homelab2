@@ -1,0 +1,18 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/app-template-3.2.0/charts/other/app-template/values.schema.json
+app-template:
+  defaultPodOptions:
+    enableServiceLinks: false
+    hostNetwork: true
+  controllers:
+    main:
+      containers:
+        main:
+          image:
+            repository: nicolaka/netshoot
+            tag: latest
+          command: ["tail", "-f", "/dev/null"]
+          securityContext:
+            allowPrivilegeEscalation: true
+            runAsUser: 0
+            capabilities:
+              add: ["NET_ADMIN", "SYS_ADMIN"]

@@ -1,0 +1,15 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/app-template-3.2.0/charts/other/app-template/values.schema.json
+app-template:
+  defaultPodOptions:
+    enableServiceLinks: false
+  controllers:
+    main:
+      containers:
+        main:
+          image:
+            repository: femtopixel/kompose
+            tag: latest
+          command:
+            - tail
+            - "-f"
+            - /dev/null
