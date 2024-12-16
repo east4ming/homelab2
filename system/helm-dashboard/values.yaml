@@ -6,7 +6,7 @@ helm-dashboard:
     type: Recreate
   ingress:
     enabled: true
-    className: "traefik"
+    className: "tailscale"
     hosts:
       - host: &host helm-dashboard.west-beta.ts.net
         paths:
