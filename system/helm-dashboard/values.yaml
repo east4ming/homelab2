@@ -1,0 +1,17 @@
+helm-dashboard:
+  dashboard:
+    persistence:
+      size: 1G
+  updateStrategy:
+    type: Recreate
+  ingress:
+    enabled: true
+    className: "traefik"
+    hosts:
+      - host: &host helm-dashboard.west-beta.ts.net
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - hosts:
+          - *host
