@@ -46,6 +46,9 @@ app-template:
       tls:
         - hosts:
             - *host
+  serviceAccount:
+    create: true
+    name: kube-explorer
   rbac:
     bindings:
       binding1:
