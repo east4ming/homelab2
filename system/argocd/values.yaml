@@ -58,7 +58,7 @@ argo-cd:
   redis:
     metrics: *metrics
     image:
-      repository: registry-mirror.e-whisper.com/redis
+      repository: docker.io/redis
   applicationSet:
     metrics: *metrics
   notifications:

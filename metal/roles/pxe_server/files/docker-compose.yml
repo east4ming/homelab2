@@ -1,6 +1,6 @@
 services:
   netbootxyz:
-    image: ghcr.e-whisper.com/netbootxyz/netbootxyz
+    image: ghcr.io/netbootxyz/netbootxyz
     container_name: netbootxyz
     volumes:
       - ./data/netbootxyz-config/root/etc/supervisor.conf:/etc/supervisor.conf

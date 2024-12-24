@@ -9,7 +9,7 @@ app-template:
       containers:
         main:
           image:
-            repository: registry-mirror.e-whisper.com/jellyfin/jellyfin
+            repository: docker.io/jellyfin/jellyfin
             tag: 10.8.13
           probes:
             liveness:
@@ -39,7 +39,7 @@ app-template:
             tag: 4.0.11
         jellyseerr:
           image:
-            repository: registry-mirror.e-whisper.com/fallenbagel/jellyseerr
+            repository: docker.io/fallenbagel/jellyseerr
             tag: 1.7.0
   service:
     main:

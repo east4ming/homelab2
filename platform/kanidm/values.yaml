@@ -9,7 +9,7 @@ app-template:
       containers:
         main:
           image:
-            repository: registry-mirror.e-whisper.com/kanidm/server
+            repository: docker.io/kanidm/server
             tag: 1.3.3
           probes:
             liveness:

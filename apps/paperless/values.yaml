@@ -27,7 +27,7 @@ app-template:
                 periodSeconds: 5
         redis:
           image:
-            repository: registry-mirror.e-whisper.com/library/redis
+            repository: docker.io/library/redis
             tag: 7.2.4
   service:
     main:
