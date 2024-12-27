@@ -28,7 +28,7 @@ app-template:
         redis:
           image:
             repository: docker.io/library/redis
-            tag: 7.2.4
+            tag: 7.4.1
   service:
     main:
       controller: main
