@@ -8,7 +8,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/gethomepage/homepage
-            tag: v0.10.4
+            tag: v0.10.7
           probes:
             liveness:
               enabled: true

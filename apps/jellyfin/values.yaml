@@ -40,7 +40,7 @@ app-template:
         jellyseerr:
           image:
             repository: docker.io/fallenbagel/jellyseerr
-            tag: 2.1.0
+            tag: 2.2.3
   service:
     main:
       controller: main
