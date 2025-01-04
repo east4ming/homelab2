@@ -8,3 +8,4 @@ book/
 *kubeconfig.yaml
 Chart.lock
 .vscode/settings.json
+metal/roles/k3s/files/secret-k3s-etcd-snapshot-s3-config.yaml
