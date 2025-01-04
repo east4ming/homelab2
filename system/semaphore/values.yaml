@@ -1,0 +1,120 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/app-template-3.6.0/charts/other/app-template/values.schema.json
+app-template:
+  defaultPodOptions:
+    enableServiceLinks: true
+  controllers:
+    semaphore:
+      strategy: RollingUpdate
+      containers:
+        semaphore:
+          image:
+            repository: semaphoreui/semaphore
+            tag: latest
+          probes:
+            liveness:
+              enabled: true
+            readiness:
+              enabled: true
+            startup:
+              enabled: true
+              spec:
+                failureThreshold: 30
+                periodSeconds: 5
+          env:
+            - name: SEMAPHORE_PORT
+              value: ":3000"
+            - name: SEMAPHORE_ACCESS_KEY_ENCRYPTION
+              value: gs72mPntFATGJs9qK0pQ0rKtfidlexiMjYCH9gWKhTU=
+            - name: SEMAPHORE_ADMIN
+              value: admin
+            - name: SEMAPHORE_DB
+              value: semaphore
+            - name: SEMAPHORE_DB_DIALECT
+              value: mysql
+            - name: SEMAPHORE_DB_HOST
+              value: semaphore-mysql
+            - name: SEMAPHORE_DB_PASS
+              value: semaphore
+            - name: SEMAPHORE_DB_PORT
+              value: "3306"
+            - name: SEMAPHORE_DB_USER
+              value: semaphore
+            - name: SEMAPHORE_PLAYBOOK_PATH
+              value: /tmp/semaphore/
+            - name: TZ
+              value: Asia/Shanghai
+    mysql:
+      strategy: Recreate
+      containers:
+        mysql:
+          image:
+            repository: mysql
+            tag: 8.0
+          env:
+            - name: MYSQL_DATABASE
+              value: semaphore
+            - name: MYSQL_PASSWORD
+              value: semaphore
+            - name: MYSQL_RANDOM_ROOT_PASSWORD
+              value: "yes"
+            - name: MYSQL_USER
+              value: semaphore
+  service:
+    semaphore:
+      controller: semaphore
+      ports:
+        http:
+          port: 3000
+          protocol: TCP
+    mysql:
+      controller: mysql
+      ports:
+        mysql:
+          port: 3306
+          protocol: TCP
+  ingress:
+    semaphore:
+      enabled: true
+      className: tailscale
+      hosts:
+        - host: &host semaphore.west-beta.ts.net
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: semaphore
+                port: http
+      tls:
+        - hosts:
+            - *host
+  persistence:
+    data:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 1Gi
+      retain: false
+      advancedMounts:
+        mysql:
+          mysql:
+            - path: /var/lib/mysql
+    config:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 1Mi
+      retain: false
+      advancedMounts:
+        semaphore:
+          semaphore:
+            - path: /etc/semaphore
+    playbook:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 10Gi
+      retain: false
+      advancedMounts:
+        semaphore:
+          semaphore:
+            - path: /tmp/semaphore
