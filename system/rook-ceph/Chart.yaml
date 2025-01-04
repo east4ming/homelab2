@@ -3,10 +3,10 @@ name: rook-ceph
 version: 0.0.0
 dependencies:
   - name: rook-ceph
-    version: v1.16.1
+    version: v1.16.0
     repository: https://charts.rook.io/release
   - name: rook-ceph-cluster
-    version: v1.16.1
+    version: v1.16.0
     repository: https://charts.rook.io/release
   # TODO switch to official chart when there is one
   # https://github.com/kubernetes-csi/external-snapshotter/issues/812
