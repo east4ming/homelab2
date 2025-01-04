@@ -28,9 +28,6 @@
       matchPackageNames: [
         '*',
       ],
-      excludeManagers: [
-        'gomod',
-      ],
     },
   ],
 }
