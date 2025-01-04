@@ -14,6 +14,9 @@
       matchPackageNames: [
         '*',
       ],
+      excludeManagers: [
+        'gomod',
+      ],
     },
   ],
 }
