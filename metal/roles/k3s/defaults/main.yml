@@ -26,5 +26,7 @@ k3s_server_config:
   # TODO:
   # if truely needed
   advertise-address: "{{ control_plane_endpoint }}"
+  etcd-s3: "{{ etcd_s3 | default(false) }}"
+  etcd-s3-config-secret: k3s-etcd-snapshot-s3-config
 k3s_agent_config:
   node-external-ip: "{{ tailscale_ipv4 }}"
