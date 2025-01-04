@@ -98,16 +98,6 @@ app-template:
         mysql:
           mysql:
             - path: /var/lib/mysql
-    config:
-      enabled: true
-      type: persistentVolumeClaim
-      accessMode: ReadWriteOnce
-      size: 1Mi
-      retain: false
-      advancedMounts:
-        semaphore:
-          semaphore:
-            - path: /etc/semaphore
     playbook:
       enabled: true
       type: persistentVolumeClaim
