@@ -43,6 +43,17 @@ app-template:
               value: /tmp/semaphore/
             - name: TZ
               value: Asia/Shanghai
+      initContainers:
+        chmod-chown-dir:
+          image:
+            repository: busybox
+            tag: latest
+          command:
+            [
+              "sh",
+              "-c",
+              "chown 1001:0 /tmp/semaphore/ && chmod -Rv ug+rwx /tmp/semaphore/ && chown 1001:0 /etc/semaphore && chmod -Rv ug+rwx /etc/semaphore",
+            ]
     mysql:
       strategy: Recreate
       containers:
@@ -106,5 +117,19 @@ app-template:
       retain: false
       advancedMounts:
         semaphore:
+          chmod-chown-dir:
+            - path: /tmp/semaphore
           semaphore:
             - path: /tmp/semaphore
+    config:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 1Mi
+      retain: false
+      advancedMounts:
+        semaphore:
+          chmod-chown-dir:
+            - path: /etc/semaphore
+          semaphore:
+            - path: /etc/semaphore
