@@ -4,7 +4,7 @@ app-template:
     enableServiceLinks: true
   controllers:
     semaphore:
-      strategy: RollingUpdate
+      strategy: Recreate
       containers:
         semaphore:
           image:
@@ -21,6 +21,8 @@ app-template:
                 failureThreshold: 30
                 periodSeconds: 5
           env:
+            - name: TZ
+              value: Asia/Shanghai
             - name: SEMAPHORE_PORT
               value: ":3000"
             - name: SEMAPHORE_ACCESS_KEY_ENCRYPTION
@@ -41,8 +43,10 @@ app-template:
               value: semaphore
             - name: SEMAPHORE_PLAYBOOK_PATH
               value: /tmp/semaphore/
-            - name: TZ
-              value: Asia/Shanghai
+            - name: SEMAPHORE_EMAIL_ALERT
+              value: "true"
+            - name: SEMAPHORE_WEB_ROOT
+              value: https://semaphore.west-beta.ts.net
       initContainers:
         chmod-chown-dir:
           image:
@@ -52,7 +56,7 @@ app-template:
             [
               "sh",
               "-c",
-              "chown 1001:0 /tmp/semaphore/ && chmod -Rv ug+rwx /tmp/semaphore/ && chown 1001:0 /etc/semaphore && chmod -Rv ug+rwx /etc/semaphore || true",
+              "chown 1001:0 /tmp/semaphore/ && chmod -v ug+rwx /tmp/semaphore/ && chown 1001:0 /etc/semaphore && chmod -v ug+rwx /etc/semaphore || true",
             ]
     mysql:
       strategy: Recreate
