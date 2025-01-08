@@ -52,7 +52,7 @@ app-template:
             [
               "sh",
               "-c",
-              "chown 1001:0 /tmp/semaphore/ && chmod -Rv ug+rwx /tmp/semaphore/ && chown 1001:0 /etc/semaphore && chmod -Rv ug+rwx /etc/semaphore",
+              "chown 1001:0 /tmp/semaphore/ && chmod -Rv ug+rwx /tmp/semaphore/ && chown 1001:0 /etc/semaphore && chmod -Rv ug+rwx /etc/semaphore || true",
             ]
     mysql:
       strategy: Recreate
