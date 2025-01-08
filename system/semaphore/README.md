@@ -16,7 +16,27 @@ User admin <cuikaidong@foxmail.com> changed!
 
 ## TODO:
 
-- [ ] Enable `email_alert`
+- [x] Enable `email_alert`
+
+## Enable `email_alert`
+
+> The reason for this is to avoid leakage of smtp related accounts.
+
+After enable config pvc, you can edit the `config.yml` to enable `email_alert` and other configs.
+
+Edit the `/etc/semaphore/config.yml`, append the following configs.
+
+```json
+{
+  ...,
+  "email_sender": "sender@example.com",
+  "email_host": "smtp.example.com",
+  "email_port": "465",
+  "email_secure": true,
+  "email_username": "sender@example.com",
+  "email_password": "changeit"
+}
+```
 
 ## 📚References
 
