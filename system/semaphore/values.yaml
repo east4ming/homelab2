@@ -2,6 +2,7 @@
 app-template:
   defaultPodOptions:
     enableServiceLinks: true
+    hostNetwork: true
   controllers:
     semaphore:
       strategy: Recreate
