@@ -72,10 +72,6 @@ app-template:
               target: _blank
         services.yaml: |
           - Popular:
-            - Matrix:
-                href: https://chat.west-beta.ts.net
-                description: Chat client
-                icon: element.svg
             - Jellyfin:
                 href: https://jellyfin.west-beta.ts.net
                 description: Media system (movies, music, etc.)
@@ -139,10 +135,6 @@ app-template:
                 href: https://speedtest.west-beta.ts.net
                 description: Internal network speed test
                 icon: openspeedtest.png
-            - Actualbudget:
-                href: https://budget.west-beta.ts.net
-                description: Personal budget
-                icon: https://images.opencollective.com/actual/166430d/logo/256.png
             - OpenWebUI:
                 href: https://ai.west-beta.ts.net
                 description: Self-hosted AI interface
@@ -164,6 +156,17 @@ app-template:
                 href: https://alertmanager.west-beta.ts.net
                 description: Alert manager
                 icon: alertmanager.svg
+            - KubeExplorer:
+                href: https://kube-explorer.west-beta.ts.net
+                description: CNRancher K8s Dashboard
+                icon: rancher.svg
+            - HelmDashboard
+                href: https://helm-dashboard.west-beta.ts.net
+                description: Helm dashboard
+                icon: helm.svg
+            - Semaphore
+                href: https://semaphore.west-beta.ts.net
+                description: UI for Ansible/Terraform
         bookmarks.yaml: |
           - Homelab:
             - Documentation:
