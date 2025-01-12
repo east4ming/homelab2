@@ -160,13 +160,14 @@ app-template:
                 href: https://kube-explorer.west-beta.ts.net
                 description: CNRancher K8s Dashboard
                 icon: rancher.svg
-            - HelmDashboard
+            - HelmDashboard:
                 href: https://helm-dashboard.west-beta.ts.net
                 description: Helm dashboard
                 icon: helm.svg
-            - Semaphore
+            - Semaphore:
                 href: https://semaphore.west-beta.ts.net
                 description: UI for Ansible/Terraform
+                icon: semaphore.svg
         bookmarks.yaml: |
           - Homelab:
             - Documentation:
