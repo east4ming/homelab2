@@ -66,6 +66,14 @@ kube-prometheus-stack:
         group_interval: 5m
         repeat_interval: 12h
         routes:
+          - receiver: "robusta"
+            group_by: ["..."]
+            group_wait: 1s
+            group_interval: 1s
+            matchers:
+              - severity =~ ".*"
+            repeat_interval: 4h
+            continue: true
           - receiver: ntfy
             matchers:
               - alertname = "Watchdog"
@@ -73,6 +81,10 @@ kube-prometheus-stack:
         - name: ntfy
           webhook_configs:
             - url: http://localhost:8081
+              send_resolved: true
+        - name: "robusta"
+          webhook_configs:
+            - url: "http://robusta-runner.default.svc.cluster.local/api/alerts"
               send_resolved: true
     ingress:
       enabled: true
