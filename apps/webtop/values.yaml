@@ -29,6 +29,12 @@ app-template:
               value: zh_CN.UTF-8
           securityContext:
             privileged: true
+          resources:
+            requests:
+              cpu: 1036m
+              memory: 4666Mi
+            limits:
+              memory: 4666Mi
   service:
     webtop:
       controller: webtop
