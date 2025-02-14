@@ -29,5 +29,10 @@
         '*',
       ],
     },
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["mysql"],
+      "enabled": false
+    },
   ],
 }
