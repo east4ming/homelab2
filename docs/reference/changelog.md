@@ -1,5 +1,10 @@
 # Changelog
 
+## v20250216
+
+- Remove Loki-stack, as Loki-stack is no longer actively maintained.
+- Use Grafana Cloud -> grafana/k8s-monitoring to monitor logs and Profiles. See [kubernetes-monitoring/configuration](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/configuration/) for more details. Since this involves Grafana Cloud secrets, install directly using helm-dashboard; the helm chart's values.yaml is not maintained in this repo.
+
 ## v0.0.8
 
 Notable changes:
