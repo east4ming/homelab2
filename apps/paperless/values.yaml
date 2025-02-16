@@ -8,7 +8,7 @@ app-template:
         main:
           image:
             repository: ghcr.io/paperless-ngx/paperless-ngx
-            tag: 2.13.5
+            tag: 2.14.7
           env:
             PAPERLESS_PORT: 8000
             PAPERLESS_ADMIN_USER: admin
@@ -28,7 +28,7 @@ app-template:
         redis:
           image:
             repository: docker.io/library/redis
-            tag: 7.4.1
+            tag: 7.4.2
   service:
     main:
       controller: main

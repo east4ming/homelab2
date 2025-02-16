@@ -10,7 +10,7 @@ app-template:
         main:
           image:
             repository: docker.io/jellyfin/jellyfin
-            tag: 10.10.3
+            tag: 10.10.5
           probes:
             liveness:
               enabled: true
@@ -28,19 +28,19 @@ app-template:
         prowlarr:
           image:
             repository: lscr.io/linuxserver/prowlarr
-            tag: 1.28.2
+            tag: 1.30.2
         radarr:
           image:
             repository: lscr.io/linuxserver/radarr
-            tag: 5.16.3
+            tag: 5.18.4
         sonarr:
           image:
             repository: lscr.io/linuxserver/sonarr
-            tag: 4.0.11
+            tag: 4.0.13
         jellyseerr:
           image:
             repository: docker.io/fallenbagel/jellyseerr
-            tag: 2.2.3
+            tag: 2.3.0
   service:
     main:
       controller: main
