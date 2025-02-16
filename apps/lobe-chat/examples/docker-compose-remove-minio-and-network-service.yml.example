@@ -1,0 +1,76 @@
+name: lobe-chat-database
+services:
+  postgresql:
+    image: pgvector/pgvector:pg16
+    container_name: lobe-postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - './data:/var/lib/postgresql/data'
+    environment:
+      - 'POSTGRES_DB=lobechat'
+      - 'POSTGRES_PASSWORD=**********'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: always
+    networks:
+      - lobe-network
+
+  casdoor:
+    image: casbin/casdoor
+    container_name: lobe-casdoor
+    entrypoint: /bin/sh -c './server --createDatabase=true'
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    environment:
+      RUNNING_IN_DOCKER: 'true'
+      driverName: 'postgres'
+      dataSourceName: 'user=postgres password=********** host=postgresql port=5432 sslmode=disable dbname=casdoor'
+      origin: 'http://localhost:8000'
+      runmode: 'dev'
+    volumes:
+      - ./init_data.json:/init_data.json
+    ports:
+      - '8000:8000' # Casdoor
+
+  lobe:
+    image: lobehub/lobe-chat-database
+    container_name: lobe-chat
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      casdoor:
+        condition: service_started
+
+    environment:
+      - 'APP_URL=http://localhost:3210'
+      - 'NEXT_AUTH_SSO_PROVIDERS=casdoor'
+      - 'KEY_VAULTS_SECRET=**********'
+      - 'NEXT_AUTH_SECRET=**********'
+      - 'AUTH_URL=http://localhost:3210/api/auth'
+      - 'AUTH_CASDOOR_ISSUER=http://localhost:8000'
+      - 'DATABASE_URL=postgresql://postgres:**********@postgresql:5432/lobechat'
+      - 'S3_ENDPOINT=http://localhost:9000'
+      - 'S3_BUCKET=lobe'
+      - 'S3_PUBLIC_DOMAIN=http://localhost:9000'
+      - 'S3_ENABLE_PATH_STYLE=1'
+      - 'S3_ACCESS_KEY_ID=**********'
+      - 'S3_SECRET_ACCESS_KEY=**********'
+      - 'LLM_VISION_IMAGE_USE_BASE64=1'
+      - 'AUTH_CASDOOR_ID=**********'
+      - 'AUTH_CASDOOR_SECRET=**********'
+    restart: always
+    ports:
+      - '3210:3210' # LobeChat
+
+volumes:
+  data:
+    driver: local
+
+networks:
+  lobe-network:
+    driver: bridge

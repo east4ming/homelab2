@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    tailscale.com/tailnet-fqdn: lobe.west-beta.ts.net
+  name: egress-lobe
+spec:
+  externalName: unused
+  type: ExternalName

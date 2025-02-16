@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    tailscale.com/tailnet-fqdn: minio.west-beta.ts.net
+  name: egress-minio
+spec:
+  externalName: unused
+  type: ExternalName
