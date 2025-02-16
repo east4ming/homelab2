@@ -31,7 +31,10 @@
     },
     {
       "matchDatasources": ["docker"],
-      "matchPackageNames": ["mysql"],
+      "matchPackageNames": [
+        "mysql",
+        "docker.io/kanidm/server",
+      ],
       "enabled": false
     },
   ],
