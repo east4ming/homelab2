@@ -1,0 +1,17 @@
+minio:
+  deploymentUpdate:
+    type: Recreate
+  ingress:
+    annotations:
+      tailscale.com/experimental-forward-cluster-traffic-via-ingress: "true"
+    enabled: true
+    hosts:
+      - minio.west-beta.ts.net
+    ingressClassName: tailscale
+    tls:
+      - hosts:
+          - minio.west-beta.ts.net
+  mode: standalone
+  persistence:
+    size: 100Gi
+  replicas: 1
