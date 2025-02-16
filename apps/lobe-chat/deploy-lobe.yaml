@@ -1,0 +1,107 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose -f compose.yaml convert
+    kompose.version: 1.34.0 (HEAD)
+  labels:
+    io.kompose.service: lobe
+  name: lobe
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: lobe
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose -f compose.yaml convert
+        kompose.version: 1.34.0 (HEAD)
+      labels:
+        io.kompose.service: lobe
+    spec:
+      containers:
+        - env:
+            - name: APP_URL
+              value: https://lobe.west-beta.ts.net
+            - name: AUTH_CASDOOR_ID
+              valueFrom:
+                secretKeyRef:
+                  name: lobe-auth
+                  key: AUTH_CASDOOR_ID
+            - name: AUTH_CASDOOR_ISSUER
+              value: https://casdoor.west-beta.ts.net
+            - name: AUTH_CASDOOR_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: lobe-auth
+                  key: AUTH_CASDOOR_SECRET
+            - name: NEXTAUTH_URL
+              value: https://lobe.west-beta.ts.net/api/auth
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: lobe-db-secrets
+                  key: LOBE_DATABASE_URL
+            - name: KEY_VAULTS_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: lobe-auth
+                  key: KEY_VAULTS_SECRET
+            - name: LLM_VISION_IMAGE_USE_BASE64
+              value: "1"
+            - name: NEXT_AUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: lobe-auth
+                  key: NEXT_AUTH_SECRET
+            - name: NEXT_AUTH_SSO_PROVIDERS
+              value: casdoor
+            - name: S3_BUCKET
+              value: lobe
+            - name: S3_ENABLE_PATH_STYLE
+              value: "1"
+            - name: S3_ENDPOINT
+              value: https://minio.west-beta.ts.net
+            - name: S3_PUBLIC_DOMAIN
+              value: https://minio.west-beta.ts.net
+            - name: S3_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: lobe-s3-secrets
+                  key: S3_ACCESS_KEY_ID
+            - name: S3_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: lobe-s3-secrets
+                  key: S3_SECRET_ACCESS_KEY
+            - name: DEEPSEEK_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: lobe-ai-api-keys
+                  key: DEEPSEEK_API_KEY
+            - name: ENABLED_OPENAI
+              value: "0"
+            - name: OLLAMA_PROXY_URL
+              value: http://ollama.ollama:11434
+            - name: ZHIPU_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: lobe-ai-api-keys
+                  key: ZHIPU_API_KEY
+            - name: DEFAULT_FILES_CONFIG
+              value: embedding_model=zhipu/embedding-3
+          image: lobehub/lobe-chat-database:1.56.4
+          imagePullPolicy: IfNotPresent
+          name: lobe-chat
+          ports:
+            - containerPort: 3210
+              name: 3210tcp
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 10m
+              memory: 4981Mi
+            limits:
+              memory: 4981Mi
+      restartPolicy: Always
