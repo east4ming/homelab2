@@ -1,5 +1,81 @@
 # Changelog
 
+## v20250217
+
+- 进入 homelab2 目录后自动运行: `nix develop --extra-experimental-features nix-command --extra-experimental-features flakes`
+
+### bash 实现
+
+通过 `bash` 的重载 `cd` 函数来实现。
+
+1. **创建一个脚本文件**：
+   创建一个脚本文件（例如 `run_nix_develop.sh`），内容如下：
+
+   ```sh
+   #!/bin/sh
+   nix develop --extra-experimental-features nix-command --extra-experimental-features flakes
+   ```
+
+   确保脚本具有可执行权限：
+
+   ```bash
+   chmod +x run_nix_develop.sh
+   ```
+
+2. **修改 `~/.bashrc` 文件**：
+   在 `~/.bashrc` 文件中添加以下内容，以便在每次进入目录时检查是否在特定目录中，并执行相应的脚本。
+
+   ```sh
+   # ~/.bashrc
+   function cd() {
+       builtin cd "$@" || return
+       if [ "$(pwd)" == "~/projects/homelab2" ]; then
+           ~/projects/homelab2/run_nix_develop.sh
+       fi
+   }
+   ```
+
+   这个脚本会重写 `cd` 命令，使其在每次切换目录后检查当前目录是否为 `~/projects/homelab2`，如果是，则执行 `run_nix_develop.sh` 脚本。
+
+3. **重新加载 `~/.bashrc` 文件**：
+   重新加载 `~/.bashrc` 文件以使更改生效：
+
+   ```bash
+   source ~/.bashrc
+   ```
+
+### zsh 实现
+
+在 `zsh` 中设置进入当前目录后自动执行 `run_nix_develop.sh` 脚本，可以通过以下方法实现：
+
+**使用 `precmd` 钩子**
+
+`precmd` 钩子会在每次显示命令提示符前触发，但需结合目录检查逻辑。
+
+1. **修改 `~/.zshrc` 文件**：
+
+   ```zsh
+   # ~/.zshrc
+   autoload -U add-zsh-hook
+
+   # 定义钩子函数
+   run_on_prompt() {
+       if [[ "$(pwd)" == "~/projects/homelab2" ]]; then
+           ~/projects/homelab2/run_nix_develop.sh
+       fi
+   }
+
+   # 将函数绑定到 precmd 钩子
+   add-zsh-hook precmd run_on_prompt
+   ```
+
+2. **重新加载 `~/.zshrc` 文件**：
+   重新加载 `~/.zshrc` 文件以使更改生效：
+
+   ```bash
+   source ~/.zshrc
+   ```
+
 ## v20250216
 
 - Remove Loki-stack, as Loki-stack is no longer actively maintained.
