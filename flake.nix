@@ -17,6 +17,7 @@
           packages = [
             ansible
             ansible-lint
+            argocd
             bmake
             diffutils
             docker
