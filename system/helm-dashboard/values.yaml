@@ -15,3 +15,6 @@ helm-dashboard:
     tls:
       - hosts:
           - *host
+  serviceAccount:
+    create: false
+    name: "helm-dashboard-admin"
