@@ -8,7 +8,7 @@ app-template:
         main:
           image:
             repository: lscr.io/linuxserver/pairdrop
-            tag: 1.10.11
+            tag: 1.11.0
           probes:
             liveness:
               enabled: true
