@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ttrss
+  namespace: rsshub
+spec:
+  ingressClassName: tailscale
+  rules:
+    - host: ttrss.west-beta.ts.net
+      http:
+        paths:
+          - backend:
+              service:
+                name: service-rss
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
+  tls:
+    - hosts:
+        - ttrss.west-beta.ts.net
