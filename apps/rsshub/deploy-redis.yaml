@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   annotations:
-    deployment.kubernetes.io/revision: "1"
     kompose.cmd: kompose convert -f docker-compose.yml
     kompose.version: 1.26.1 (a9d05d509)
   labels:
