@@ -43,7 +43,7 @@ spec:
             - name: PUID
               value: "1000"
             - name: SELF_URL_PATH
-              value: https://ttrss.ewhisper.cn/
+              value: https://ttrss.west-beta.ts.net/
           image: wangqiru/ttrss:latest
           imagePullPolicy: Always
           name: ttrss
