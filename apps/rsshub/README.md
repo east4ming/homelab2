@@ -93,7 +93,13 @@ Log in to the TTRss domain: `ttrss.west-beta.ts.net`, go to: **Preferences** -> 
 
 1. Backup Postgres data
 
-### 10. Clean up the original cluster after running in parallel for a period
+### 10. Managed by ArgoCD
+
+Since ArgoCD does not monitor YAML files in subdirectories, all YAML files need to be placed in a single directory.
+
+Use the script `move_and_rename.sh` to perform the adjustment. After adjusting, modify the `.gitignore` file and delete any empty directories that are no longer needed.
+
+### 11. Clean up the original cluster after running in parallel for a period
 
 1. Node recycling
 2. DNS record cleanup

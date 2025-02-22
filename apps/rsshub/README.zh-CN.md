@@ -93,7 +93,13 @@ cat export.sql | psql -U postgres
 
 1. 备份 Postgres 数据
 
-### 10. 并行一段时间后清理原集群
+### 10. 纳入 ArgoCD 管理
+
+因为 ArgoCD 不监控子目录的 yaml 文件, 所以需要将所有 yaml 文件都放在一个目录中.
+
+使用脚本 `move_and_rename.sh` 执行调整, 调整后修改 `.gitignore` 文件并删除不再需要的空目录.
+
+### 11. 并行一段时间后清理原集群
 
 1. node 回收
 2. DNS 记录清理
