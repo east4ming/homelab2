@@ -84,6 +84,10 @@ app-template:
                 href: https://paperless.west-beta.ts.net
                 description: Document management system
                 icon: paperless.svg
+            - TTRss:
+                href: https://ttrss.west-beta.ts.net
+                description: RSS reader
+                icon: tinytinyrss.png
           - Management:
             - Transmission:
                 href: https://transmission.west-beta.ts.net
