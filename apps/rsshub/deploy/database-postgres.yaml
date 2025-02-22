@@ -45,6 +45,17 @@ spec:
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
               name: database-postgres-claim0
+      initContainers:
+        - command:
+            - rm
+            - -rf
+            - /var/lib/postgresql/data/lost+found
+          image: busybox
+          imagePullPolicy: IfNotPresent
+          name: chown-data
+          volumeMounts:
+            - mountPath: /var/lib/postgresql/data
+              name: database-postgres-claim0
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
