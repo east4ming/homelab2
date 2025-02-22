@@ -58,6 +58,18 @@ spec:
           volumeMounts:
             - mountPath: /var/www/feed-icons/
               name: feed-icons
+      initContainers:
+        - command:
+            - chmod
+            - -R
+            - "777"
+            - /var/www/feed-icons/
+          image: busybox
+          imagePullPolicy: IfNotPresent
+          name: chmod-data
+          volumeMounts:
+            - mountPath: /var/www/feed-icons/
+              name: feed-icons
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
