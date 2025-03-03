@@ -20,3 +20,4 @@ minio:
   metrics:
     serviceMonitor:
       enabled: true
+  users: []
