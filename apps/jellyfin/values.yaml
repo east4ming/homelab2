@@ -9,8 +9,8 @@ app-template:
       containers:
         main:
           image:
-            repository: docker.io/jellyfin/jellyfin
-            tag: 10.10.6
+            repository: nyanmisaka/jellyfin
+            tag: latest
           probes:
             liveness:
               enabled: true
