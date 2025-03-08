@@ -15,3 +15,9 @@ minio:
   persistence:
     size: 100Gi
   replicas: 1
+  ignoreChartChecksums: true
+  existingSecret: "minio-root"
+  metrics:
+    serviceMonitor:
+      enabled: true
+  users: []
