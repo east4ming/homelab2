@@ -117,3 +117,12 @@ app-template:
           jellyseerr:
             - path: /app/config
               subPath: jellyseerr/config
+    dri-devices:
+      enabled: true
+      type: hostPath
+      hostPath: /dev/dri
+      advancedMounts:
+        main:
+          main:
+            - path: /dev/dri
+              readOnly: false
