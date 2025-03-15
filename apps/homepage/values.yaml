@@ -171,7 +171,7 @@ homepage:
             memory: true
             showLabel: true
       - type: apcups
-        url: tcp://your.acpupsd.host:3493
+        url: tcp://192.168.3.216:3493
     kubernetes:
       mode: cluster
     settings:
