@@ -8,7 +8,7 @@ homepage:
   ingress:
     main:
       enabled: true
-      className: tailscale
+      ingressClassName: tailscale
       hosts:
         - host: &host home.west-beta.ts.net
           paths:
