@@ -14,9 +14,6 @@ homepage:
           paths:
             - path: /
               pathType: Prefix
-              service:
-                identifier: main
-                port: http
       tls:
         - hosts:
             - *host
