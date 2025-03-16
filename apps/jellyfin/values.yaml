@@ -130,7 +130,6 @@ app-template:
       enabled: true
       type: persistentVolumeClaim
       existingClaim: pvc-nfs-anothervideos
-      retain: true
       advancedMounts:
         main:
           main:
@@ -140,7 +139,6 @@ app-template:
       enabled: true
       type: persistentVolumeClaim
       existingClaim: pvc-nfs-thirdvideos
-      retain: true
       advancedMounts:
         main:
           main:
