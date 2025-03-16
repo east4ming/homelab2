@@ -126,3 +126,23 @@ app-template:
           main:
             - path: /dev/dri
               readOnly: false
+    anothervideos:
+      enabled: true
+      type: persistentVolumeClaim
+      existingClaim: pvc-nfs-anothervideos
+      retain: true
+      advancedMounts:
+        main:
+          main:
+            - path: /media/AnotherVideos
+              readOnly: false
+    thirdvideos:
+      enabled: true
+      type: persistentVolumeClaim
+      existingClaim: pvc-nfs-thirdvideos
+      retain: true
+      advancedMounts:
+        main:
+          main:
+            - path: /media/ThirdVideos
+              readOnly: false

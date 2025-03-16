@@ -1,0 +1,7 @@
+apiVersion: v2
+name: csi-driver-nfs
+version: 0.0.0
+dependencies:
+  - name: csi-driver-nfs
+    version: v4.10.0
+    repository: https://raw.githubusercontent.com/kubernetes-csi/csi-driver-nfs/master/charts
