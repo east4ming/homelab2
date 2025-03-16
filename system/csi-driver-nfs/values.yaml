@@ -1,0 +1,4 @@
+csi-driver-nfs:
+  controller:
+    enableSnapshotter: false
+    defaultOnDeletePolicy: retain
