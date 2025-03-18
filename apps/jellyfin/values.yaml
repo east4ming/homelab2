@@ -36,11 +36,11 @@ app-template:
         sonarr:
           image:
             repository: lscr.io/linuxserver/sonarr
-            tag: 4.0.13
+            tag: 4.0.14
         jellyseerr:
           image:
             repository: docker.io/fallenbagel/jellyseerr
-            tag: 2.5.0
+            tag: 2.5.1
   service:
     main:
       controller: main
