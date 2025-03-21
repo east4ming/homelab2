@@ -18,3 +18,9 @@ helm-dashboard:
   serviceAccount:
     create: false
     name: "helm-dashboard-admin"
+  resources:
+    requests:
+      cpu: 18m
+      memory: 368Mi
+    limits:
+      memory: 368Mi
