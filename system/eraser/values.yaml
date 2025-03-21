@@ -8,3 +8,10 @@ eraser:
       scanner:
         request:
           cpu: 100m
+  deploy:
+    resources:
+      limits:
+        memory: 30Mi
+      requests:
+        cpu: 1m
+        memory: 30Mi
