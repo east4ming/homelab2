@@ -57,6 +57,12 @@ spec:
           volumeMounts:
             - mountPath: /var/www/feed-icons/
               name: feed-icons
+          resources:
+            requests:
+              cpu: 31m
+              memory: 110Mi
+            limits:
+              memory: 110Mi
       initContainers:
         - command:
             - chmod

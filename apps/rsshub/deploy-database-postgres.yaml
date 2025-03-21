@@ -44,6 +44,12 @@ spec:
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
               name: database-postgres-claim0
+          resources:
+            requests:
+              cpu: 28m
+              memory: 122Mi
+            limits:
+              memory: 122Mi
       initContainers:
         - command:
             - rm
