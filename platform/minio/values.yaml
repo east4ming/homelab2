@@ -21,3 +21,9 @@ minio:
     serviceMonitor:
       enabled: true
   users: []
+  resources:
+    requests:
+      cpu: 10m
+      memory: 164Mi
+    limits:
+      memory: 164Mi

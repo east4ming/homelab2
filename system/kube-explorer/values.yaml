@@ -22,6 +22,12 @@ app-template:
               spec:
                 failureThreshold: 30
                 periodSeconds: 5
+          resources:
+            requests:
+              cpu: 15m
+              memory: 421Mi
+            limits:
+              memory: 421Mi
       serviceAccount:
         name: kube-explorer
   service:

@@ -41,6 +41,12 @@ spec:
               protocol: TCP
           terminationMessagePath: /dev/termination-log
           terminationMessagePolicy: File
+          resources:
+            requests:
+              cpu: 10m
+              memory: 123Mi
+            limits:
+              memory: 123Mi
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler

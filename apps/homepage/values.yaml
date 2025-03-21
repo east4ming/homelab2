@@ -181,3 +181,9 @@ homepage:
       fiveColumns: true
   env:
     HOMEPAGE_ALLOWED_HOSTS: home.west-beta.ts.net
+  resources:
+    requests:
+      cpu: 64m
+      memory: 157Mi
+    limits:
+      memory: 157Mi

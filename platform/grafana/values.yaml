@@ -19,6 +19,11 @@ grafana:
       searchNamespace: monitoring-system
     plugins:
       enabled: true
+    resources:
+      requests:
+        memory: 123Mi
+      limits:
+        memory: 123Mi
   envFromSecret: grafana-secrets
   grafana.ini:
     server:
@@ -40,3 +45,9 @@ grafana:
   useStatefulSet: true
   serviceMonitor:
     enabled: true
+  resources:
+    requests:
+      cpu: 21m
+      memory: 169Mi
+    limits:
+      memory: 169Mi

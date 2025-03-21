@@ -101,7 +101,7 @@ spec:
           resources:
             requests:
               cpu: 10m
-              memory: 4981Mi
+              memory: 467Mi
             limits:
-              memory: 4981Mi
+              memory: 467Mi
       restartPolicy: Always
