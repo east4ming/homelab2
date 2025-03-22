@@ -9,6 +9,7 @@ app-template:
           image:
             repository: femtopixel/kompose
             tag: latest
+            pullPolicy: Always
           command:
             - tail
             - "-f"

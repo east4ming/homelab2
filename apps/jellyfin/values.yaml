@@ -11,6 +11,7 @@ app-template:
           image:
             repository: nyanmisaka/jellyfin
             tag: latest
+            pullPolicy: Always
           probes:
             liveness:
               enabled: true
