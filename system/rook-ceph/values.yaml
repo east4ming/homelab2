@@ -29,22 +29,22 @@ rook-ceph-cluster:
     resources:
       mgr:
         limits:
-          memory: "1Gi"
+          memory: 1093Mi
         requests:
-          cpu: "100m"
-          memory: "512Mi"
+          cpu: 14m
+          memory: 584Mi
       mon:
         limits:
-          memory: "2Gi"
+          memory: 1451Mi
         requests:
-          cpu: "100m"
-          memory: "100Mi"
+          cpu: 29m
+          memory: 1164Mi
       osd:
         limits:
-          memory: "4Gi"
+          memory: 2264Mi
         requests:
-          cpu: "100m"
-          memory: "512Mi"
+          cpu: 152m
+          memory: 2083Mi
   cephBlockPools:
     - name: standard-rwo
       spec:
@@ -81,10 +81,10 @@ rook-ceph-cluster:
           activeStandby: true
           resources:
             limits:
-              memory: "4Gi"
+              memory: 71Mi
             requests:
-              cpu: "100m"
-              memory: "100Mi"
+              cpu: 19m
+              memory: 67Mi
           priorityClassName: system-cluster-critical
       storageClass:
         enabled: true

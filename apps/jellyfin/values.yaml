@@ -24,9 +24,9 @@ app-template:
                 periodSeconds: 5
           resources:
             limits:
-              cpu: 123m
               memory: 995Mi
             requests:
+              cpu: 123m
               memory: 995Mi
         transmission:
           image:
@@ -34,9 +34,9 @@ app-template:
             tag: 4.0.6
           resources:
             limits:
-              cpu: 24m
               memory: 177Mi
             requests:
+              cpu: 24m
               memory: 177Mi
         prowlarr:
           image:
@@ -44,9 +44,9 @@ app-template:
             tag: 1.32.2
           resources:
             limits:
-              cpu: 23m
               memory: 186Mi
             requests:
+              cpu: 23m
               memory: 186Mi
         radarr:
           image:
@@ -58,9 +58,9 @@ app-template:
             tag: 4.0.14
           resources:
             limits:
-              cpu: 22m
               memory: 254Mi
             requests:
+              cpu: 22m
               memory: 254Mi
         jellyseerr:
           image:
@@ -68,7 +68,6 @@ app-template:
             tag: 2.5.1
           resources:
             limits:
-              cpu: 10m
               memory: 319Mi
             requests:
               memory: 319Mi
