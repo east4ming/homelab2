@@ -52,7 +52,6 @@ spec:
               name: postgresql-claim0
           resources:
             requests:
-              cpu: 10m
               memory: 117Mi
             limits:
               memory: 117Mi
