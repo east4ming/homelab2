@@ -9,6 +9,7 @@ app-template:
           image:
             repository: docker.io/openspeedtest/latest
             tag: latest
+            pullPolicy: Always
           probes:
             liveness:
               enabled: true
