@@ -21,6 +21,6 @@ helm-dashboard:
   resources:
     requests:
       cpu: 18m
-      memory: 368Mi
+      memory: 1Gi
     limits:
-      memory: 368Mi
+      memory: 1Gi
