@@ -91,7 +91,7 @@ spec:
                   key: ZHIPU_API_KEY
             - name: DEFAULT_FILES_CONFIG
               value: embedding_model=zhipu/embedding-3
-          image: docker.io/lobehub/lobe-chat-database:1.77.10
+          image: docker.io/lobehub/lobe-chat-database:1.79.7
           imagePullPolicy: IfNotPresent
           name: lobe-chat
           ports:
