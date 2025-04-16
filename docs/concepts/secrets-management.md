@@ -52,7 +52,7 @@ You can use it with `ExternalSecret` just like any other global secret.
 When you apply an `ExternalSecret` object, for example:
 
 ```yaml hl_lines="4 21-23"
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: gitea-admin-secret
