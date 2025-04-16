@@ -59,7 +59,7 @@ apply_custom_resource(
     name=secret,
     namespace=namespace,
     body={
-        "apiVersion": "external-secrets.io/v1beta1",
+        "apiVersion": "external-secrets.io/v1",
         "kind": "ExternalSecret",
         "metadata": {
             "name": secret,
