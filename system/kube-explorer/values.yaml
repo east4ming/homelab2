@@ -25,9 +25,9 @@ app-template:
           resources:
             requests:
               cpu: 15m
-              memory: 421Mi
+              memory: 500Mi
             limits:
-              memory: 421Mi
+              memory: 500Mi
       serviceAccount:
         name: kube-explorer
   service:

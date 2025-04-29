@@ -24,10 +24,10 @@ app-template:
                 periodSeconds: 5
           resources:
             limits:
-              memory: 995Mi
+              memory: 1200Mi
             requests:
               cpu: 123m
-              memory: 995Mi
+              memory: 1200Mi
         transmission:
           image:
             repository: lscr.io/linuxserver/transmission
