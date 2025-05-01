@@ -137,12 +137,11 @@ if args.action == "setup":
             },
             "spec": {
                 "sourcePVC": pvc,
-                "trigger": {"schedule": "*/30 * * * *"},
+                "trigger": {"schedule": "0 3 * * *"},
                 "restic": {
                     "pruneIntervalDays": 14,
                     "repository": secret,
                     "retain": {
-                        "hourly": 6,
                         "daily": 5,
                         "weekly": 4,
                         "monthly": 2,
