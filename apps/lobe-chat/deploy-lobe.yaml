@@ -90,7 +90,7 @@ spec:
                   name: lobe-ai-api-keys
                   key: ZHIPU_API_KEY
             - name: DEFAULT_FILES_CONFIG
-              value: embedding_model=ollama/nomic-embed-text
+              value: embedding_model=ollama/snowflake-arctic-embed2
           image: docker.io/lobehub/lobe-chat-database:1.84.5
           imagePullPolicy: IfNotPresent
           name: lobe-chat
