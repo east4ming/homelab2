@@ -20,6 +20,7 @@ zot:
     enabled: true
     serviceMonitor:
       enabled: true
+      basicAuth: null
   mountConfig: true
   configFiles:
     config.json: |-
