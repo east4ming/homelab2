@@ -31,7 +31,7 @@ app-template:
             privileged: true
           resources:
             requests:
-              cpu: 1036m
+              cpu: 100m
               memory: 4666Mi
             limits:
               memory: 4666Mi

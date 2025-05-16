@@ -61,7 +61,7 @@ spec:
           terminationMessagePolicy: File
           resources:
             requests:
-              cpu: 36m
+              cpu: 18m
               memory: 585Mi
             limits:
               memory: 585Mi

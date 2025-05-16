@@ -23,7 +23,7 @@ minio:
   users: []
   resources:
     requests:
-      cpu: 10m
+      cpu: 5m
       memory: 164Mi
     limits:
       memory: 164Mi

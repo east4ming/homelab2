@@ -24,7 +24,7 @@ app-template:
                 periodSeconds: 5
           resources:
             requests:
-              cpu: 15m
+              cpu: 8m
               memory: 500Mi
             limits:
               memory: 500Mi

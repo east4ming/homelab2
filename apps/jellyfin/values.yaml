@@ -26,7 +26,7 @@ app-template:
             limits:
               memory: 1200Mi
             requests:
-              cpu: 123m
+              cpu: 64m
               memory: 1200Mi
         transmission:
           image:
@@ -36,7 +36,7 @@ app-template:
             limits:
               memory: 177Mi
             requests:
-              cpu: 24m
+              cpu: 12m
               memory: 177Mi
         prowlarr:
           image:
@@ -46,7 +46,7 @@ app-template:
             limits:
               memory: 186Mi
             requests:
-              cpu: 23m
+              cpu: 12m
               memory: 186Mi
         radarr:
           image:
@@ -60,7 +60,7 @@ app-template:
             limits:
               memory: 254Mi
             requests:
-              cpu: 22m
+              cpu: 10m
               memory: 254Mi
         jellyseerr:
           image:

@@ -183,7 +183,7 @@ homepage:
     HOMEPAGE_ALLOWED_HOSTS: home.west-beta.ts.net
   resources:
     requests:
-      cpu: 64m
+      cpu: 32m
       memory: 157Mi
     limits:
       memory: 157Mi

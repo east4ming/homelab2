@@ -31,19 +31,19 @@ rook-ceph-cluster:
         limits:
           memory: 1093Mi
         requests:
-          cpu: 14m
+          cpu: 7m
           memory: 584Mi
       mon:
         limits:
           memory: 1451Mi
         requests:
-          cpu: 29m
+          cpu: 15m
           memory: 1164Mi
       osd:
         limits:
           memory: 2264Mi
         requests:
-          cpu: 152m
+          cpu: 75m
           memory: 2083Mi
   cephBlockPools:
     - name: standard-rwo
@@ -83,7 +83,7 @@ rook-ceph-cluster:
             limits:
               memory: 71Mi
             requests:
-              cpu: 19m
+              cpu: 10m
               memory: 67Mi
           priorityClassName: system-cluster-critical
       storageClass:

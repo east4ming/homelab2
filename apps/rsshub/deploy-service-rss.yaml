@@ -59,7 +59,7 @@ spec:
               name: feed-icons
           resources:
             requests:
-              cpu: 31m
+              cpu: 15m
               memory: 110Mi
             limits:
               memory: 110Mi

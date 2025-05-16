@@ -53,7 +53,7 @@ spec:
               subPath: init_data.json
           resources:
             requests:
-              cpu: 10m
+              cpu: 5m
               memory: 100Mi
             limits:
               memory: 100Mi

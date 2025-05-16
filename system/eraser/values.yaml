@@ -7,7 +7,7 @@ eraser:
     components:
       scanner:
         request:
-          cpu: 100m
+          cpu: 10m
   deploy:
     resources:
       limits:
