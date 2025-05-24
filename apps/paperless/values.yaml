@@ -53,6 +53,7 @@ app-template:
             - *host
   persistence:
     data:
+      suffix: data
       accessMode: ReadWriteOnce
       size: 10Gi
       advancedMounts:
