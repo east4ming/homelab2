@@ -48,7 +48,23 @@ gitea:
         ALLOWED_DOMAINS: ""
         ALLOW_LOCALNETWORKS: true
         BLOCKED_DOMAINS: ""
+      database:
+        DB_TYPE: sqlite3
+      session:
+        PROVIDER: memory
+      cache:
+        ADAPTER: memory
+      queue:
+        TYPE: level
     metrics:
       enabled: true
       serviceMonitor:
         enabled: true
+  valkey-cluster:
+    enabled: false
+  valkey:
+    enabled: false
+  postgresql-ha:
+    enabled: false
+  postgresql:
+    enabled: false
