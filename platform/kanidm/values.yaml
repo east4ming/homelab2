@@ -30,6 +30,7 @@ app-template:
             accessMode: "ReadWriteOnce"
   configMaps:
     config:
+      suffix: config
       enabled: true
       data:
         server.toml: |

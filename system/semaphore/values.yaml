@@ -5,6 +5,7 @@ app-template:
     hostNetwork: true
   controllers:
     semaphore:
+      forceRename: semaphore
       strategy: Recreate
       containers:
         semaphore:
@@ -78,6 +79,7 @@ app-template:
               value: semaphore
   service:
     semaphore:
+      forceRename: semaphore
       controller: semaphore
       ports:
         http:

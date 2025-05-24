@@ -111,6 +111,7 @@ app-template:
             - *jellyfinHost
   persistence:
     data:
+      suffix: data
       accessMode: ReadWriteOnce
       size: 50Gi
       advancedMounts:
