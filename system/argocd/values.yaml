@@ -70,7 +70,7 @@ argocd-apps:
       generators:
         - git:
             # TODO:
-            repoURL: &repoURL https://github.com/east4ming/homelab2
+            repoURL: &repoURL http://gitea-http.gitea:3000/ops/homelab2
             revision: &revision master
             directories:
               - path: system/*
