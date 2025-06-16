@@ -51,7 +51,7 @@ app-template:
         radarr:
           image:
             repository: lscr.io/linuxserver/radarr
-            tag: 5.25.0
+            tag: 5.26.2
         sonarr:
           image:
             repository: lscr.io/linuxserver/sonarr
@@ -65,7 +65,7 @@ app-template:
         jellyseerr:
           image:
             repository: docker.io/fallenbagel/jellyseerr
-            tag: 2.5.2
+            tag: 2.6.0
           resources:
             limits:
               memory: 319Mi
