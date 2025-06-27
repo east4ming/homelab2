@@ -24,6 +24,7 @@
             docker-compose
             dyff
             git
+            glibcLocales
             go
             gotestsum
             iproute2
