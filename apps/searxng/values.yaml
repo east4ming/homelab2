@@ -186,7 +186,7 @@ app-template:
           ui:
             static_use_hash: true
           redis:
-            url: redis://redis:6379/0
+            url: redis://searxng-valkey:6379/0
           search:
             formats:
               - html
