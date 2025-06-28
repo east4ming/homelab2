@@ -56,3 +56,5 @@ grafana:
       memory: 169Mi
     limits:
       memory: 169Mi
+  imageRenderer:
+    enabled: true
