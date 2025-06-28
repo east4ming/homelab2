@@ -207,7 +207,12 @@ app-template:
       advancedMounts:
         searxng:
           searxng:
-            - path: /etc/searxng
+            - path: /etc/searxng/settings.yml
+              readOnly: false
+              subPath: settings.yml
+            - path: /etc/searxng/limiter.toml
+              readOnly: false
+              subPath: limiter.toml
     searxng-data:
       type: emptyDir
       advancedMounts:
