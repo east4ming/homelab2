@@ -1,0 +1,119 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/app-template-4.1.2/charts/other/app-template/values.schema.json
+app-template:
+  defaultPodOptions:
+    enableServiceLinks: true
+  controllers:
+    searxng:
+      containers:
+        searxng:
+          image:
+            repository: docker.io/searxng/searxng
+            tag: latest
+          env:
+            - name: SEARXNG_BASE_URL
+              value: "http://searxng.west-beta.ts.net"
+            - name: UWSGI_WORKERS
+              value: "4"
+            - name: UWSGI_THREADS
+              value: "4"
+    caddy:
+      containers:
+        caddy:
+          image:
+            repository: docker.io/library/caddy
+            tag: 2-alpine
+          env:
+            - name: SEARXNG_HOSTNAME
+              value: "http://searxng.west-beta.ts.net"
+    valkey:
+      containers:
+        valkey:
+          image:
+            repository: docker.io/valkey/valkey
+            tag: 8-alpine
+          command:
+            - valkey-server
+            - --save
+            - "30 1"
+            - --loglevel
+            - warning
+
+  service:
+    searxng:
+      controller: searxng
+      ports:
+        http:
+          port: 8080
+          protocol: TCP
+    caddy:
+      controller: caddy
+      ports:
+        http:
+          port: 80
+          protocol: TCP
+    valkey:
+      controller: valkey
+      ports:
+        valkey:
+          port: 6379
+          protocol: TCP
+  ingress:
+    caddy:
+      enabled: true
+      className: tailscale
+      hosts:
+        - host: &host searxng.west-beta.ts.net
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: caddy
+                port: http
+      tls:
+        - hosts:
+            - *host
+
+  configMapsFromFolder:
+    enabled: true
+
+  persistence:
+    searxng-config:
+      type: configMap
+      name: searxng
+      advancedMounts:
+        searxng:
+          searxng:
+            - path: /etc/searxng
+              readOnly: true
+    searxng-data:
+      type: emptyDir
+      advancedMounts:
+        searxng:
+          searxng:
+            - path: /var/cache/searxng
+    caddyfile:
+      type: configMap
+      name: caddy
+      advancedMounts:
+        caddy:
+          caddy:
+            - path: /etc/caddy
+              readOnly: true
+    caddy-data:
+      type: emptyDir
+      advancedMounts:
+        caddy:
+          caddy:
+            - path: /data
+    caddy-config:
+      type: emptyDir
+      advancedMounts:
+        caddy:
+          caddy:
+            - path: /config
+    valkey-data:
+      type: emptyDir
+      advancedMounts:
+        valkey:
+          valkey:
+            - path: /data
