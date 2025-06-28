@@ -39,6 +39,11 @@ grafana:
       auth_url: https://dex.west-beta.ts.net/auth
       token_url: https://dex.west-beta.ts.net/token
       api_url: https://dex.west-beta.ts.net/userinfo
+    feature_toggles:
+      provisioning: true
+      kubernetesClientDashboardsFolders: true
+      kubernetesDashboards: true
+      grafanaAPIServerEnsureKubectlAccess: true
   persistence:
     enabled: true
     size: 1Gi
