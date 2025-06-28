@@ -91,6 +91,10 @@ spec:
                   key: ZHIPU_API_KEY
             - name: DEFAULT_FILES_CONFIG
               value: embedding_model=ollama/snowflake-arctic-embed2
+            - name: SEARCH_PROVIDERS
+              value: searxng
+            - name: SEARXNG_URL
+              value: http://searxng.searxng:8080
           image: docker.io/lobehub/lobe-chat-database:1.96.9
           imagePullPolicy: IfNotPresent
           name: lobe-chat
