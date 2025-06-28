@@ -24,7 +24,7 @@ app-template:
             tag: 2-alpine
           env:
             - name: SEARXNG_HOSTNAME
-              value: "searxng.west-beta.ts.net"
+              value: "http://searxng.west-beta.ts.net"
     valkey:
       containers:
         valkey:
