@@ -208,7 +208,6 @@ app-template:
         searxng:
           searxng:
             - path: /etc/searxng
-              readOnly: true
     searxng-data:
       type: emptyDir
       advancedMounts:
@@ -217,12 +216,11 @@ app-template:
             - path: /var/cache/searxng
     caddyfile:
       type: configMap
-      name: caddy
+      identifier: caddy
       advancedMounts:
         caddy:
           caddy:
             - path: /etc/caddy
-              readOnly: true
     caddy-data:
       type: emptyDir
       advancedMounts:
