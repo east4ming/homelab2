@@ -11,7 +11,7 @@ app-template:
             tag: latest
           env:
             - name: SEARXNG_BASE_URL
-              value: "http://searxng.west-beta.ts.net"
+              value: "https://searxng.west-beta.ts.net"
             - name: UWSGI_WORKERS
               value: "4"
             - name: UWSGI_THREADS
@@ -24,7 +24,7 @@ app-template:
             tag: 2-alpine
           env:
             - name: SEARXNG_HOSTNAME
-              value: "http://searxng.west-beta.ts.net"
+              value: "searxng.west-beta.ts.net"
     valkey:
       containers:
         valkey:
