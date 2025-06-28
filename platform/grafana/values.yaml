@@ -44,6 +44,9 @@ grafana:
       kubernetesClientDashboardsFolders: true
       kubernetesDashboards: true
       grafanaAPIServerEnsureKubectlAccess: true
+    rendering:
+      server_url: http://grafana-image-renderer:8081/render
+      callback_url: http://localhost:3000/
   persistence:
     enabled: true
     size: 1Gi
