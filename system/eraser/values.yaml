@@ -11,7 +11,7 @@ eraser:
   deploy:
     resources:
       limits:
-        memory: 30Mi
+        memory: 100Mi
       requests:
         cpu: 1m
         memory: 30Mi
