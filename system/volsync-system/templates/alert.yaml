@@ -1,0 +1,35 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: volsync
+  namespace: {{ .Release.Namespace }}
+spec:
+  groups:
+  - name: volsync
+    rules:
+    - alert: VolSyncVolumesOutOfSync
+      annotations:
+        description: |
+          VolSync has detected that some volumes are out of sync. This needs to be resolved for the system to maintain state.
+          Details:
+            - Namespace: {{ `{{ $labels.obj_namespace }}` }}
+            - Volume: {{ `{{ $labels.obj_name }}` }}
+        summary: '[VolSync] Volume: {{ `{{ $labels.obj_name }}` }} out of sync'
+      expr: |
+        volsync_volume_out_of_sync != 0
+      for: 15m
+      labels:
+        severity: critical
+    - alert: VolSyncReplicationDurationTooLong
+      annotations:
+        description: |
+          VolSync has detected that some volumes are taking too long to replicate. This needs to be resolved for the system to maintain state.
+          Details:
+            - Namespace: {{ `{{ $labels.obj_namespace }}` }}
+            - Volume: {{ `{{ $labels.obj_name }}` }}
+        summary: '[VolSync] Volume: {{ `{{ $labels.obj_name }}` }} replication duration too long'
+      expr: |
+        volsync_sync_duration_seconds{quantile="0.99",role="source"} > 43200
+      for: 0m
+      labels:
+        severity: warning
