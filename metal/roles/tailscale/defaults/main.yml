@@ -1,5 +1,5 @@
 tailscale_repo_url: https://pkgs.tailscale.com/helmcharts
-tailscale_version: 1.84.3
+tailscale_version: 1.86.2
 tailscale_namespace: tailscale
 tailscale_values:
   oauth:
