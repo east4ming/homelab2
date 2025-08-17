@@ -27,7 +27,7 @@ app-template:
               memory: 1200Mi
             requests:
               cpu: 64m
-              memory: 1200Mi
+              memory: 897Mi
         transmission:
           image:
             repository: lscr.io/linuxserver/transmission
@@ -36,8 +36,8 @@ app-template:
             limits:
               memory: 177Mi
             requests:
-              cpu: 12m
-              memory: 177Mi
+              cpu: 2m
+              memory: 10Mi
         prowlarr:
           image:
             repository: lscr.io/linuxserver/prowlarr
@@ -46,12 +46,18 @@ app-template:
             limits:
               memory: 186Mi
             requests:
-              cpu: 12m
-              memory: 186Mi
+              cpu: 2m
+              memory: 101Mi
         radarr:
           image:
             repository: lscr.io/linuxserver/radarr
             tag: 5.26.2
+          resources:
+            requests:
+              cpu: 2m
+              memory: 104Mi
+            limits:
+              memory: 200Mi
         sonarr:
           image:
             repository: lscr.io/linuxserver/sonarr
@@ -60,8 +66,8 @@ app-template:
             limits:
               memory: 254Mi
             requests:
-              cpu: 10m
-              memory: 254Mi
+              cpu: 2m
+              memory: 187Mi
         jellyseerr:
           image:
             repository: docker.io/fallenbagel/jellyseerr
@@ -70,7 +76,8 @@ app-template:
             limits:
               memory: 319Mi
             requests:
-              memory: 319Mi
+              memory: 208Mi
+              cpu: 1m
   service:
     main:
       controller: main
