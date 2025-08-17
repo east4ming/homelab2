@@ -20,7 +20,7 @@ helm-dashboard:
     name: "helm-dashboard-admin"
   resources:
     requests:
-      cpu: 10m
-      memory: 1Gi
+      cpu: 25m
+      memory: 398Mi
     limits:
       memory: 1Gi
