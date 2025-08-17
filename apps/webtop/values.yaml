@@ -32,7 +32,7 @@ app-template:
           resources:
             requests:
               cpu: 100m
-              memory: 4666Mi
+              memory: 3471Mi
             limits:
               memory: 4666Mi
   service:
