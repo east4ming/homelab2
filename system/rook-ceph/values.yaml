@@ -4,6 +4,151 @@ rook-ceph:
   csi:
     serviceMonitor:
       enabled: true
+    csiRBDProvisionerResource: |
+      - name : csi-provisioner
+        resource:
+          requests:
+            cpu: 2m
+            memory: 22Mi
+          limits:
+            memory: 44Mi
+      - name : csi-resizer
+        resource:
+          requests:
+            cpu: 3m
+            memory: 17Mi
+          limits:
+            memory: 34Mi
+      - name : csi-attacher
+        resource:
+          requests:
+            cpu: 2m
+            memory: 22Mi
+          limits:
+            memory: 44Mi
+      - name : csi-snapshotter
+        resource:
+          requests:
+            cpu: 1m
+            memory: 14Mi
+          limits:
+            memory: 28Mi
+      - name : csi-rbdplugin
+        resource:
+          requests:
+            cpu: 2m
+            memory: 52Mi
+          limits:
+            memory: 104Mi
+      - name : csi-omap-generator
+        resource:
+          requests:
+            memory: 128Mi
+            cpu: 2m
+          limits:
+            memory: 256Mi
+      - name : liveness-prometheus
+        resource:
+          requests:
+            memory: 32Mi
+            cpu: 1m
+          limits:
+            memory: 64Mi
+    # -- CEPH CSI RBD plugin resource requirement list
+    # @default -- see values.yaml
+    csiRBDPluginResource: |
+      - name : driver-registrar
+        resource:
+          requests:
+            cpu: 1m
+            memory: 21Mi
+          limits:
+            memory: 42Mi
+      - name : csi-rbdplugin
+        resource:
+          requests:
+            memory: 85Mi
+            cpu: 2m
+          limits:
+            memory: 128Mi
+      - name : liveness-prometheus
+        resource:
+          requests:
+            memory: 32Mi
+            cpu: 1m
+          limits:
+            memory: 64Mi
+
+    # -- CEPH CSI CephFS provisioner resource requirement list
+    # @default -- see values.yaml
+    csiCephFSProvisionerResource: |
+      - name : csi-provisioner
+        resource:
+          requests:
+            cpu: 2m
+            memory: 42Mi
+          limits:
+            memory: 84Mi
+      - name : csi-resizer
+        resource:
+          requests:
+            cpu: 3m
+            memory: 17Mi
+          limits:
+            memory: 34Mi
+      - name : csi-attacher
+        resource:
+          requests:
+            cpu: 1m
+            memory: 13Mi
+          limits:
+            memory: 26Mi
+      - name : csi-snapshotter
+        resource:
+          requests:
+            cpu: 1m
+            memory: 40Mi
+          limits:
+            memory: 80Mi
+      - name : csi-cephfsplugin
+        resource:
+          requests:
+            cpu: 1m
+            memory: 24Mi
+          limits:
+            memory: 48Mi
+      - name : liveness-prometheus
+        resource:
+          requests:
+            memory: 32Mi
+            cpu: 1m
+          limits:
+            memory: 64Mi
+
+    # -- CEPH CSI CephFS plugin resource requirement list
+    # @default -- see values.yaml
+    csiCephFSPluginResource: |
+      - name : driver-registrar
+        requests:
+          cpu: 1m
+          memory: 10Mi
+        limits:
+          memory: 20Mi
+      - name : csi-cephfsplugin
+        resource:
+          requests:
+            cpu: 1m
+            memory: 21Mi
+          limits:
+            memory: 42Mi
+      - name : liveness-prometheus
+        resource:
+          requests:
+            memory: 32Mi
+            cpu: 1m
+          limits:
+            memory: 64Mi
+
   enableDiscoveryDaemon: true
 rook-ceph-cluster:
   monitoring:
@@ -38,13 +183,13 @@ rook-ceph-cluster:
           memory: 1451Mi
         requests:
           cpu: 15m
-          memory: 1164Mi
+          memory: 559Mi
       osd:
         limits:
           memory: 2264Mi
         requests:
           cpu: 75m
-          memory: 2083Mi
+          memory: 1500Mi
   cephBlockPools:
     - name: standard-rwo
       spec:
@@ -114,3 +259,9 @@ rook-ceph-cluster:
       ingressClassName: tailscale
   toolbox:
     enabled: true
+    resources:
+      limits:
+        memory: 256Mi
+      requests:
+        cpu: "2m"
+        memory: "10Mi"

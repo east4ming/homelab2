@@ -46,10 +46,10 @@ spec:
               name: database-postgres-claim0
           resources:
             requests:
-              cpu: 15m
-              memory: 122Mi
+              cpu: 37m
+              memory: 153Mi
             limits:
-              memory: 122Mi
+              memory: 153Mi
       initContainers:
         - command:
             - rm

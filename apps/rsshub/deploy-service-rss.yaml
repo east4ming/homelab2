@@ -59,10 +59,10 @@ spec:
               name: feed-icons
           resources:
             requests:
-              cpu: 15m
-              memory: 110Mi
+              cpu: 31m
+              memory: 138Mi
             limits:
-              memory: 110Mi
+              memory: 138Mi
       initContainers:
         - command:
             - chmod

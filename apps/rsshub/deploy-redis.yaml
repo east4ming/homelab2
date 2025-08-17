@@ -39,6 +39,12 @@ spec:
           volumeMounts:
             - mountPath: /data
               name: redis-data
+          resources:
+            requests:
+              cpu: 13m
+              memory: 30Mi
+            limits:
+              memory: 60Mi
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler

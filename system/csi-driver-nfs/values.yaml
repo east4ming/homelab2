@@ -2,3 +2,54 @@ csi-driver-nfs:
   controller:
     enableSnapshotter: false
     defaultOnDeletePolicy: retain
+    resources:
+      csiProvisioner:
+        requests:
+          cpu: 1m
+          memory: 16Mi
+        limits:
+          memory: 64Mi
+      csiResizer:
+        requests:
+          cpu: 3m
+          memory: 14Mi
+        limits:
+          memory: 64Mi
+      csiSnapshotter:
+        limits:
+          memory: 80Mi
+        requests:
+          cpu: 1m
+          memory: 20Mi
+      livenessProbe:
+        requests:
+          cpu: 1m
+          memory: 10Mi
+        limits:
+          memory: 20Mi
+      nfs:
+        requests:
+          cpu: 1m
+          memory: 11Mi
+        limits:
+          memory: 64Mi
+  node:
+    resources:
+      livenessProbe:
+        requests:
+          cpu: 1m
+          memory: 31Mi
+        limits:
+          memory: 64Mi
+      nodeDriverRegistrar:
+        requests:
+          cpu: 1m
+          memory: 10Mi
+        limits:
+          memory: 40Mi
+      nfs:
+        requests:
+          cpu: 1m
+          memory: 49Mi
+        limits:
+          memory: 100Mi

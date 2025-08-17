@@ -16,6 +16,12 @@ kube-prometheus-stack:
             resources:
               requests:
                 storage: 30Gi
+      resources:
+        requests:
+          cpu: 207m
+          memory: 4819Mi
+        limits:
+          memory: 6Gi
     ingress:
       enabled: true
       ingressClassName: tailscale
@@ -27,6 +33,13 @@ kube-prometheus-stack:
       tls:
         - hosts:
             - prometheus.west-beta.ts.net
+    prometheusConfigReloader:
+      resources:
+        requests:
+          cpu: 1m
+          memory: 25Mi
+        limits:
+          memory: 50Mi
   alertmanager:
     alertmanagerSpec:
       containers:
@@ -53,6 +66,12 @@ kube-prometheus-stack:
             resources:
               requests:
                 storage: 10Mi
+      resources:
+        requests:
+          cpu: 2m
+          memory: 35Mi
+        limits:
+          memory: 70Mi
     config:
       route:
         receiver: ntfy
@@ -93,6 +112,14 @@ kube-prometheus-stack:
       tls:
         - hosts:
             - alertmanager.west-beta.ts.net
+
+    prometheusConfigReloader:
+      resources:
+        requests:
+          cpu: 1m
+          memory: 21Mi
+        limits:
+          memory: 42Mi
   defaultRules:
     rules:
       kubeProxy: false
@@ -123,3 +150,24 @@ kube-prometheus-stack:
       enabled: true
       port: 2381
       targetPort: 2381
+  prometheusOperator:
+    resources:
+      requests:
+        cpu: 3m
+        memory: 107Mi
+      limits:
+        memory: 214Mi
+  kubeStateMetrics:
+    resources:
+      requests:
+        cpu: 5m
+        memory: 42Mi
+      limits:
+        memory: 84Mi
+  nodeExporter:
+    resources:
+      requests:
+        cpu: 5m
+        memory: 39Mi
+      limits:
+        memory: 80Mi
