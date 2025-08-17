@@ -43,9 +43,10 @@ spec:
           terminationMessagePolicy: File
           resources:
             requests:
-              memory: 123Mi
+              cpu: 6m
+              memory: 130Mi
             limits:
-              memory: 123Mi
+              memory: 130Mi
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler

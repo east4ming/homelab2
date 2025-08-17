@@ -61,8 +61,8 @@ spec:
           terminationMessagePolicy: File
           resources:
             requests:
-              cpu: 18m
-              memory: 585Mi
+              cpu: 21m
+              memory: 461Mi
             limits:
               memory: 585Mi
       dnsPolicy: ClusterFirst
