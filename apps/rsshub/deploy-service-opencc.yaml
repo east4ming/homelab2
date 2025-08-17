@@ -45,9 +45,9 @@ spec:
           resources:
             requests:
               cpu: 1m
-              memory: 29Mi
+              memory: 32Mi
             limits:
-              memory: 29Mi
+              memory: 64Mi
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
