@@ -9,38 +9,62 @@ rook-ceph:
         resource:
           requests:
             cpu: 2m
-            memory: 22Mi
-          limits:
             memory: 44Mi
+          limits:
+            memory: 88Mi
       - name : csi-resizer
         resource:
           requests:
             cpu: 3m
-            memory: 17Mi
-          limits:
             memory: 34Mi
+          limits:
+            memory: 68Mi
       - name : csi-attacher
         resource:
           requests:
             cpu: 2m
-            memory: 22Mi
-          limits:
             memory: 44Mi
+          limits:
+            memory: 88Mi
       - name : csi-snapshotter
         resource:
           requests:
             cpu: 1m
-            memory: 14Mi
-          limits:
             memory: 28Mi
+          limits:
+            memory: 56Mi
       - name : csi-rbdplugin
         resource:
           requests:
+            memory: 128Mi
             cpu: 2m
-            memory: 52Mi
           limits:
-            memory: 104Mi
+            memory: 256Mi
       - name : csi-omap-generator
+        resource:
+          requests:
+            memory: 256Mi
+            cpu: 2m
+          limits:
+            memory: 512Mi
+      - name : liveness-prometheus
+        resource:
+          requests:
+            memory: 42Mi
+            cpu: 1m
+          limits:
+            memory: 84Mi
+    # -- CEPH CSI RBD plugin resource requirement list
+    # @default -- see values.yaml
+    csiRBDPluginResource: |
+      - name : driver-registrar
+        resource:
+          requests:
+            cpu: 2m
+            memory: 42Mi
+          limits:
+            memory: 84Mi
+      - name : csi-rbdplugin
         resource:
           requests:
             memory: 128Mi
@@ -50,34 +74,10 @@ rook-ceph:
       - name : liveness-prometheus
         resource:
           requests:
-            memory: 32Mi
-            cpu: 1m
-          limits:
-            memory: 64Mi
-    # -- CEPH CSI RBD plugin resource requirement list
-    # @default -- see values.yaml
-    csiRBDPluginResource: |
-      - name : driver-registrar
-        resource:
-          requests:
-            cpu: 1m
-            memory: 21Mi
-          limits:
             memory: 42Mi
-      - name : csi-rbdplugin
-        resource:
-          requests:
-            memory: 85Mi
-            cpu: 2m
-          limits:
-            memory: 128Mi
-      - name : liveness-prometheus
-        resource:
-          requests:
-            memory: 32Mi
             cpu: 1m
           limits:
-            memory: 64Mi
+            memory: 84Mi
 
     # -- CEPH CSI CephFS provisioner resource requirement list
     # @default -- see values.yaml
