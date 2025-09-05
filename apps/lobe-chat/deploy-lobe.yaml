@@ -95,8 +95,8 @@ spec:
               value: searxng
             - name: SEARXNG_URL
               value: http://searxng.searxng:8080
-          image: docker.io/lobehub/lobe-chat-database:1.117.1
-          imagePullPolicy: IfNotPresent
+          image: docker.io/lobehub/lobe-chat-database:latest
+          imagePullPolicy: Always
           name: lobe-chat
           ports:
             - containerPort: 3210
