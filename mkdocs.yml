@@ -69,7 +69,7 @@ nav:
       - how-to-guides/alternate-nas-nfs-setup.md
       - how-to-guides/updating-documentation.md
       - Troubleshooting:
-          - how-to-guides/troubleshooting/pxe-boot.md
+          - how-to-guides/troubleshooting/*
   - Reference:
       - Architecture:
           - reference/architecture/overview.md
