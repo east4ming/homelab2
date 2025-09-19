@@ -1,7 +1,7 @@
 babel==2.17.0
 certifi==2025.8.3
 charset-normalizer==3.4.3
-click==8.2.1
+click==8.3.0
 colorama==0.4.6
 ghp-import==2.1.0
 idna==3.10
@@ -22,7 +22,7 @@ pymdown-extensions==10.16.1
 python-dateutil==2.9.0.post0
 PyYAML==6.0.2
 pyyaml_env_tag==1.1
-regex==2025.9.1
+regex==2025.9.18
 requests==2.32.5
 six==1.17.0
 urllib3==2.5.0
