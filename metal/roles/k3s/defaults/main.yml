@@ -23,6 +23,9 @@ k3s_server_config:
     - "bind-address=0.0.0.0"
   kube-scheduler-arg:
     - "bind-address=0.0.0.0"
+  etcd-arg:
+    - "heartbeat-interval=200"
+    - "election-timeout=2000"
   # TODO:
   # if truely needed
   advertise-address: "{{ control_plane_endpoint }}"
