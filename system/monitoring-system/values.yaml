@@ -87,7 +87,6 @@ kube-prometheus-stack:
             group_interval: 1s
             matchers:
               - severity =~ ".*"
-            repeat_interval: 4h
             continue: true
           - receiver: ntfy
             matchers:
