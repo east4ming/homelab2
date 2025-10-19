@@ -3,5 +3,5 @@ name: zot
 version: 0.0.0
 dependencies:
   - name: zot
-    version: 0.1.85
+    version: 0.1.87
     repository: http://zotregistry.dev/helm-charts
