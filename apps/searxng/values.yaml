@@ -30,7 +30,7 @@ app-template:
         valkey:
           image:
             repository: docker.io/valkey/valkey
-            tag: 8-alpine
+            tag: 9-alpine
           command:
             - valkey-server
             - --save
