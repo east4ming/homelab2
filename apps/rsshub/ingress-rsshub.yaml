@@ -9,7 +9,7 @@ metadata:
 spec:
   ingressClassName: tailscale
   rules:
-    - host: rss.west-beta.ts.net
+    - host: rss
       http:
         paths:
           - backend:
@@ -21,4 +21,4 @@ spec:
             pathType: Prefix
   tls:
     - hosts:
-        - rss.west-beta.ts.net
+        - rss

@@ -14,4 +14,4 @@ spec:
   ingressClassName: tailscale
   tls:
     - hosts:
-        - jellyseerr.west-beta.ts.net
+        - jellyseerr

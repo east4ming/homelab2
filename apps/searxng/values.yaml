@@ -64,7 +64,7 @@ app-template:
       annotations:
         tailscale.com/proxy-group: ingress-proxies
       hosts:
-        - host: &host searxng.west-beta.ts.net
+        - host: &host searxng
           paths:
             - path: /
               pathType: Prefix

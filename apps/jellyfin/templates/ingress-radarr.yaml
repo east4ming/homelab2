@@ -14,4 +14,4 @@ spec:
   ingressClassName: tailscale
   tls:
     - hosts:
-        - radarr.west-beta.ts.net
+        - radarr

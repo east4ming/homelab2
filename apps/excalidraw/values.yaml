@@ -35,7 +35,7 @@ app-template:
         tailscale.com/funnel: "true"
         tailscale.com/proxy-group: ingress-proxies
       hosts:
-        - host: &host draw.west-beta.ts.net
+        - host: &host draw
           paths:
             - path: /
               pathType: Prefix

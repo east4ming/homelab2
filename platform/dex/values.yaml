@@ -44,7 +44,7 @@ dex:
       tailscale.com/experimental-forward-cluster-traffic-via-ingress: "true"
       tailscale.com/proxy-group: ingress-proxies
     hosts:
-      - host: &host dex.west-beta.ts.net
+      - host: &host dex
         paths:
           - path: /
             pathType: Prefix

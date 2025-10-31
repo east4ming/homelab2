@@ -49,7 +49,7 @@ app-template:
       annotations:
         tailscale.com/proxy-group: ingress-proxies
       hosts:
-        - host: &host webtop.west-beta.ts.net
+        - host: &host webtop
           paths:
             - path: /
               pathType: Prefix

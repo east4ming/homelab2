@@ -10,7 +10,7 @@ helm-dashboard:
     annotations:
       tailscale.com/proxy-group: ingress-proxies
     hosts:
-      - host: &host helm-dashboard.west-beta.ts.net
+      - host: &host helm-dashboard
         paths:
           - path: /
             pathType: Prefix

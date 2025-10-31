@@ -37,10 +37,10 @@ cilium_values:
         annotations:
           tailscale.com/proxy-group: ingress-proxies
         hosts:
-          - hubble.west-beta.ts.net
+          - hubble
         tls:
           - hosts:
-              - hubble.west-beta.ts.net
+              - hubble
     # Hubble Grafana dashboard
     metrics:
       enabled:

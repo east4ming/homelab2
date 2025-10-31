@@ -14,4 +14,4 @@ spec:
   ingressClassName: tailscale
   tls:
     - hosts:
-        - sonarr.west-beta.ts.net
+        - sonarr

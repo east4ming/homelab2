@@ -12,7 +12,7 @@ homepage:
       annotations:
         tailscale.com/proxy-group: ingress-proxies
       hosts:
-        - host: &host home.west-beta.ts.net
+        - host: &host home
           paths:
             - path: /
               pathType: Prefix

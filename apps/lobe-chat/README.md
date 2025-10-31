@@ -39,11 +39,11 @@ ingress:
         tailscale.com/proxy-group: ingress-proxies
     enabled: true
     hosts:
-        - minio.west-beta.ts.net
+        - minio
     ingressClassName: tailscale
     tls:
         - hosts:
-            - minio.west-beta.ts.net
+            - minio
 mode: standalone
 persistence:
     size: 100Gi

@@ -5,7 +5,7 @@ zot:
     annotations:
       tailscale.com/proxy-group: ingress-proxies
     hosts:
-      - host: &host registry.west-beta.ts.net
+      - host: &host registry
         paths:
           - path: /
     tls:

@@ -25,7 +25,7 @@ woodpecker:
         tailscale.com/experimental-forward-cluster-traffic-via-ingress: "true"
         tailscale.com/proxy-group: ingress-proxies
       hosts:
-        - host: &host ci.west-beta.ts.net
+        - host: &host ci
           paths:
             - path: /
       tls:

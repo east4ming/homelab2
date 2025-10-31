@@ -34,7 +34,7 @@ app-template:
       annotations:
         tailscale.com/proxy-group: ingress-proxies
       hosts:
-        - host: &ollamaHost ollama.west-beta.ts.net
+        - host: &ollamaHost ollama
           paths:
             - path: /
               pathType: Prefix

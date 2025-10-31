@@ -33,7 +33,7 @@ app-template:
       annotations:
         tailscale.com/proxy-group: ingress-proxies
       hosts:
-        - host: &host drop.west-beta.ts.net
+        - host: &host drop
           paths:
             - path: /
               pathType: Prefix

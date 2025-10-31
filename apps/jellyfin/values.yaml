@@ -108,7 +108,7 @@ app-template:
       annotations:
         tailscale.com/proxy-group: ingress-proxies
       hosts:
-        - host: &jellyfinHost jellyfin.west-beta.ts.net
+        - host: &jellyfinHost jellyfin
           paths:
             - path: /
               pathType: Prefix

@@ -28,13 +28,13 @@ kube-prometheus-stack:
       annotations:
         tailscale.com/proxy-group: ingress-proxies
       hosts:
-        - prometheus.west-beta.ts.net
+        - prometheus
       paths:
         - /
       pathType: Prefix
       tls:
         - hosts:
-            - prometheus.west-beta.ts.net
+            - prometheus
     prometheusConfigReloader:
       resources:
         requests:
@@ -108,13 +108,13 @@ kube-prometheus-stack:
       annotations:
         tailscale.com/proxy-group: ingress-proxies
       hosts:
-        - alertmanager.west-beta.ts.net
+        - alertmanager
       paths:
         - /
       pathType: Prefix
       tls:
         - hosts:
-            - alertmanager.west-beta.ts.net
+            - alertmanager
 
     prometheusConfigReloader:
       resources:

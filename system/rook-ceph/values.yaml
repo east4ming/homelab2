@@ -251,11 +251,11 @@ rook-ceph-cluster:
   ingress:
     dashboard:
       host:
-        name: rook-ceph-dashboard.west-beta.ts.net
+        name: rook-ceph-dashboard
         path: "/"
       tls:
         - hosts:
-            - rook-ceph-dashboard.west-beta.ts.net
+            - rook-ceph-dashboard
       ingressClassName: tailscale
       annotations:
         tailscale.com/proxy-group: ingress-proxies

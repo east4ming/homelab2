@@ -8,7 +8,7 @@ metadata:
 spec:
   ingressClassName: tailscale
   rules:
-    - host: lobe.west-beta.ts.net
+    - host: lobe
       http:
         paths:
           - backend:
@@ -20,4 +20,4 @@ spec:
             pathType: Prefix
   tls:
     - hosts:
-        - lobe.west-beta.ts.net
+        - lobe

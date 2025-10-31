@@ -8,7 +8,7 @@ grafana:
       tailscale.com/proxy-group: ingress-proxies
     ingressClassName: tailscale
     hosts:
-      - &host grafana.west-beta.ts.net
+      - &host grafana
     tls:
       - hosts:
           - *host

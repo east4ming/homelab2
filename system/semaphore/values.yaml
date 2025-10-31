@@ -98,7 +98,7 @@ app-template:
       annotations:
         tailscale.com/proxy-group: ingress-proxies
       hosts:
-        - host: &host semaphore.west-beta.ts.net
+        - host: &host semaphore
           paths:
             - path: /
               pathType: Prefix

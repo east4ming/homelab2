@@ -34,7 +34,7 @@ app-template:
       annotations:
         tailscale.com/proxy-group: ingress-proxies
       hosts:
-        - host: &host speedtest.west-beta.ts.net
+        - host: &host speedtest
           paths:
             - path: /
               pathType: Prefix

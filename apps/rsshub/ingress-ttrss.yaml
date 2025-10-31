@@ -8,7 +8,7 @@ metadata:
 spec:
   ingressClassName: tailscale
   rules:
-    - host: ttrss.west-beta.ts.net
+    - host: ttrss
       http:
         paths:
           - backend:
@@ -20,4 +20,4 @@ spec:
             pathType: Prefix
   tls:
     - hosts:
-        - ttrss.west-beta.ts.net
+        - ttrss

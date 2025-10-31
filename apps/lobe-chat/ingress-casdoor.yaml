@@ -8,7 +8,7 @@ metadata:
 spec:
   ingressClassName: tailscale
   rules:
-    - host: casdoor.west-beta.ts.net
+    - host: casdoor
       http:
         paths:
           - backend:
@@ -20,4 +20,4 @@ spec:
             pathType: Prefix
   tls:
     - hosts:
-        - casdoor.west-beta.ts.net
+        - casdoor
