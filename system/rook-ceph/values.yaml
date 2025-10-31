@@ -257,6 +257,8 @@ rook-ceph-cluster:
         - hosts:
             - rook-ceph-dashboard.west-beta.ts.net
       ingressClassName: tailscale
+      annotations:
+        tailscale.com/proxy-group: ingress-proxies
   toolbox:
     enabled: true
     resources:

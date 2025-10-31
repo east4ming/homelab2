@@ -105,6 +105,8 @@ app-template:
     main:
       enabled: true
       className: tailscale
+      annotations:
+        tailscale.com/proxy-group: ingress-proxies
       hosts:
         - host: &jellyfinHost jellyfin.west-beta.ts.net
           paths:

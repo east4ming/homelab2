@@ -30,6 +30,8 @@ app-template:
     main:
       enabled: true
       className: tailscale
+      annotations:
+        tailscale.com/proxy-group: ingress-proxies
       hosts:
         - host: &host drop.west-beta.ts.net
           paths:

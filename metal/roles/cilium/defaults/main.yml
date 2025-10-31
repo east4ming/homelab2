@@ -34,6 +34,8 @@ cilium_values:
       ingress:
         enabled: true
         className: "tailscale"
+        annotations:
+          tailscale.com/proxy-group: ingress-proxies
         hosts:
           - hubble.west-beta.ts.net
         tls:

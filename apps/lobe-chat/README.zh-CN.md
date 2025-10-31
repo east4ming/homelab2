@@ -36,6 +36,7 @@ deploymentUpdate:
 ingress:
     annotations:
         tailscale.com/experimental-forward-cluster-traffic-via-ingress: "true"
+        tailscale.com/proxy-group: ingress-proxies
     enabled: true
     hosts:
         - minio.west-beta.ts.net

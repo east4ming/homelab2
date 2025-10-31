@@ -4,6 +4,8 @@ grafana:
   adminPassword: crse4zLTjCrds8PxdOlTRgcs2jh4QP1AgNM350IG
   ingress:
     enabled: true
+    annotations:
+      tailscale.com/proxy-group: ingress-proxies
     ingressClassName: tailscale
     hosts:
       - &host grafana.west-beta.ts.net

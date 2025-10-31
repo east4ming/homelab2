@@ -62,6 +62,7 @@
 - [x] tailscale funnel - replace cloudflared
 - [x] tailscale dns - replace external-dns
 - [x] tailscale proxygroup
+- [x] tailscale HA
 
 ### Observability
 

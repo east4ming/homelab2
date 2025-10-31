@@ -3,6 +3,8 @@ kind: Ingress
 metadata:
   name: ttrss
   namespace: rsshub
+  annotations:
+    tailscale.com/proxy-group: ingress-proxies
 spec:
   ingressClassName: tailscale
   rules:

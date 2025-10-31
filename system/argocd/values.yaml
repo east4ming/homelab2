@@ -14,6 +14,8 @@ argo-cd:
     ingress:
       enabled: true
       ingressClassName: tailscale
+      annotations:
+        tailscale.com/proxy-group: ingress-proxies
       tls: true
     metrics: &metrics
       enabled: true
