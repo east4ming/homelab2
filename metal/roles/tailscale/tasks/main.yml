@@ -33,3 +33,4 @@
     template: "{{ item }}"
   loop:
     - dnsconfig.yaml
+    - proxygroup.yaml
