@@ -9,6 +9,9 @@ app-template:
           image:
             repository: docker.io/ollama/ollama
             tag: 0.12.9
+          env:
+            OLLAMA_ORIGINS: "*"
+            OLLAMA_HOST: "0.0.0.0"
           probes:
             liveness:
               enabled: true
