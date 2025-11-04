@@ -90,7 +90,7 @@ spec:
                   name: lobe-ai-api-keys
                   key: ZHIPU_API_KEY
             - name: DEFAULT_FILES_CONFIG
-              value: embedding_model=ollama/qwen3-embedding
+              value: embedding_model=ollama/qwen3-embedding:0.6b
             - name: SEARCH_PROVIDERS
               value: searxng
             - name: SEARXNG_URL
