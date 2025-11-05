@@ -20,7 +20,7 @@ app-template:
               spec:
                 httpGet:
                   path: /api/health
-                  port: 5000
+                  port: 8090
                   scheme: HTTP
                 initialDelaySeconds: 0
                 periodSeconds: 10
@@ -45,7 +45,7 @@ app-template:
       controller: upsnap
       ports:
         http:
-          port: 5000
+          port: 8090
           protocol: HTTP
 
   # 使用主机网络
