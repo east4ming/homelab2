@@ -125,6 +125,10 @@ homepage:
               href: https://lobe.west-beta.ts.net
               description: An open-source, modern-design AI chat framework. Supports Multi AI Providers
               icon: https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/light/lobehub-color.png
+          - UpSnap:
+              href: https://upsnap.west-beta.ts.net
+              description: A simple wake on lan web app.
+              icon: upsnap.svg
       - Ops:
           - Hubble:
               href: https://hubble.west-beta.ts.net
