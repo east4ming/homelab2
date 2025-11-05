@@ -1,0 +1,71 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/refs/heads/main/charts/library/common/values.schema.json
+app-template:
+  # 控制器配置
+  controllers:
+    upsnap:
+      containers:
+        upsnap:
+          image:
+            repository: ghcr.io/seriousm4x/upsnap
+            tag: "5"
+          env:
+            TZ: Asia/Shanghai
+            UPSNAP_INTERVAL: "*/10 * * * * *"
+            UPSNAP_SCAN_RANGE: 192.168.3.0/24
+            UPSNAP_SCAN_TIMEOUT: 500ms
+          probes:
+            liveness:
+              enabled: true
+              custom: true
+              spec:
+                httpGet:
+                  path: /api/health
+                  port: 5000
+                  scheme: HTTP
+                initialDelaySeconds: 0
+                periodSeconds: 10
+          securityContext:
+            privileged: true # 因为需要特权模式运行UPSNAP_PING_PRIVILEGED=true(默认)
+
+  # 持久化存储配置
+  persistence:
+    data:
+      enabled: true
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 1Gi
+      advancedMounts:
+        upsnap:
+          upsnap:
+            - path: /app/pb_data
+
+  # 服务配置
+  service:
+    upsnap:
+      controller: upsnap
+      ports:
+        http:
+          port: 5000
+          protocol: HTTP
+
+  # 使用主机网络
+  defaultPodOptions:
+    hostNetwork: true
+    dnsConfig:
+      nameservers:
+        - 192.168.3.1
+  ingress:
+    upsnap:
+      enabled: true
+      className: tailscale
+      hosts:
+        - host: &upsnapHost upsnap.west-beta.ts.net
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: upsnap
+                port: http
+      tls:
+        - hosts:
+            - *upsnapHost
