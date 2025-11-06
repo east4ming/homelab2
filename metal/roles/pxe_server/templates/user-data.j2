@@ -183,5 +183,7 @@ autoinstall:
       - curl -fsSL https://tailscale.com/install.sh | sh
       - tailscale up --accept-dns=false --authkey {{ tailscale_auth_key }} --force-reauth=true --timeout 30s --reset --operator={{ username }} --ssh --hostname {{ hostvars[item]['inventory_hostname'] }}
       - tailscale set --auto-update
+      # 使用 Tailscale Services 的前提条件
+      - tailscale set --accept-routes=true
       # Starship
       - curl -sS https://starship.rs/install.sh | sh -s -- -y
