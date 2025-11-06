@@ -25,6 +25,8 @@ kube-prometheus-stack:
     ingress:
       enabled: true
       ingressClassName: tailscale
+      annotations:
+        tailscale.com/proxy-group: ingress-proxies
       hosts:
         - prometheus.west-beta.ts.net
       paths:
@@ -103,6 +105,8 @@ kube-prometheus-stack:
     ingress:
       enabled: true
       ingressClassName: tailscale
+      annotations:
+        tailscale.com/proxy-group: ingress-proxies
       hosts:
         - alertmanager.west-beta.ts.net
       paths:

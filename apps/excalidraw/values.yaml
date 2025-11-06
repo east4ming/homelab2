@@ -33,6 +33,7 @@ app-template:
       className: tailscale
       annotations:
         tailscale.com/funnel: "true"
+        tailscale.com/proxy-group: ingress-proxies
       hosts:
         - host: &host draw.west-beta.ts.net
           paths:

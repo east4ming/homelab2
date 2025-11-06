@@ -26,6 +26,8 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: foo
+  annotations:
+    tailscale.com/proxy-group: ingress-proxies
 spec:
   defaultBackend:
     service:
@@ -37,6 +39,8 @@ spec:
     - hosts:
         - foo
 ```
+
+(Optional): `tailscale.com/proxy-group: ingress-proxies`
 
 Currently the only supported [`Ingress` path type](https://kubernetes.io/docs/concepts/services-networking/ingress/#path-types) is `Prefix`. Requests for paths with other path types will be routed according to `Prefix` rules.
 

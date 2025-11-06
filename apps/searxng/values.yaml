@@ -61,6 +61,8 @@ app-template:
     caddy:
       enabled: true
       className: tailscale
+      annotations:
+        tailscale.com/proxy-group: ingress-proxies
       hosts:
         - host: &host searxng.west-beta.ts.net
           paths:
