@@ -3,6 +3,8 @@ kind: Ingress
 metadata:
   name: prowlarr
   namespace: {{ .Release.Namespace }}
+  annotations:
+    tailscale.com/proxy-group: ingress-proxies
 spec:
   defaultBackend:
     service:

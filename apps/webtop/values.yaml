@@ -46,6 +46,8 @@ app-template:
     webtop:
       enabled: true
       className: tailscale
+      annotations:
+        tailscale.com/proxy-group: ingress-proxies
       hosts:
         - host: &host webtop.west-beta.ts.net
           paths:

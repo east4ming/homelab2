@@ -58,6 +58,8 @@ app-template:
     upsnap:
       enabled: true
       className: tailscale
+      annotations:
+        tailscale.com/proxy-group: ingress-proxies
       hosts:
         - host: &upsnapHost upsnap.west-beta.ts.net
           paths:

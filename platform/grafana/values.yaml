@@ -5,6 +5,8 @@ grafana:
   ingress:
     enabled: true
     ingressClassName: tailscale
+    annotations:
+      tailscale.com/proxy-group: ingress-proxies
     hosts:
       - &host grafana.west-beta.ts.net
     tls:
