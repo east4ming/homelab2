@@ -54,7 +54,7 @@ def apply_custom_resource(api, group, version, plural, name, namespace, body):
 apply_custom_resource(
     api=client.CustomObjectsApi(),
     group="external-secrets.io",
-    version="v1beta1",
+    version="v1",
     plural="externalsecrets",
     name=secret,
     namespace=namespace,
