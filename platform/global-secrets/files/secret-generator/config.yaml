@@ -17,13 +17,6 @@
       length: 32
       special: false
 
-# Registry
-- name: registry.admin
-  data:
-    - key: password
-      length: 32
-      special: true
-
 # Woodpecker
 - name: woodpecker.agent
   data:
