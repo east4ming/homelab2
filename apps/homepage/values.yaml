@@ -106,10 +106,6 @@ homepage:
               href: https://argocd.west-beta.ts.net
               description: Continuous deployment
               icon: argocd.svg
-          - Registry:
-              href: https://registry.west-beta.ts.net
-              description: Container registry
-              icon: docker.svg
           - Grafana:
               href: https://grafana.west-beta.ts.net
               description: Observability dashboards

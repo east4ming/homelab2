@@ -23,7 +23,6 @@ func TestSmoke(t *testing.T) {
 		{"grafana", "grafana"},
 		{"homepage", "homepage"},
 		{"kanidm", "kanidm"},
-		{"zot", "zot"},
 	}
 
 	for _, app := range mainApps {
