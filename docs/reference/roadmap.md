@@ -9,7 +9,7 @@
 ### Optimized for China
 
 - [ ] YUM/APT Repo
-- [ ] Docker Registry
+- [x] Docker Registry (based on Cloudflare and K3s Embedded Registry Mirror)
 - [x] NTP Server
 - [ ] Add domains to `/etc/hosts` and coredns configmap
 
@@ -85,7 +85,6 @@
   - [x] Dex
   - [x] external-secrets
   - [x] Grafana
-  - [x] Zot
 - [ ] More PrometheusRules/Alerts
   - [x] ArgoCD
   - [x] Loki/Promtail
@@ -166,7 +165,7 @@ Good enough for tinkering and personal usage, and reasonably secure.
 - [x] Core applications
   - [x] Gitea
   - [x] Woodpecker
-  - [x] Private container registry
+  - [x] Private container registry (based on Cloudflare and K3s Embedded Registry Mirror)
   - [x] Homepage
 
 ## Stable requirements

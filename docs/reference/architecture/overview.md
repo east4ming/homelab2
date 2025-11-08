@@ -71,7 +71,6 @@ flowchart TD
     Kanidm
     Renovate
     Woodpecker
-    Zot
   end
 
   subgraph apps[./apps]

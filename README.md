@@ -69,7 +69,7 @@ More information can be found in [the roadmap](#roadmap) below.
 - [x] Automatically update DNS records for exposed services ([Tailscale MagicDNS](https://tailscale.com/kb/1217/tailnet-name))
 - [x] Expose services to the internet securely with [Tailscale Funnel](https://tailscale.com/kb/1223/tailscale-funnel)
 - [x] CI/CD platform
-- [x] Private container registry
+- [x] Private container registry (based on Cloudflare and K3s Embedded Registry Mirror)
 - [x] Distributed storage
 - [x] Support multiple environments (dev, prod)
 - [x] Monitoring and alerting
@@ -251,11 +251,6 @@ They can't capture all the project's features, but they are sufficient to get a 
         <td><img width="32" src="https://avatars.githubusercontent.com/u/84780935?s=200&v=4"></td>
         <td><a href="https://woodpecker-ci.org">Woodpecker CI</a></td>
         <td>Simple yet powerful CI/CD engine with great extensibility</td>
-    </tr>
-    <tr>
-        <td><img width="32" src="https://zotregistry.dev/v2.0.2/assets/images/logo.svg"></td>
-        <td><a href="https://zotregistry.dev">Zot Registry</a></td>
-        <td>Private container registry</td>
     </tr>
 </table>
 
