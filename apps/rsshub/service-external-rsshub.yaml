@@ -3,6 +3,7 @@ kind: Service
 metadata:
   annotations:
     tailscale.com/tailnet-fqdn: rss.west-beta.ts.net
+    tailscale.com/proxy-group: egress-proxies
   name: egress-rss
   namespace: rsshub
 spec:

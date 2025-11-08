@@ -3,6 +3,7 @@ kind: Service
 metadata:
   annotations:
     tailscale.com/tailnet-fqdn: lobe.west-beta.ts.net
+    tailscale.com/proxy-group: egress-proxies
   name: egress-lobe
 spec:
   externalName: unused
