@@ -9,3 +9,7 @@ metadata:
 spec:
   externalName: unused
   type: ExternalName
+  ports:
+    - port: 443
+      protocol: TCP
+      name: https
