@@ -4,6 +4,7 @@ metadata:
   annotations:
     tailscale.com/tailnet-fqdn: auth.west-beta.ts.net
     tailscale.com/proxy-group: egress-proxies
+    tailscale.com/proxy-class: accept-routes
   name: egress-auth
   namespace: {{ .Release.Namespace }}
 spec:

@@ -34,3 +34,4 @@
   loop:
     - dnsconfig.yaml
     - proxygroup.yaml
+    - proxyclass.yaml
