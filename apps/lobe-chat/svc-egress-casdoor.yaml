@@ -3,6 +3,7 @@ kind: Service
 metadata:
   annotations:
     tailscale.com/tailnet-fqdn: casdoor.west-beta.ts.net
+    tailscale.com/proxy-group: egress-proxies
   name: egress-casdoor
 spec:
   externalName: unused

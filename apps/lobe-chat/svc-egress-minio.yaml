@@ -3,6 +3,7 @@ kind: Service
 metadata:
   annotations:
     tailscale.com/tailnet-fqdn: minio.west-beta.ts.net
+    tailscale.com/proxy-group: egress-proxies
   name: egress-minio
 spec:
   externalName: unused

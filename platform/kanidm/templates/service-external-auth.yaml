@@ -3,6 +3,7 @@ kind: Service
 metadata:
   annotations:
     tailscale.com/tailnet-fqdn: auth.west-beta.ts.net
+    tailscale.com/proxy-group: egress-proxies
   name: egress-auth
   namespace: {{ .Release.Namespace }}
 spec:
