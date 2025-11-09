@@ -77,18 +77,6 @@ homepage:
               href: https://transmission.west-beta.ts.net
               description: Bittorrent client
               icon: transmission.svg
-          - Prowlarr:
-              href: https://prowlarr.west-beta.ts.net
-              description: Indexer manager
-              icon: prowlarr.svg
-          - Radarr:
-              href: https://radarr.west-beta.ts.net
-              description: Movie manager
-              icon: radarr.svg
-          - Sonarr:
-              href: https://sonarr.west-beta.ts.net
-              description: TV show manager
-              icon: sonarr.svg
           - Kanidm:
               href: https://auth.west-beta.ts.net
               description: Identity management
