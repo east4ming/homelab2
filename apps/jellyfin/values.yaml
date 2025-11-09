@@ -38,46 +38,6 @@ app-template:
             requests:
               cpu: 2m
               memory: 10Mi
-        prowlarr:
-          image:
-            repository: lscr.io/linuxserver/prowlarr
-            tag: 2.1.5
-          resources:
-            limits:
-              memory: 186Mi
-            requests:
-              cpu: 2m
-              memory: 101Mi
-        radarr:
-          image:
-            repository: lscr.io/linuxserver/radarr
-            tag: 5.28.0
-          resources:
-            requests:
-              cpu: 2m
-              memory: 104Mi
-            limits:
-              memory: 200Mi
-        sonarr:
-          image:
-            repository: lscr.io/linuxserver/sonarr
-            tag: 4.0.16
-          resources:
-            limits:
-              memory: 254Mi
-            requests:
-              cpu: 2m
-              memory: 187Mi
-        jellyseerr:
-          image:
-            repository: docker.io/fallenbagel/jellyseerr
-            tag: 2.7.3
-          resources:
-            limits:
-              memory: 319Mi
-            requests:
-              memory: 208Mi
-              cpu: 1m
   service:
     main:
       controller: main
@@ -88,18 +48,6 @@ app-template:
           primary: true
         transmission:
           port: 9091
-          protocol: HTTP
-        prowlarr:
-          port: 9696
-          protocol: HTTP
-        radarr:
-          port: 7878
-          protocol: HTTP
-        sonarr:
-          port: 8989
-          protocol: HTTP
-        jellyseerr:
-          port: 5055
           protocol: HTTP
   ingress:
     main:
@@ -137,26 +85,6 @@ app-template:
               subPath: transmission/config
             - path: /downloads
               subPath: transmission/downloads
-          prowlarr:
-            - path: /config
-              subPath: prowlarr/config
-          radarr:
-            - path: /config
-              subPath: radarr/config
-            - path: /downloads/complete
-              subPath: transmission/downloads/complete
-            - path: /movies
-              subPath: movies
-          sonarr:
-            - path: /config
-              subPath: sonarr/config
-            - path: /downloads/complete
-              subPath: transmission/downloads/complete
-            - path: /shows
-              subPath: shows
-          jellyseerr:
-            - path: /app/config
-              subPath: jellyseerr/config
     dri-devices:
       enabled: true
       type: hostPath
