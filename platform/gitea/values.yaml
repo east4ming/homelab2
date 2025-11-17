@@ -12,7 +12,6 @@ gitea:
     className: tailscale
     annotations:
       tailscale.com/experimental-forward-cluster-traffic-via-ingress: "true"
-      tailscale.com/proxy-group: ingress-proxies
     hosts:
       - host: &host git.west-beta.ts.net
         paths:
