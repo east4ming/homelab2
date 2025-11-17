@@ -60,10 +60,6 @@ homepage:
               href: https://jellyfin.west-beta.ts.net
               description: Media system (movies, music, etc.)
               icon: jellyfin.svg
-          - Jellyseerr:
-              href: https://jellyseerr.west-beta.ts.net
-              description: Request media
-              icon: jellyseerr.svg
           - Paperless:
               href: https://paperless.west-beta.ts.net
               description: Document management system
