@@ -15,7 +15,7 @@ rustfs:
     className: tailscale
     # TODO: rustfs 还不支持annotations
     # annotations:
-    #   tailscale.com/experimental-forward-cluster-traffic-via-ingress: "true"
+    #   tailscale.com/proxy-group: ingress-proxies
     hosts:
       - host: rustfs.west-beta.ts.net
         paths:
