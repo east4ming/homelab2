@@ -77,6 +77,10 @@ homepage:
               href: https://auth.west-beta.ts.net
               description: Identity management
               icon: https://auth.west-beta.ts.net/pkg/img/logo-square.svg
+          - RustFS:
+              href: https://rustfs.west-beta.ts.net
+              description: An open-source, S3-compatible high-performance object storage system.
+              icon: https://docs.rustfs.com/images/logo.svg
       - Development:
           - Gitea:
               href: https://git.west-beta.ts.net
