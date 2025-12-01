@@ -10,7 +10,7 @@ rustfs:
       secret_key: zsd4lsRZHeD9I0OX2pr2I2HBCkzsuot9sFegcbmP5Co=
   storageclass:
     name: standard-rwo
-    size: 100Gi
+    size: 1Gi
   ingress:
     className: tailscale
     # TODO: rustfs 还不支持annotations
@@ -21,6 +21,9 @@ rustfs:
         paths:
           - path: /
             pathType: Prefix
+    tls:
+      - hosts:
+          - rustfs.west-beta.ts.net
 
   config:
     rustfs:
