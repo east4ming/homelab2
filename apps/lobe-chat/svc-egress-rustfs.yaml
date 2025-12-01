@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    tailscale.com/tailnet-fqdn: rustfs.west-beta.ts.net
+    tailscale.com/proxy-group: egress-proxies
+    tailscale.com/proxy-class: accept-routes
+  name: egress-rustfs
+spec:
+  externalName: unused
+  type: ExternalName
+  ports:
+    - port: 443
+      protocol: TCP
+      name: https
