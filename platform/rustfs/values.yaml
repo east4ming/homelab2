@@ -1,0 +1,30 @@
+rustfs:
+  mode:
+    standalone:
+      enabled: true
+    distributed:
+      enabled: false
+  secret:
+    rustfs:
+      access_key: rustfsadmin
+      secret_key: zsd4lsRZHeD9I0OX2pr2I2HBCkzsuot9sFegcbmP5Co=
+  storageclass:
+    name: standard-rwo
+    size: 100Gi
+  ingress:
+    className: tailscale
+    # TODO: rustfs 还不支持annotations
+    # annotations:
+    #   tailscale.com/experimental-forward-cluster-traffic-via-ingress: "true"
+    hosts:
+      - host: rustfs.west-beta.ts.net
+        paths:
+          - path: /
+            pathType: Prefix
+
+  config:
+    rustfs:
+      log_level: "info"
+      rust_log: "info"
+  service:
+    type: ClusterIP
