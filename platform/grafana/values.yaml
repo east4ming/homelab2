@@ -23,9 +23,9 @@ grafana:
       enabled: true
     resources:
       requests:
-        memory: 123Mi
+        memory: 256Mi
       limits:
-        memory: 123Mi
+        memory: 512Mi
   envFromSecret: grafana-secrets
   grafana.ini:
     server:
