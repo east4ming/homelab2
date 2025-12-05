@@ -1,4 +1,4 @@
-resource "kubernetes_secret" "ntfy_auth" {
+resource "kubernetes_secret_v1" "ntfy_auth" {
   metadata {
     name      = "webhook-transformer"
     namespace = "monitoring-system"
