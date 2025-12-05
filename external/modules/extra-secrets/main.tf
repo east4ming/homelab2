@@ -1,4 +1,4 @@
-resource "kubernetes_secret" "external" {
+resource "kubernetes_secret_v1" "external" {
   metadata {
     name      = var.name
     namespace = var.namespace
