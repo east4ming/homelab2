@@ -10,7 +10,8 @@ rustfs:
       secret_key: zsd4lsRZHeD9I0OX2pr2I2HBCkzsuot9sFegcbmP5Co=
   storageclass:
     name: standard-rwo
-    size: 1Gi
+    dataStorageSize: 1Gi
+    logStorageSize: 1Gi
   ingress:
     className: tailscale
     customAnnotations:
