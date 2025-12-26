@@ -13,17 +13,19 @@ rustfs:
     size: 1Gi
   ingress:
     className: tailscale
-    # TODO: rustfs 还不支持annotations
-    # annotations:
-    #   tailscale.com/proxy-group: ingress-proxies
+    customAnnotations:
+      tailscale.com/experimental-forward-cluster-traffic-via-ingress: "true"
     hosts:
       - host: rustfs.west-beta.ts.net
         paths:
           - path: /
             pathType: Prefix
     tls:
-      - hosts:
-          - rustfs.west-beta.ts.net
+      enabled: true
+      # 其实是因为tailscale也是自动生成证书的
+      # 这样配置避免tls secret的创建
+      certManager:
+        enabled: true
 
   config:
     rustfs:
