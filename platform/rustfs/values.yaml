@@ -22,8 +22,7 @@ rustfs:
           - path: /
             pathType: Prefix
     tls:
-      - hosts:
-          - rustfs.west-beta.ts.net
+      enabled: true
 
   config:
     rustfs:
