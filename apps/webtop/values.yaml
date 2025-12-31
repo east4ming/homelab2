@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s/helm-charts/app-template-3.7.1/charts/other/app-template/values.schema.json
 app-template:
   defaultPodOptions:
-    enableServiceLinks: true
+    enableServiceLinks: false
   controllers:
     webtop:
       strategy: Recreate
