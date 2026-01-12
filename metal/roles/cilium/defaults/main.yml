@@ -86,8 +86,8 @@ cilium_values:
     # enable pod BBR
     bbr: true
   # https://tailscale.com/kb/1236/kubernetes-operator?q=operator#cilium-in-kube-proxy-replacement-mode
-  socketLB:
-    hostNamespaceOnly: true
+  # socketLB:
+  #   hostNamespaceOnly: true
   # enable metrics - cilium agent
   prometheus:
     enabled: true
