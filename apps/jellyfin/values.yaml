@@ -4,6 +4,7 @@ app-template:
     enableServiceLinks: false
     securityContext:
       fsGroup: 1000
+    hostNetwork: true
   controllers:
     main:
       containers:
