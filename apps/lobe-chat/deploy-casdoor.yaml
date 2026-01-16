@@ -57,6 +57,30 @@ spec:
               memory: 35Mi
             limits:
               memory: 100Mi
+          livenessProbe:
+            httpGet:
+              path: /api/get-version-info
+              port: 8000
+            initialDelaySeconds: 60
+            periodSeconds: 30
+            timeoutSeconds: 10
+            failureThreshold: 5
+          readinessProbe:
+            httpGet:
+              path: /api/get-version-info
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /api/get-version-info
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
       restartPolicy: Always
       volumes:
         - configMap:
