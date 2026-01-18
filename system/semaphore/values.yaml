@@ -26,6 +26,8 @@ app-template:
           env:
             - name: TZ
               value: Asia/Shanghai
+            - name: SEMAPHORE_SCHEDULE_TIMEZONE
+              value: Asia/Shanghai
             - name: SEMAPHORE_PORT
               value: ":3000"
             - name: SEMAPHORE_ACCESS_KEY_ENCRYPTION
