@@ -3,6 +3,7 @@ app-template:
   defaultPodOptions:
     enableServiceLinks: false
     hostNetwork: true
+    dnsPolicy: ClusterFirstWithHostNet
   controllers:
     semaphore:
       forceRename: semaphore
