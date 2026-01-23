@@ -267,3 +267,5 @@ rook-ceph-cluster:
       requests:
         cpu: "2m"
         memory: "10Mi"
+  cephImage:
+    imagePullPolicy: IfNotPresent
