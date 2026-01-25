@@ -8,7 +8,7 @@ app-template:
         main:
           image:
             repository: docker.io/ollama/ollama
-            tag: 0.14.3
+            tag: 0.15.0
           probes:
             liveness:
               enabled: true
