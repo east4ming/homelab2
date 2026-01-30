@@ -54,9 +54,9 @@ spec:
           resources:
             requests:
               cpu: 1m
-              memory: 35Mi
+              memory: 64Mi
             limits:
-              memory: 100Mi
+              memory: 128Mi
           livenessProbe:
             httpGet:
               path: /api/get-version-info
