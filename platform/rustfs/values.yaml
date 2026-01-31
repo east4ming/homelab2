@@ -34,3 +34,6 @@ rustfs:
       rust_log: "info"
   service:
     type: ClusterIP
+
+  gatewayApi:
+    gatewayClass: ""
