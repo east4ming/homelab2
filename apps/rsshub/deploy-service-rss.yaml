@@ -62,7 +62,7 @@ spec:
               cpu: 31m
               memory: 138Mi
             limits:
-              memory: 138Mi
+              memory: 256Mi
       initContainers:
         - command:
             - chmod
