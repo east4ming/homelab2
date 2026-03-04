@@ -30,8 +30,10 @@ rustfs:
 
   config:
     rustfs:
-      log_level: "info"
-      rust_log: "info"
+      log_level: "warn"
+      rust_log: "warn"
+      log_rotation:
+        size: 30
   service:
     type: ClusterIP
 
