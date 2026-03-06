@@ -30,8 +30,8 @@ rustfs:
 
   config:
     rustfs:
-      log_level: "warn"
-      rust_log: "warn"
+      log_level: "error"
+      rust_log: "error"
       log_rotation:
         size: 30
   service:
