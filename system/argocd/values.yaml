@@ -78,6 +78,10 @@ argocd-apps:
               - path: system/*
               - path: platform/*
               - path: apps/*
+      # Ref https://argo-cd.readthedocs.io/en/stable/operator-manual/applicationset/Controlling-Resource-Modification/#allow-temporarily-toggling-auto-sync
+      ignoreApplicationDifferences:
+        - jsonPointers:
+            - /spec/syncPolicy
       template:
         metadata:
           name: "{{path.basename}}"
