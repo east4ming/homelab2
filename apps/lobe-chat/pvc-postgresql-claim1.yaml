@@ -1,11 +1,9 @@
-# 闲置中. 先保存一个月
-# 待 v2 平稳运行一个月后再删除
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   labels:
-    io.kompose.service: postgresql-claim0
-  name: postgresql-claim0
+    io.kompose.service: postgresql-claim1
+  name: postgresql-claim1
 spec:
   accessModes:
     - ReadWriteOnce

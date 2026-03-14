@@ -36,8 +36,6 @@ spec:
                 secretKeyRef:
                   name: lobe-auth
                   key: AUTH_CASDOOR_SECRET
-            - name: NEXTAUTH_URL
-              value: https://lobe.west-beta.ts.net/api/auth
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
@@ -50,13 +48,18 @@ spec:
                   key: KEY_VAULTS_SECRET
             - name: LLM_VISION_IMAGE_USE_BASE64
               value: "1"
-            - name: NEXT_AUTH_SECRET
+            - name: AUTH_SECRET
               valueFrom:
                 secretKeyRef:
                   name: lobe-auth
-                  key: NEXT_AUTH_SECRET
-            - name: NEXT_AUTH_SSO_PROVIDERS
+                  key: AUTH_SECRET
+            - name: AUTH_SSO_PROVIDERS
               value: casdoor
+            # https://lobehub.com/zh/docs/self-hosting/environment-variables/auth#jwks-key
+            - name: JWKS_KEY
+              value: '{"keys":[{"d":"B_AeLrsWQrKSyOh1ndsciNIAPkunVjs_qkArZ1muUeeB1isOCDkfwpyGgSKXtDLb8GLjk0S7ZnBA___1_RvWFS2r7BuJvDfAlFNzn1icWRVF8OGsQOnz7HqV9sEJrRKvuOhJiAanLAKe-2bU-T3ljL9Zsb68wMSH2zYuDJIsNs97Ra7ruPjw-5xRWoMGM_8vf5HLXHHBOu3Vtk71eI8QkABsoeY3vf3AgiCqoWftmiAZIbZpNnqNC0JQ3XV-OeVBMe2sxj9w3BkrZ5-cwGwTUT91DEKolPTOCJfNuTOdEVTyWE0thVsidalxoUSzSftdyoZGAfV4lkP2-hsEkoEJWQ","dp":"kjv89lfLfnqJu-LpK_ziQlP3fC1HVkDszEe9i3jbKK7M68ZjWfyfB_h4k4n7K3Y9o6DwlVaUyr2lmXmh0uemartai9wRoRN8fin4fHnjEx8ZCgfcDg2EWCnyK3YFLdUBdEU6usRj92Z_TwLtBS7dKrolk8S-8WrGVXdw0Bx15CU","dq":"k63Ruj7inTUZNjyOlt1ex4-QArYjPrIUAVizEGD9lhmFBIS1u4Ov_u84F1h4ICfbH8KSW7coCiifRmFshBI98VEcj_R5uLWDo95Yj_pmZGtDwRfUtg7GEP8vj0lX4x86A97WQvWJRy1GDD2Xc1ttuDR-I9Web67GqE6rsYXOiVE","e":"AQAB","kty":"RSA","n":"qar8zP67pNdBJmKJUJa1JNKnwoqX-TPajciBNJCxFFf6kuGHPQD8kZP4n9bhd17thuwjv2cnhRIyMyZAkqccbiIStil7el7GMDuqICnxa0Tzzycgka7G1IeENb23LS950o2qq2yZAzJ4Xo2M0LDm4YfynxaK6r9GvOO0QIeoBqkJcNZC3HwyB3Gh19bZ5gtCUbDjDgg15sr0FadG1dqGATg_u635FMTyLoubLykAa4nOoNHqkoJszKb1bQGSs46MrsBEK5KVY_fcLZVVMxlV3T8ARNa6BHs2Be1HrmMftVGC1HSKct-flUBti3et4IZnM5B2pJdAW1adndaOnYgJEw","p":"1fOse20zx6lFBHMy2KKSXpABvPpuRmNYU8klXEn3wZpTtLenZV-Yg-aJb4PoTV3zRw2F5NB_Sw10hl4uFtiEPK5csZH1oMVQvYCXpU3kwaNqxmiqer7T7He1mRt4Xpumq2vQfxkDZL9g1UC0u8AM8q4VCtZr3ecDKuJrpWmLqvs","q":"ywNN-wqlxu2dtSIJypo6xaoPMrEVy44LuXzOosUPlApppU10lGLSvyOpN12dQ28TbQbfvWEubzORjGySTY4FSBGEAZhULvMPhrIxoSRoxO4ple70h41zt9CprXXR3XpnyF-YDN1uM_NP9umQNK63uzFGcV2xm5zX0XYwesiCPsk","qi":"1fDsr9BhQDbDO8L94kLe0evVz6RbYHNKPPLOWiNbeyW0gmnFzKm6n2zvB5KBCX6V5eSXRmtxAJQ7C6Gwxs9knC47fWeUdznLfv_XJNtaSreTadTzSoZJU_cbhRPJek3vXREAu8Kdlz9bJ2k_fMciMgpXed7I7Pr0sshZ8zKEMZQ","use":"sig","kid":"11011992426f2cfa","alg":"RS256"}]}'
+            - name: CASDOOR_WEBHOOK_SECRET
+              value: 374a892701
             - name: S3_BUCKET
               value: lobe
             - name: S3_ENABLE_PATH_STYLE
@@ -95,7 +98,7 @@ spec:
               value: searxng
             - name: SEARXNG_URL
               value: http://searxng.searxng:8080
-          image: docker.io/lobehub/lobe-chat-database:latest
+          image: docker.io/lobehub/lobehub:2.1.42
           imagePullPolicy: Always
           name: lobe-chat
           ports:
