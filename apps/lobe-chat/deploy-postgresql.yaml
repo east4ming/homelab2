@@ -31,7 +31,7 @@ spec:
                 secretKeyRef:
                   name: lobe-db-secrets
                   key: PGVECTOR_POSTGRES_PASSWORD
-          image: pgvector/pgvector:pg16
+          image: paradedb/paradedb:latest-pg17
           imagePullPolicy: IfNotPresent
           livenessProbe:
             exec:
@@ -49,13 +49,13 @@ spec:
               protocol: TCP
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
-              name: postgresql-claim0
+              name: postgresql-claim1
           resources:
             requests:
               cpu: 11m
-              memory: 83Mi
+              memory: 128Mi
             limits:
-              memory: 117Mi
+              memory: 256Mi
       initContainers:
         - command:
             - rm
@@ -66,9 +66,9 @@ spec:
           name: chown-data
           volumeMounts:
             - mountPath: /var/lib/postgresql/data
-              name: postgresql-claim0
+              name: postgresql-claim1
       restartPolicy: Always
       volumes:
-        - name: postgresql-claim0
+        - name: postgresql-claim1
           persistentVolumeClaim:
-            claimName: postgresql-claim0
+            claimName: postgresql-claim1

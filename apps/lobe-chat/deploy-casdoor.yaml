@@ -41,7 +41,7 @@ spec:
               value: https://casdoor.west-beta.ts.net
             - name: runmode
               value: dev
-          image: casbin/casdoor:v1.840.0
+          image: casbin/casdoor:v1.843.0
           imagePullPolicy: IfNotPresent
           name: lobe-casdoor
           ports:
