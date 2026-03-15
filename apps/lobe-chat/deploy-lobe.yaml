@@ -92,8 +92,9 @@ spec:
                 secretKeyRef:
                   name: lobe-ai-api-keys
                   key: ZHIPU_API_KEY
+            # 默认只支持embedding_length=1024的embeddings模型
             - name: DEFAULT_FILES_CONFIG
-              value: embedding_model=ollama/snowflake-arctic-embed2
+              value: embedding_model=ollama/qwen3-embedding:0.6b
             - name: SEARCH_PROVIDERS
               value: searxng
             - name: SEARXNG_URL
