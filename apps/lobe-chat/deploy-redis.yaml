@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lobe-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lobe-redis
+  template:
+    metadata:
+      labels:
+        app: lobe-redis
+    spec:
+      containers:
+        - name: lobe-redis
+          image: redis:7-alpine
+          command: ["redis-server"]
+          args: ["--save", "60", "1000", "--appendonly", "yes"]
+          ports:
+            - containerPort: 6379
+          volumeMounts:
+            - name: redis-data
+              mountPath: /data
+          livenessProbe:
+            exec:
+              command:
+                - redis-cli
+                - ping
+            failureThreshold: 5
+            periodSeconds: 5
+            successThreshold: 1
+            timeoutSeconds: 3
+      restartPolicy: Always
+      volumes:
+        - name: redis-data
+          persistentVolumeClaim:
+            claimName: redis-data-pvc

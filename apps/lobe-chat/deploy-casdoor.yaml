@@ -59,7 +59,7 @@ spec:
               memory: 128Mi
           livenessProbe:
             httpGet:
-              path: /api/get-version-info
+              path: /api/health
               port: 8000
             initialDelaySeconds: 60
             periodSeconds: 30
@@ -67,7 +67,7 @@ spec:
             failureThreshold: 5
           readinessProbe:
             httpGet:
-              path: /api/get-version-info
+              path: /api/health
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 5
@@ -75,7 +75,7 @@ spec:
             failureThreshold: 3
           startupProbe:
             httpGet:
-              path: /api/get-version-info
+              path: /api/health
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 10
