@@ -53,7 +53,7 @@ spec:
           resources:
             requests:
               cpu: 11m
-              memory: 128Mi
+              memory: 83Mi
             limits:
               memory: 256Mi
       initContainers:

@@ -98,6 +98,12 @@ spec:
               value: searxng
             - name: SEARXNG_URL
               value: http://searxng.searxng:8080
+            - name: REDIS_URL
+              value: redis://redis:6379
+            - name: REDIS_PREFIX
+              value: lobechat
+            - name: REDIS_TLS
+              value: "0"
           image: docker.io/lobehub/lobehub:2.1.42
           imagePullPolicy: Always
           name: lobe-chat
