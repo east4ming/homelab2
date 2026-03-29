@@ -1,6 +1,6 @@
 # lobe-chat
 
-## Installation
+## Installation(Expired)
 
 Reference Documentation:
 
@@ -154,11 +154,10 @@ Emphasize again that lobe/casdoor/minio need to ensure that the domain name can 
 
 - [ ] Voice reading function not available
 - [ ] Should be able to set `S3_SET_ACL: "0"` to avoid anonymous read.
-- [ ] MinIO should be able to set bucket and policy directly through Helm without manual creation.
 - [x] Install plugins and persist (probably not needed? -- currently seems not needed)
 - [x] Current embedding_model is not effective, choose a better-performing model later. (using `zhipu/embedding-3`)
 - ~~Change to Helm chart~~
 - [x] ArgoCD deployment
 - [x] Remove sensitive information
 - [x] Ollama image deployment (enable GPU/SHM)
-- [x] MinIO ArgoCD deployment
+- [x] RustFS ArgoCD deployment

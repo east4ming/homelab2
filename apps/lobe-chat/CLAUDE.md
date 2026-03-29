@@ -9,7 +9,7 @@ This repository contains Kubernetes deployment manifests for self-hosting [Lobe 
 - **Lobe Chat**: Primary application (database variant with PostgreSQL support)
 - **Casdoor**: Authentication and single sign-on service
 - **PostgreSQL with pgvector**: Vector database for embeddings and knowledge base
-- **External S3-compatible storage**: Object storage for file uploads (configured to use rustfs, but originally designed for MinIO)
+- **External S3-compatible storage**: Object storage for file uploads (configured to use rustfs)
 
 The manifests are generated from Docker Compose using `kompose` and optimized for homelab Kubernetes clusters with Tailscale networking.
 
@@ -95,7 +95,7 @@ kubectl scale deployment/lobe --replicas=2 -n lobe-chat
 
 ### Storage Configuration
 - **PostgreSQL**: 10Gi PVC with pgvector extension
-- **S3 Storage**: Originally designed for MinIO but currently configured for rustfs. Bucket `lobe` with anonymous read access required for frontend file access.
+- **S3 Storage**: Currently configured for rustfs. Bucket `lobe` with anonymous read access required for frontend file access.
 - **File Processing**: Lobe Chat uses configured embedding models (`zhipu/embedding-3` or `ollama/snowflake-arctic-embed2:latest`) for knowledge base functionality.
 
 ## Important Notes for Development

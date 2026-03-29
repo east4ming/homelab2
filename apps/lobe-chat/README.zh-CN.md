@@ -1,6 +1,6 @@
 # lobe-chat
 
-## 安装
+## 安装(已过期)
 
 参考文档:
 
@@ -154,11 +154,10 @@ replicas: 1
 
 - [ ] 语音朗读功能不可用
 - [ ] 应该可以通过设置 `S3_SET_ACL: "0"`, 从而避免匿名读.
-- [ ] MinIO 应该可以通过 Helm 直接设置 bucket 及 policy, 而不用手动创建.
 - [x] 安装插件并持久化(可能不需要持久化? -- 目前看不需要持久化)
 - [x] 当前 embedding_model 效果不好, 后面选择一个效果好/性能好的模型. (使用 `zhipu/embedding-3`)
 - ~~改为 helm chart~~
 - [x] argocd 部署
 - [x] 移除敏感信息
 - [x] ollama 镜像部署(enable gpu/shm)
-- [x] minio argocd 部署
+- [x] rustfs argocd 部署

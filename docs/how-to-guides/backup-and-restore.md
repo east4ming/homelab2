@@ -2,12 +2,12 @@
 
 ## Prerequisites
 
-Create an S3 bucket to store backups. You can use AWS S3, Minio, or
+Create an S3 bucket to store backups. You can use AWS S3, RustFS, or
 any other S3-compatible provider.
 
 - For AWS S3, your bucket URL might look something like this:
   `https://s3.amazonaws.com/my-homelab-backup`.
-- For Minio, your bucket URL might look something like this:
+- For RustFS, your bucket URL might look something like this:
   `https://my-s3-host.example.com/homelab-backup`.
 
 Follow your provider's documentation to create a service account with the
@@ -40,7 +40,7 @@ save it there as well.
 
 !!! example
 
-    I use Minio for my homelab backups. Here's how I set it up:
+    I use RustFS for my homelab backups. Here's how I set it up:
 
     - Create a bucket named `homelab-backup`.
     - Create a service account under Identity -> Service Accounts -> Create
@@ -48,7 +48,7 @@ save it there as well.
         - Enable Restrict beyond user policy.
         - Paste the policy above.
         - Click Create and copy the access key and secret key
-    - I also set up Minio replication to store backups in two locations: one in
+    - I also set up RustFS replication to store backups in two locations: one in
       my house and one remotely.
 
 ## Add backup credentials to global secrets

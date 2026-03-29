@@ -3,11 +3,11 @@
 ## Prerequisites
 
 Create an S3 bucket named: `k3s-etcd-snapshot` (sure you can change it) to store backups.
-You can use AWS S3, Minio, or any other S3-compatible provider.
+You can use AWS S3, RustFS, or any other S3-compatible provider.
 
 - For AWS S3, your bucket URL might look something like this:
   `https://s3.amazonaws.com/my-homelab-backup`.
-- For Minio, your bucket URL might look something like this:
+- For RustFS, your bucket URL might look something like this:
   `https://my-s3-host.example.com/homelab-backup`.
 
 Please refer to the documentation [Backup and restore](#backup-and-restore) more details.
