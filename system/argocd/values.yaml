@@ -10,6 +10,21 @@ argo-cd:
       resource.customizations.ignoreResourceUpdates.all: |
         jsonPointers:
           - /status
+      accounts.holmesgptuser: apiKey, login
+    rbac:
+      policy.default: role:readonly
+      policy.csv: |
+        p, role:admin, *, *, *, allow
+        p, role:admin, accounts, apiKey, *, allow
+        p, holmesgpt, accounts, apiKey, holmesgpt, allow
+        p, holmesgpt, projects, get, *, allow
+        p, holmesgpt, applications, get, *, allow
+        p, holmesgpt, repositories, get, *, allow
+        p, holmesgpt, clusters, get, *, allow
+        p, holmesgpt, applications, manifests, */*, allow
+        p, holmesgpt, applications, resources, */*, allow
+        g, admin, role:admin
+        g, holmesgptuser, role:holmesgpt
   server:
     ingress:
       enabled: true
