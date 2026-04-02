@@ -56,7 +56,7 @@ grafana:
       callback_url: http://localhost:3000/
   persistence:
     enabled: true
-    size: 1Gi
+    size: 1200Mi
   useStatefulSet: true
   serviceMonitor:
     enabled: true
