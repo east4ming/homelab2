@@ -41,7 +41,7 @@ spec:
               value: https://casdoor.west-beta.ts.net
             - name: runmode
               value: dev
-          image: casbin/casdoor:v1.843.0
+          image: casbin/casdoor:v1.1000.0
           imagePullPolicy: IfNotPresent
           name: lobe-casdoor
           ports:
@@ -56,26 +56,23 @@ spec:
               cpu: 1m
               memory: 64Mi
             limits:
-              memory: 128Mi
+              memory: 256Mi
           livenessProbe:
-            httpGet:
-              path: /api/health
+            tcpSocket:
               port: 8000
             initialDelaySeconds: 60
             periodSeconds: 30
             timeoutSeconds: 10
             failureThreshold: 5
           readinessProbe:
-            httpGet:
-              path: /api/health
+            tcpSocket:
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 5
             timeoutSeconds: 5
             failureThreshold: 3
           startupProbe:
-            httpGet:
-              path: /api/health
+            tcpSocket:
               port: 8000
             initialDelaySeconds: 10
             periodSeconds: 10
