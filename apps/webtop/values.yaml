@@ -54,26 +54,24 @@ app-template:
           port: 3000
           protocol: TCP
         https:
-          port: 3001
+          # https://tailscale.com/docs/features/kubernetes-operator/how-to/cluster-ingress#exposing-cluster-workloads-using-a-kubernetes-ingress
+          port: 443
           protocol: TCP
+          targetPort: 3001
   ingress:
     webtop:
       enabled: true
       className: tailscale
       annotations:
         tailscale.com/proxy-group: ingress-proxies
-      hosts:
-        - host: &host webtop.west-beta.ts.net
-          paths:
-            - path: /
-              pathType: Prefix
-              service:
-                identifier: webtop
-                # https://tailscale.com/docs/features/kubernetes-operator/how-to/cluster-ingress#exposing-cluster-workloads-using-a-kubernetes-ingress
-                port: https
+      defaultBackend:
+        service:
+          name: webtop
+          port:
+            name: https
       tls:
         - hosts:
-            - *host
+            - webtop.west-beta.ts.net
   persistence:
     config:
       suffix: config
