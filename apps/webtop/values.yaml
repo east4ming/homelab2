@@ -27,6 +27,17 @@ app-template:
               value: fonts-noto-cjk|git|vim
             - name: LC_ALL
               value: zh_CN.UTF-8
+            # https://github.com/linuxserver/docker-webtop/blob/master/README.md
+            - name: PIXELFLUX_WAYLAND
+              value: "true"
+            - name: AUTO_GPU
+              value: "true"
+            - name: SELKIES_MANUAL_WIDTH
+              value: "1920"
+            - name: SELKIES_MANUAL_HEIGHT
+              value: "1080"
+            - name: MAX_RESOLUTION
+              value: "1920x1080"
           securityContext:
             privileged: true
           resources:
@@ -42,6 +53,9 @@ app-template:
         http:
           port: 3000
           protocol: TCP
+        https:
+          port: 3001
+          protocol: TCP
   ingress:
     webtop:
       enabled: true
@@ -55,7 +69,8 @@ app-template:
               pathType: Prefix
               service:
                 identifier: webtop
-                port: http
+                # https://tailscale.com/docs/features/kubernetes-operator/how-to/cluster-ingress#exposing-cluster-workloads-using-a-kubernetes-ingress
+                port: https
       tls:
         - hosts:
             - *host
