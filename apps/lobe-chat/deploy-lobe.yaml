@@ -57,7 +57,34 @@ spec:
               value: casdoor
             # https://lobehub.com/zh/docs/self-hosting/environment-variables/auth#jwks-key
             - name: JWKS_KEY
-              value: '{"keys":[{"d":"B_AeLrsWQrKSyOh1ndsciNIAPkunVjs_qkArZ1muUeeB1isOCDkfwpyGgSKXtDLb8GLjk0S7ZnBA___1_RvWFS2r7BuJvDfAlFNzn1icWRVF8OGsQOnz7HqV9sEJrRKvuOhJiAanLAKe-2bU-T3ljL9Zsb68wMSH2zYuDJIsNs97Ra7ruPjw-5xRWoMGM_8vf5HLXHHBOu3Vtk71eI8QkABsoeY3vf3AgiCqoWftmiAZIbZpNnqNC0JQ3XV-OeVBMe2sxj9w3BkrZ5-cwGwTUT91DEKolPTOCJfNuTOdEVTyWE0thVsidalxoUSzSftdyoZGAfV4lkP2-hsEkoEJWQ","dp":"kjv89lfLfnqJu-LpK_ziQlP3fC1HVkDszEe9i3jbKK7M68ZjWfyfB_h4k4n7K3Y9o6DwlVaUyr2lmXmh0uemartai9wRoRN8fin4fHnjEx8ZCgfcDg2EWCnyK3YFLdUBdEU6usRj92Z_TwLtBS7dKrolk8S-8WrGVXdw0Bx15CU","dq":"k63Ruj7inTUZNjyOlt1ex4-QArYjPrIUAVizEGD9lhmFBIS1u4Ov_u84F1h4ICfbH8KSW7coCiifRmFshBI98VEcj_R5uLWDo95Yj_pmZGtDwRfUtg7GEP8vj0lX4x86A97WQvWJRy1GDD2Xc1ttuDR-I9Web67GqE6rsYXOiVE","e":"AQAB","kty":"RSA","n":"qar8zP67pNdBJmKJUJa1JNKnwoqX-TPajciBNJCxFFf6kuGHPQD8kZP4n9bhd17thuwjv2cnhRIyMyZAkqccbiIStil7el7GMDuqICnxa0Tzzycgka7G1IeENb23LS950o2qq2yZAzJ4Xo2M0LDm4YfynxaK6r9GvOO0QIeoBqkJcNZC3HwyB3Gh19bZ5gtCUbDjDgg15sr0FadG1dqGATg_u635FMTyLoubLykAa4nOoNHqkoJszKb1bQGSs46MrsBEK5KVY_fcLZVVMxlV3T8ARNa6BHs2Be1HrmMftVGC1HSKct-flUBti3et4IZnM5B2pJdAW1adndaOnYgJEw","p":"1fOse20zx6lFBHMy2KKSXpABvPpuRmNYU8klXEn3wZpTtLenZV-Yg-aJb4PoTV3zRw2F5NB_Sw10hl4uFtiEPK5csZH1oMVQvYCXpU3kwaNqxmiqer7T7He1mRt4Xpumq2vQfxkDZL9g1UC0u8AM8q4VCtZr3ecDKuJrpWmLqvs","q":"ywNN-wqlxu2dtSIJypo6xaoPMrEVy44LuXzOosUPlApppU10lGLSvyOpN12dQ28TbQbfvWEubzORjGySTY4FSBGEAZhULvMPhrIxoSRoxO4ple70h41zt9CprXXR3XpnyF-YDN1uM_NP9umQNK63uzFGcV2xm5zX0XYwesiCPsk","qi":"1fDsr9BhQDbDO8L94kLe0evVz6RbYHNKPPLOWiNbeyW0gmnFzKm6n2zvB5KBCX6V5eSXRmtxAJQ7C6Gwxs9knC47fWeUdznLfv_XJNtaSreTadTzSoZJU_cbhRPJek3vXREAu8Kdlz9bJ2k_fMciMgpXed7I7Pr0sshZ8zKEMZQ","use":"sig","kid":"11011992426f2cfa","alg":"RS256"}]}'
+              value: "{\"keys\":[{\"d\":\"B_AeLrsWQrKSyOh1ndsciNIAPkunVjs_qkArZ1muUeeB1isOCDk\
+                fwpyGgSKXtDLb8GLjk0S7ZnBA___1_RvWFS2r7BuJvDfAlFNzn1icWRVF8OGsQO\
+                nz7HqV9sEJrRKvuOhJiAanLAKe-2bU-T3ljL9Zsb68wMSH2zYuDJIsNs97Ra7ru\
+                Pjw-5xRWoMGM_8vf5HLXHHBOu3Vtk71eI8QkABsoeY3vf3AgiCqoWftmiAZIbZp\
+                NnqNC0JQ3XV-OeVBMe2sxj9w3BkrZ5-cwGwTUT91DEKolPTOCJfNuTOdEVTyWE0\
+                thVsidalxoUSzSftdyoZGAfV4lkP2-hsEkoEJWQ\",\"dp\":\"kjv89lfLfnqJ\
+                u-LpK_ziQlP3fC1HVkDszEe9i3jbKK7M68ZjWfyfB_h4k4n7K3Y9o6DwlVaUyr2\
+                lmXmh0uemartai9wRoRN8fin4fHnjEx8ZCgfcDg2EWCnyK3YFLdUBdEU6usRj92\
+                Z_TwLtBS7dKrolk8S-8WrGVXdw0Bx15CU\",\"dq\":\"k63Ruj7inTUZNjyOlt\
+                1ex4-QArYjPrIUAVizEGD9lhmFBIS1u4Ov_u84F1h4ICfbH8KSW7coCiifRmFsh\
+                BI98VEcj_R5uLWDo95Yj_pmZGtDwRfUtg7GEP8vj0lX4x86A97WQvWJRy1GDD2X\
+                c1ttuDR-I9Web67GqE6rsYXOiVE\",\"e\":\"AQAB\",\"kty\":\"RSA\",\"n\
+                \":\"qar8zP67pNdBJmKJUJa1JNKnwoqX-TPajciBNJCxFFf6kuGHPQD8kZP4n9\
+                bhd17thuwjv2cnhRIyMyZAkqccbiIStil7el7GMDuqICnxa0Tzzycgka7G1IeEN\
+                b23LS950o2qq2yZAzJ4Xo2M0LDm4YfynxaK6r9GvOO0QIeoBqkJcNZC3HwyB3Gh\
+                19bZ5gtCUbDjDgg15sr0FadG1dqGATg_u635FMTyLoubLykAa4nOoNHqkoJszKb\
+                1bQGSs46MrsBEK5KVY_fcLZVVMxlV3T8ARNa6BHs2Be1HrmMftVGC1HSKct-flU\
+                Bti3et4IZnM5B2pJdAW1adndaOnYgJEw\",\"p\":\"1fOse20zx6lFBHMy2KKS\
+                XpABvPpuRmNYU8klXEn3wZpTtLenZV-Yg-aJb4PoTV3zRw2F5NB_Sw10hl4uFti\
+                EPK5csZH1oMVQvYCXpU3kwaNqxmiqer7T7He1mRt4Xpumq2vQfxkDZL9g1UC0u8\
+                AM8q4VCtZr3ecDKuJrpWmLqvs\",\"q\":\"ywNN-wqlxu2dtSIJypo6xaoPMrE\
+                Vy44LuXzOosUPlApppU10lGLSvyOpN12dQ28TbQbfvWEubzORjGySTY4FSBGEAZ\
+                hULvMPhrIxoSRoxO4ple70h41zt9CprXXR3XpnyF-YDN1uM_NP9umQNK63uzFGc\
+                V2xm5zX0XYwesiCPsk\",\"qi\":\"1fDsr9BhQDbDO8L94kLe0evVz6RbYHNKP\
+                PLOWiNbeyW0gmnFzKm6n2zvB5KBCX6V5eSXRmtxAJQ7C6Gwxs9knC47fWeUdznL\
+                fv_XJNtaSreTadTzSoZJU_cbhRPJek3vXREAu8Kdlz9bJ2k_fMciMgpXed7I7Pr\
+                0sshZ8zKEMZQ\",\"use\":\"sig\",\"kid\":\"11011992426f2cfa\",\"a\
+                lg\":\"RS256\"}]}"
             - name: CASDOOR_WEBHOOK_SECRET
               value: 374a892701
             - name: S3_BUCKET
@@ -105,7 +132,7 @@ spec:
               value: lobechat
             - name: REDIS_TLS
               value: "0"
-          image: docker.io/lobehub/lobehub:latest
+          image: docker.io/lobehub/lobehub:2.1.54
           imagePullPolicy: Always
           name: lobe-chat
           ports:
