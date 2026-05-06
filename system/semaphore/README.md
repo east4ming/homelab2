@@ -43,4 +43,4 @@ Edit the `/etc/semaphore/config.yml`, append the following configs.
 - <https://docs.semaphoreui.com/administration-guide/installation/docker/>
 - <https://github.com/semaphoreui/semaphore/tree/develop/deployment>
 - <https://docs.semaphoreui.com/administration-guide/configuration/>
-- <https://github.com/bjw-s/helm-charts/tree/main/charts>
+- <https://github.com/bjw-s-labs/helm-charts/tree/main/charts>
