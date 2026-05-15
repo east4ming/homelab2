@@ -5,9 +5,7 @@ rustfs:
     distributed:
       enabled: false
   secret:
-    rustfs:
-      access_key: rustfsadmin
-      secret_key: zsd4lsRZHeD9I0OX2pr2I2HBCkzsuot9sFegcbmP5Co=
+    existingSecret: rustfs-secret
   storageclass:
     name: standard-rwo
     dataStorageSize: 1Gi
