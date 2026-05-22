@@ -1,6 +1,5 @@
 # Homelab2
 
 <!-- SPECKIT START -->
-For additional context about technologies to be used, project structure,
-shell commands, and other important information, read the current plan
+当前 Plan: [specs/001-add-styleferry-app/plan.md](specs/001-add-styleferry-app/plan.md)
 <!-- SPECKIT END -->
