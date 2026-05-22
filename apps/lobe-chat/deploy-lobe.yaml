@@ -57,7 +57,8 @@ spec:
               value: casdoor
             # https://lobehub.com/zh/docs/self-hosting/environment-variables/auth#jwks-key
             - name: JWKS_KEY
-              value: "{\"keys\":[{\"d\":\"B_AeLrsWQrKSyOh1ndsciNIAPkunVjs_qkArZ1muUeeB1isOCDk\
+              value:
+                "{\"keys\":[{\"d\":\"B_AeLrsWQrKSyOh1ndsciNIAPkunVjs_qkArZ1muUeeB1isOCDk\
                 fwpyGgSKXtDLb8GLjk0S7ZnBA___1_RvWFS2r7BuJvDfAlFNzn1icWRVF8OGsQO\
                 nz7HqV9sEJrRKvuOhJiAanLAKe-2bU-T3ljL9Zsb68wMSH2zYuDJIsNs97Ra7ru\
                 Pjw-5xRWoMGM_8vf5HLXHHBOu3Vtk71eI8QkABsoeY3vf3AgiCqoWftmiAZIbZp\
@@ -132,7 +133,7 @@ spec:
               value: lobechat
             - name: REDIS_TLS
               value: "0"
-          image: docker.io/lobehub/lobehub:2.1.54
+          image: docker.io/lobehub/lobehub:2.2.0
           imagePullPolicy: Always
           name: lobe-chat
           ports:
