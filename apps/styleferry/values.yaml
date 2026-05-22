@@ -1,0 +1,74 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/app-template-5.0.0/charts/other/app-template/values.schema.json
+app-template:
+  defaultPodOptions:
+    enableServiceLinks: false
+  controllers:
+    main:
+      containers:
+        main:
+          image:
+            repository: registry.cn-hangzhou.aliyuncs.com/caseycui/styleferry
+            tag: 1.0.0
+          env:
+            BLOG_LLM_PROVIDER: deepseek
+            BLOG_LLM_BASE_URL: https://api.deepseek.com
+            BLOG_LLM_MODEL: deepseek-v4-flash
+            BLOG_SEARCH_PROVIDER: searxng
+            BLOG_SEARXNG_URL: http://searxng-caddy.searxng
+            BLOG_MONTHLY_COST_LIMIT: "100.0"
+            BLOG_LOG_LEVEL: DEBUG
+            BLOG_TRACING_PROVIDER: langsmith
+            BLOG_RECALL_BASE_URL: https://backend.getrecall.ai/api/v1
+            BLOG_SQLITE_PATH: /data/blog_system.db
+            BLOG_CACHE_DIR: /data/cache
+          envFrom:
+            - secret: "{{ .Release.Name }}-secret"
+          probes:
+            liveness:
+              enabled: true
+            readiness:
+              enabled: true
+            startup:
+              enabled: true
+              spec:
+                failureThreshold: 30
+                periodSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+  service:
+    main:
+      controller: main
+      ports:
+        http:
+          port: 8000
+          protocol: HTTP
+  ingress:
+    main:
+      enabled: true
+      className: tailscale
+      annotations:
+        tailscale.com/proxy-group: ingress-proxies
+      hosts:
+        - host: &host styleferry.west-beta.ts.net
+          paths:
+            - path: /
+              pathType: Prefix
+              service:
+                identifier: main
+                port: http
+      tls:
+        - hosts:
+            - *host
+  persistence:
+    data:
+      accessMode: ReadWriteOnce
+      size: 10Gi
+      advancedMounts:
+        main:
+          main:
+            - path: /data

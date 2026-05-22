@@ -25,7 +25,7 @@
 
 **Purpose**: 创建 StyleFerry Helm Chart 的目录结构
 
-- [ ] T001 Create directory structure `apps/styleferry/templates/`
+- [x] T001 Create directory structure `apps/styleferry/templates/`
 
 ---
 
@@ -35,8 +35,8 @@
 
 **⚠️ CRITICAL**: 完成此阶段后用户故事实现才能开始
 
-- [ ] T002 [P] Create `apps/styleferry/Chart.yaml` with app-template v5.0.1 dependency
-- [ ] T003 [P] Create `apps/styleferry/templates/secret.yaml` (ExternalSecret → global-secrets → key `styleferry`)
+- [x] T002 [P] Create `apps/styleferry/Chart.yaml` with app-template v5.0.1 dependency
+- [x] T003 [P] Create `apps/styleferry/templates/secret.yaml` (ExternalSecret → global-secrets → key `styleferry`)
 
 **Checkpoint**: Chart 骨架就绪——可开始填充 values.yaml
 
@@ -50,13 +50,13 @@
 
 ### Implementation for User Story 1
 
-- [ ] T004 [US1] Configure controller and image (`registry.cn-hangzhou.aliyuncs.com/caseycui/styleferry:1.0.0`) in `apps/styleferry/values.yaml`
-- [ ] T005 [US1] Configure non-sensitive env vars (BLOG_LLM_PROVIDER, BLOG_LLM_BASE_URL, BLOG_LLM_MODEL, BLOG_SEARCH_PROVIDER, BLOG_SEARXNG_URL, BLOG_MONTHLY_COST_LIMIT, BLOG_LOG_LEVEL, BLOG_TRACING_PROVIDER, BLOG_RECALL_BASE_URL, BLOG_SQLITE_PATH, BLOG_CACHE_DIR) in `apps/styleferry/values.yaml`
-- [ ] T006 [US1] Configure `envFrom` secret reference pointing to `styleferry` (via `{{ .Release.Name }}-secret`) in `apps/styleferry/values.yaml`
-- [ ] T007 [US1] Configure startup/liveness/readiness probes in `apps/styleferry/values.yaml`
-- [ ] T008 [US1] Configure service port (8000, HTTP) in `apps/styleferry/values.yaml`
-- [ ] T009 [US1] Set resources.requests (CPU 50m / Memory 128Mi) and resources.limits (CPU 500m / Memory 512Mi) in `apps/styleferry/values.yaml`
-- [ ] T010 [US1] Run `helmlint` and `yamllint` on `apps/styleferry/`
+- [x] T004 [US1] Configure controller and image (`registry.cn-hangzhou.aliyuncs.com/caseycui/styleferry:1.0.0`) in `apps/styleferry/values.yaml`
+- [x] T005 [US1] Configure non-sensitive env vars (BLOG_LLM_PROVIDER, BLOG_LLM_BASE_URL, BLOG_LLM_MODEL, BLOG_SEARCH_PROVIDER, BLOG_SEARXNG_URL, BLOG_MONTHLY_COST_LIMIT, BLOG_LOG_LEVEL, BLOG_TRACING_PROVIDER, BLOG_RECALL_BASE_URL, BLOG_SQLITE_PATH, BLOG_CACHE_DIR) in `apps/styleferry/values.yaml`
+- [x] T006 [US1] Configure `envFrom` secret reference pointing to `styleferry` (via `{{ .Release.Name }}-secret`) in `apps/styleferry/values.yaml`
+- [x] T007 [US1] Configure startup/liveness/readiness probes in `apps/styleferry/values.yaml`
+- [x] T008 [US1] Configure service port (8000, HTTP) in `apps/styleferry/values.yaml`
+- [x] T009 [US1] Set resources.requests (CPU 50m / Memory 128Mi) and resources.limits (CPU 500m / Memory 512Mi) in `apps/styleferry/values.yaml`
+- [x] T010 [US1] Run `helmlint` and `yamllint` on `apps/styleferry/`
 
 **Checkpoint**: Chart 核心功能完整——ArgoCD 可部署并启动 StyleFerry Pod
 
@@ -70,8 +70,8 @@
 
 ### Implementation for User Story 2
 
-- [ ] T011 [US2] Configure ingress section (enabled: true, className: tailscale) with proxy-group annotation in `apps/styleferry/values.yaml`
-- [ ] T012 [US2] Set ingress host `styleferry.west-beta.ts.net` with TLS in `apps/styleferry/values.yaml`
+- [x] T011 [US2] Configure ingress section (enabled: true, className: tailscale) with proxy-group annotation in `apps/styleferry/values.yaml`
+- [x] T012 [US2] Set ingress host `styleferry.west-beta.ts.net` with TLS in `apps/styleferry/values.yaml`
 
 **Checkpoint**: StyleFerry 可通过 Tailscale MagicDNS 域名访问
 
@@ -85,8 +85,8 @@
 
 ### Implementation for User Story 3
 
-- [ ] T013 [US3] Configure persistence PVC (accessMode: ReadWriteOnce, size: 10Gi) in `apps/styleferry/values.yaml`
-- [ ] T014 [US3] Configure advancedMounts mapping `/data` to PVC in `apps/styleferry/values.yaml`
+- [x] T013 [US3] Configure persistence PVC (accessMode: ReadWriteOnce, size: 10Gi) in `apps/styleferry/values.yaml`
+- [x] T014 [US3] Configure advancedMounts mapping `/data` to PVC in `apps/styleferry/values.yaml`
 
 **Checkpoint**: StyleFerry 数据持久化，Pod 重启数据不丢失
 
@@ -96,9 +96,9 @@
 
 **Purpose**: 集成到项目仪表盘和冒烟测试
 
-- [ ] T015 [P] Register StyleFerry entry in `apps/homepage/values.yaml` config.services
-- [ ] T016 [P] Add `https://styleferry.west-beta.ts.net` endpoint to `make smoke-test`
-- [ ] T017 Run final `helmlint`, `yamllint` verification on all changed files
+- [x] T015 [P] Register StyleFerry entry in `apps/homepage/values.yaml` config.services
+- [ ] T016 (已跳过 — 用户手动处理) [P] Add `https://styleferry.west-beta.ts.net` endpoint to `make smoke-test`
+- [x] T017 Run final `helmlint`, `yamllint` verification on all changed files
 
 ---
 

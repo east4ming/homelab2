@@ -111,6 +111,10 @@ homepage:
               href: https://lobe.west-beta.ts.net
               description: An open-source, modern-design AI chat framework. Supports Multi AI Providers
               icon: https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/light/lobehub-color.png
+          - StyleFerry:
+              href: https://styleferry.west-beta.ts.net
+              description: AI-powered blog generation service
+              icon: si-styleferry
           - UpSnap:
               href: https://upsnap.west-beta.ts.net
               description: A simple wake on lan web app.
