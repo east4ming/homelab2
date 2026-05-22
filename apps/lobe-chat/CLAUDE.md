@@ -37,3 +37,8 @@ K8s manifests for self-hosting Lobe Chat (AI chatbot) with Casdoor auth, Postgre
 - Secrets 不提交仓库，需外部管理
 - S3 存储需桶匿名读权限（前端文件展示用）
 - PostgreSQL PVC 大小可在 `pvc-postgresql.yaml` 调整
+
+<!-- SPECKIT START -->
+For additional context about technologies to be used, project structure,
+shell commands, and other important information, read the current plan
+<!-- SPECKIT END -->
