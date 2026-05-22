@@ -188,7 +188,7 @@ rook-ceph-cluster:
         limits:
           memory: 2264Mi
         requests:
-          cpu: 75m
+          cpu: 40m
           memory: 1500Mi
   cephBlockPools:
     - name: standard-rwo

@@ -18,10 +18,10 @@ kube-prometheus-stack:
                 storage: 30Gi
       resources:
         requests:
-          cpu: 207m
-          memory: 4819Mi
+          cpu: 160m
+          memory: 3968Mi
         limits:
-          memory: 6Gi
+          memory: 5Gi
     ingress:
       enabled: true
       ingressClassName: tailscale

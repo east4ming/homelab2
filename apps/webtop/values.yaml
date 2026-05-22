@@ -42,10 +42,10 @@ app-template:
             privileged: true
           resources:
             requests:
-              cpu: 100m
-              memory: 3471Mi
+              cpu: 76m
+              memory: 3038Mi
             limits:
-              memory: 4666Mi
+              memory: 3471Mi
   service:
     webtop:
       controller: webtop
