@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  name: ttrss
+  namespace: rsshub
+  annotations:
+    tailscale.com/proxy-group: ingress-proxies
+spec:
+  ingressClassName: tailscale
+  rules:
+    - host: ttrss.west-beta.ts.net
+      http:
+        paths:
+          - backend:
+              service:
+                name: service-rss
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
+  tls:
+    - hosts:
+        - ttrss.west-beta.ts.net

@@ -1,0 +1,5 @@
+apiVersion: v2
+name: rsshub
+version: 0.1.0
+appVersion: "1.0.0"
+description: RSSHub - RSS feed aggregator with browserless, postgres, redis, mercury parser, opencc, and ttrss

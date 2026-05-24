@@ -1,0 +1,5 @@
+# Helm ignore rules for rsshub
+*.sh
+README*
+.gitignore
+secret-*.yaml

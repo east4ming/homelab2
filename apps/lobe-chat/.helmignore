@@ -1,0 +1,7 @@
+# Helm ignore rules for lobe-chat
+*.sh
+*.example
+README*
+docs/
+examples/
+CLAUDE.md

@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+  annotations:
+    tailscale.com/tailnet-fqdn: rss.west-beta.ts.net
+    tailscale.com/proxy-group: egress-proxies
+    tailscale.com/proxy-class: accept-routes
+  name: egress-rss
+  namespace: rsshub
+spec:
+  externalName: unused
+  type: ExternalName
+  ports:
+    - port: 443
+      protocol: TCP
+      name: https
