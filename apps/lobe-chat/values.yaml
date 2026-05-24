@@ -1,0 +1,2 @@
+# Lobe Chat Helm Chart - 默认 values
+# 所有资源配置已硬编码在 templates 中，此文件保留为扩展点
