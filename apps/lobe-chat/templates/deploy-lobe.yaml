@@ -5,7 +5,7 @@ metadata:
     kompose.cmd: kompose -f compose.yaml convert
     kompose.version: 1.34.0 (HEAD)
   labels:
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/managed-by: { { .Release.Service } }
     io.kompose.service: lobe
   name: lobe
 spec:
@@ -156,7 +156,7 @@ spec:
             failureThreshold: 5
           readinessProbe:
             httpGet:
-              path: /
+              path: /api/version
               port: 3210
             initialDelaySeconds: 10
             periodSeconds: 5
@@ -164,7 +164,7 @@ spec:
             failureThreshold: 3
           startupProbe:
             httpGet:
-              path: /
+              path: /api/version
               port: 3210
             initialDelaySeconds: 10
             periodSeconds: 10
