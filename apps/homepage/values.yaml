@@ -112,7 +112,7 @@ homepage:
               description: An open-source, modern-design AI chat framework. Supports Multi AI Providers
               icon: https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/light/lobehub-color.png
           - StyleFerry:
-              href: https://styleferry.west-beta.ts.net
+              href: https://styleferry.west-beta.ts.net/docs/
               description: AI-powered blog generation service
               icon: si-styleferry
           - UpSnap:
