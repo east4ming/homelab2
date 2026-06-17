@@ -38,4 +38,5 @@
       "enabled": false
     },
   ],
+  "minimumReleaseAge": "7 days"
 }
