@@ -5,7 +5,7 @@ metadata:
     kompose.cmd: kompose -f compose.yaml convert
     kompose.version: 1.34.0 (HEAD)
   labels:
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/managed-by: "{{ .Release.Service }}"
     io.kompose.service: lobe
   name: lobe
 spec:
@@ -134,7 +134,7 @@ spec:
               value: lobechat
             - name: REDIS_TLS
               value: "0"
-          image: docker.io/lobehub/lobehub:2.2.0
+          image: docker.io/lobehub/lobehub:2.2.6
           imagePullPolicy: Always
           name: lobe-chat
           ports:
