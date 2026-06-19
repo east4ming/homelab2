@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   labels:
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/managed-by: "{{ .Release.Service }}"
   annotations:
     tailscale.com/experimental-forward-cluster-traffic-via-ingress: "true"
   name: rsshub

@@ -2,7 +2,7 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/managed-by: "{{ .Release.Service }}"
     io.kompose.service: database-postgres
   name: database-postgres-np
   namespace: rsshub

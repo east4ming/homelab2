@@ -5,7 +5,7 @@ metadata:
     kompose.cmd: kompose convert -f docker-compose.yml
     kompose.version: 1.26.1 (a9d05d509)
   labels:
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/managed-by: "{{ .Release.Service }}"
     app.kubernetes.io/part-of: rsshub
     io.kompose.service: redis
   name: redis

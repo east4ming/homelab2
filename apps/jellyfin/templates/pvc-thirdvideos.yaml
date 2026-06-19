@@ -2,7 +2,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: pvc-nfs-thirdvideos
-  namespace: {{ .Release.Namespace }}
+  namespace: "{{ .Release.Namespace }}"
 spec:
   accessModes:
     - ReadWriteMany

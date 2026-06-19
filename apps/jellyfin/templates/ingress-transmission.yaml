@@ -2,7 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: transmission
-  namespace: {{ .Release.Namespace }}
+  namespace: "{{ .Release.Namespace }}"
   annotations:
     tailscale.com/proxy-group: ingress-proxies
 spec:

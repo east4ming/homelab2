@@ -2,7 +2,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   labels:
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/managed-by: "{{ .Release.Service }}"
     io.kompose.service: postgresql-claim1
   name: postgresql-claim1
 spec:
