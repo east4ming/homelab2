@@ -1,6 +1,15 @@
 rook-ceph:
   monitoring:
     enabled: true
+  # [v1.20+] ceph-csi-operator subchart configuration.
+  # The csiServiceAccountPrefix must be empty for compatibility with the
+  # ceph-csi-drivers chart's ServiceAccount naming convention.
+  # Ref: https://rook.io/docs/rook/latest-release/Upgrade/rook-upgrade/#helm
+  ceph-csi-operator:
+    controllerManager:
+      manager:
+        env:
+          csiServiceAccountPrefix: ""
   csi:
     serviceMonitor:
       enabled: true
@@ -150,6 +159,35 @@ rook-ceph:
             memory: 64Mi
 
   enableDiscoveryDaemon: true
+# [v1.20+] ceph-csi-drivers chart — manages CSI Driver CRs, ServiceAccounts, and RBAC.
+# This chart is REQUIRED since v1.20.0. Without it, CSI components will fail with
+# ServiceAccount not found or RBAC permission denied errors.
+# Ref: https://rook.io/docs/rook/latest-release/Upgrade/rook-upgrade/#helm
+ceph-csi-drivers:
+  operatorConfig:
+    namespace: rook-ceph
+    create: true
+    driverSpecDefaults:
+      imageSet:
+        name: rook-csi-operator-image-set-configmap
+      clusterName: rook-ceph
+      nodePlugin:
+        priorityClassName: system-node-critical
+      controllerPlugin:
+        priorityClassName: system-cluster-critical
+  drivers:
+    rbd:
+      enabled: true
+      name: "rook-ceph.rbd.csi.ceph.com"
+    cephfs:
+      enabled: true
+      name: "rook-ceph.cephfs.csi.ceph.com"
+    nfs:
+      enabled: false
+      name: "rook-ceph.nfs.csi.ceph.com"
+    nvmeof:
+      enabled: false
+      name: "rook-ceph.nvmeof.csi.ceph.com"
 rook-ceph-cluster:
   monitoring:
     enabled: true

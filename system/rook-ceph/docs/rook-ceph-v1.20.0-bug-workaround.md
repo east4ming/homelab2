@@ -245,7 +245,154 @@ kubectl get volumeattachment -o jsonpath='{range .items[?(@.metadata.deletionTim
 
 ---
 
-## 附录：RBAC 绑定映射总表
+## 正式修复：基于官方升级指南的 Chart 优化
+
+以下是根据 [Rook 官方升级指南](https://rook.io/docs/rook/latest-release/Upgrade/rook-upgrade/) 对 ArgoCD 管理的 Helm Chart 进行的永久修复。
+
+### 核心变更
+
+#### 1. Chart.yaml — 添加 `ceph-csi-drivers` 依赖
+
+Rook v1.20.0 最大的架构变化是 CSI 驱动不再由 Rook Operator 直接部署，而是通过 **ceph-csi-operator** 管理。官方升级指南明确要求安装 `ceph-csi-drivers` chart。
+
+```yaml
+dependencies:
+  - name: rook-ceph
+    version: v1.20.1
+    repository: https://charts.rook.io/release
+  # [v1.20+] 必须添加！
+  - name: ceph-csi-drivers
+    version: 1.0.1
+    repository: https://ceph.github.io/ceph-csi-operator
+  - name: rook-ceph-cluster
+    version: v1.20.1
+    repository: https://charts.rook.io/release
+  - name: snapshot-controller
+    version: 5.1.1
+    repository: https://piraeus.io/helm-charts
+```
+
+#### 2. values.yaml — ceph-csi-operator 配置
+
+```yaml
+rook-ceph:
+  ceph-csi-operator:
+    controllerManager:
+      manager:
+        env:
+          # 必须为空字符串，与 ceph-csi-drivers chart 的 SA 命名兼容
+          csiServiceAccountPrefix: ""
+```
+
+#### 3. values.yaml — ceph-csi-drivers 配置
+
+```yaml
+ceph-csi-drivers:
+  operatorConfig:
+    namespace: rook-ceph
+    create: true
+    driverSpecDefaults:
+      imageSet:
+        name: rook-csi-operator-image-set-configmap
+      clusterName: rook-ceph
+      nodePlugin:
+        priorityClassName: system-node-critical
+      controllerPlugin:
+        priorityClassName: system-cluster-critical
+  drivers:
+    rbd:
+      enabled: true
+      name: "rook-ceph.rbd.csi.ceph.com"
+    cephfs:
+      enabled: true
+      name: "rook-ceph.cephfs.csi.ceph.com"
+    nfs:
+      enabled: false
+      name: "rook-ceph.nfs.csi.ceph.com"
+    nvmeof:
+      enabled: false
+      name: "rook-ceph.nvmeof.csi.ceph.com"
+```
+
+#### 4. ArgoCD 同步策略优化
+
+升级时的 ArgoCD 同步策略应：
+
+```yaml
+syncPolicy:
+  syncOptions:
+    - CreateNamespace=true
+    - ApplyOutOfSyncOnly=true
+    # 避免 ServerSideApply + force 冲突问题
+    # - ServerSideApply=true  # 建议在升级期间禁用
+```
+
+### 升级顺序（重要！）
+
+Helm chart 安装/升级的依赖顺序已由 Chart.yaml 自动处理，等效于：
+
+1. `rook-ceph` (operator + ceph-csi-operator) → 升级 operator
+2. `ceph-csi-drivers` → 创建 CSI Driver CR + SA + RBAC
+3. `rook-ceph-cluster` → 升级 Ceph 集群
+
+### ceph-csi-drivers chart 创建的资源和命名规则
+
+此 chart 使用 `normalizeDriverName` 将 driver name 中的 `.` 替换为 `-` 并转为小写后生成 SA 名称：
+
+| Driver Name | 归一化后 | CtrlPlugin SA |
+|---|---|---|
+| `rook-ceph.rbd.csi.ceph.com` | `rook-ceph-rbd-csi-ceph-com` | `rook-ceph-rbd-csi-ceph-com-ctrlplugin-sa` |
+| `rook-ceph.cephfs.csi.ceph.com` | `rook-ceph-cephfs-csi-ceph-com` | `rook-ceph-cephfs-csi-ceph-com-ctrlplugin-sa` |
+
+同时为每个 SA 创建完整的 RBAC：
+- **ClusterRoleBinding** → 集群级资源（csinodes, volumeattachments, persistentvolumes）
+- **RoleBinding** → namespace 级资源（leases, configmaps 用于 leader election）
+
+### 迁移步骤
+
+1. **更新 Chart.yaml 和 values.yaml**（按上述修改）
+2. **更新 Helm 依赖**：
+   ```bash
+   helm dependency update system/rook-ceph/
+   ```
+3. **通过 ArgoCD 手动同步**（ArgoCD 自动同步应保持关闭）：
+   ```bash
+   argocd app sync rook-ceph --prune
+   ```
+4. **验证 Driver CR 和 SA 已创建**：
+   ```bash
+   kubectl get drivers.csi.ceph.io -n rook-ceph
+   kubectl get sa -n rook-ceph | grep rook-ceph-
+   ```
+5. **等待 operator 重建 CSI Deployments**（约 1-2 分钟）
+6. **验证 CSI Pod 正常运行**：
+   ```bash
+   kubectl get pods -n rook-ceph | grep -E 'ctrlplugin|nodeplugin'
+   ```
+7. **清理旧的 workaround SA**（确认新 SA 工作正常后）：
+   ```bash
+   kubectl delete sa -n rook-ceph \
+     cephfs-ctrlplugin-sa rbd-ctrlplugin-sa \
+     cephfs-nodeplugin-sa rbd-nodeplugin-sa \
+     ceph-csi-cephfs-ctrlplugin-sa ceph-csi-rbd-ctrlplugin-sa \
+     ceph-csi-cephfs-nodeplugin-sa ceph-csi-rbd-nodeplugin-sa
+   ```
+8. **清理旧的 RBAC 资源**（可选，图表会创建新的 RBAC）：
+   ```bash
+   # 旧 ClusterRoleBinding 会被新的替换
+   kubectl get clusterrolebinding,rolebinding -n rook-ceph | grep -E 'ceph-csi-cephfs|ceph-csi-rbd|cephfs-csi|rbd-csi'
+   ```
+
+### 为什么之前的 workaround 不再是必需的
+
+正式修复后，`ceph-csi-drivers` chart 负责创建 SA，ceph-csi-operator 负责创建引用这些 SA 的 Deployment。两者的命名通过 `normalizeDriverName` 保持一致，**不再需要手动拷贝 SA 和修补 RBAC**。
+
+### 相关参考
+
+- [Rook 1.19 → 1.20 升级指南](https://rook.io/docs/rook/latest-release/Upgrade/rook-upgrade/)
+- [ceph-csi-drivers Helm Chart](https://github.com/rook/rook/tree/v1.20.1/deploy/charts/ceph-csi-drivers)
+- [ceph-csi-operator](https://github.com/ceph/ceph-csi-operator)
+- 本次修复的 Chart 变更: `system/rook-ceph/Chart.yaml` + `system/rook-ceph/values.yaml`
 
 以下表格记录了从「旧 SA 名称」→「需要绑定的 ClusterRoleBinding/RoleBinding」的完整映射：
 

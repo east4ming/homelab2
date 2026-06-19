@@ -5,11 +5,20 @@ dependencies:
   - name: rook-ceph
     version: v1.20.1
     repository: https://charts.rook.io/release
+  # [v1.20+] ceph-csi-drivers chart is required for CSI ServiceAccount and RBAC management.
+  # The ceph-csi-operator subchart (included in rook-ceph) deploys the operator, while
+  # this chart creates:
+  #   - Driver CRs (tell the operator which CSI drivers to manage)
+  #   - ServiceAccounts (for ctrlplugin/nodeplugin pods)
+  #   - ClusterRole/ClusterRoleBinding (CSI-side RBAC)
+  #   - Role/RoleBinding (leader-election leases)
+  # Ref: https://rook.io/docs/rook/latest-release/Upgrade/rook-upgrade/#helm
+  - name: ceph-csi-drivers
+    version: 1.0.1
+    repository: https://ceph.github.io/ceph-csi-operator
   - name: rook-ceph-cluster
     version: v1.20.1
     repository: https://charts.rook.io/release
-  # TODO switch to official chart when there is one
-  # https://github.com/kubernetes-csi/external-snapshotter/issues/812
   - name: snapshot-controller
     version: 5.1.1
     repository: https://piraeus.io/helm-charts
