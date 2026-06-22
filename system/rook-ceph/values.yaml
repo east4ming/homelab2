@@ -179,6 +179,8 @@ ceph-csi-drivers:
     rbd:
       enabled: true
       name: "rook-ceph.rbd.csi.ceph.com"
+      # v1.20 default: "none". Must be "volumeSnapshot" for VolSync/Restic CSI snapshots.
+      snapshotPolicy: volumeSnapshot
     cephfs:
       enabled: true
       name: "rook-ceph.cephfs.csi.ceph.com"
