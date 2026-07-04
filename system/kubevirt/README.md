@@ -132,3 +132,57 @@ kubectl delete vm -n kubevirt demo-vm
 | KubeVirt | v1.8.4 | GitHub releases |
 | CDI | v1.65.0 | GitHub releases |
 | VM OS | Ubuntu 26.04 LTS | cloud-images.ubuntu.com |
+
+## 部署备注
+
+本次部署踩过的坑，记录在此以免遗忘。
+
+### 前置条件
+
+- **硬件虚拟化**：Intel N100 支持 VT-x，需确认所有节点 `/dev/kvm` 存在且 `kvm_intel` 模块已加载
+- **KVM 默认密码禁用**：cloud-init `lock_passwd: true`，只能通过 SSH 密钥或 `virtctl console` 登录
+
+### 关键问题与修复
+
+| # | 问题 | 根因 | 修复 |
+|---|------|------|------|
+| 1 | CDI 资源命名空间不一致 | 上游 CDI operator 硬编码 `namespace: cdi`，ArgoCD ApplicationSet 部署到 `namespace: kubevirt` | `sed` 全局替换为 `namespace: kubevirt` |
+| 2 | CR 与 CRD 同批部署失败 | ArgoCD 校验 CR 时 CRD 尚未注册 | CR 资源加 `argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true` |
+| 3 | cloud-init 字段名错误 | KubeVirt v1 API 字段为 `secretRef`，非 `userDataSecretRef` | 修正为 `secretRef` |
+| 4 | cloud-init Secret key 大小写 | KubeVirt 期望 key 为 `userdata`（全小写），非 `userData` | 修正为 `userdata` |
+| 5 | **Cilium netkit MAC 地址** | Cilium `bpf.datapathMode: netkit` 将 pod MAC 设为 `00:00:00:00:00:00`，KubeVirt 无法解析 → libvirt XML error | VM 接口显式指定 `macAddress: "02:42:ac:11:00:01"` |
+| 6 | `customizeComponents` patch 格式 | Operator 期望 JSON Patch 数组（RFC 6902），非 strategic merge 对象 | `type: json` + `patch: '[{"op":"replace","path":"/spec/replicas","value":1}]'` |
+| 7 | VM spec 更新后不生效 | KubeVirt VirtualMachine 类似 StatefulSet OnDelete 策略，`spec.template` 变更不自动重启 | 删除 VMI 触发重建：`kubectl delete vmi -n kubevirt demo-vm` |
+
+### Cilium netkit 与 KubeVirt 兼容性
+
+Cilium `bpf.datapathMode: netkit`（homelab 默认）不分配有效 pod MAC 地址，导致 KubeVirt 虚拟机无法启动。三种方案：
+
+| 方案 | 改动 | 说明 |
+|------|------|------|
+| 显式 MAC 地址 | VM spec 加 `macAddress` | ✅ 已采用，改动最小 |
+| 切换到 netkit-l2 | Cilium `bpf.datapathMode: netkit-l2` | 需 Cilium ≥ v1.17.3 |
+| 回退到 veth | Cilium `bpf.datapathMode: veth` | 兼容性最好，性能略降 |
+
+参考：[kubevirt/kubevirt#13782](https://github.com/kubevirt/kubevirt/issues/13782) [cilium/cilium#37265](https://github.com/cilium/cilium/issues/37265)
+
+### KubeVirt VM 更新策略
+
+VirtualMachine 的 `spec.template` 变更后，已运行的 VMI **不会自动重启**。更新步骤：
+
+```bash
+# 1. 修改 VM spec（通过 GitOps 或 kubectl edit）
+# 2. 删除 VMI，VM controller 立即用新 spec 重建
+kubectl delete vmi -n kubevirt demo-vm
+
+# 或使用 virtctl
+virtctl restart -n kubevirt demo-vm
+```
+
+> 删除 VMI 不影响 VM 资源本身，也不影响持久化磁盘数据。
+
+### Replicas 缩容
+
+homelab 单副本即可（`kubevirt.replicas: 1`）。三处需修改：
+- `virt-operator`：operator Deployment 模板直接参数化
+- `virt-api` + `virt-controller`：KubeVirt CR 的 `customizeComponents.patches`（JSON Patch 格式）
