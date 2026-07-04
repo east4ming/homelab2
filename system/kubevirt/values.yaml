@@ -48,4 +48,4 @@ vm:
   # 使用已存在的 cloud-init Secret（优先级高于 sshPublicKey）
   # 例如通过 ExternalSecret 或手动创建的 Secret
   # Secret 中至少包含 userdata key（cloud-config 格式）
-  cloudInitSecretName: ""
+  cloudInitSecretName: "my-vm-cloudinit"
