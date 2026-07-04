@@ -36,6 +36,9 @@ spec:
             - name: datadisk
               disk:
                 bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
         features:
           acpi: {}
           apic: {}
