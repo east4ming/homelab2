@@ -8490,7 +8490,7 @@ metadata:
   name: virt-operator
   namespace: kubevirt
 spec:
-  replicas: 2
+  replicas: {{ .Values.kubevirt.replicas }}
   selector:
     matchLabels:
       kubevirt.io: virt-operator

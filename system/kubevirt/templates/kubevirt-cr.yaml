@@ -17,6 +17,15 @@ spec:
       useEmulation: true
       {{- end }}
     imagePullPolicy: IfNotPresent
-  customizeComponents: {}
+  customizeComponents:
+    patches:
+      - resourceType: Deployment
+        resourceName: virt-api
+        type: strategic
+        patch: '{"spec":{"replicas":{{ .Values.kubevirt.replicas }}}}'
+      - resourceType: Deployment
+        resourceName: virt-controller
+        type: strategic
+        patch: '{"spec":{"replicas":{{ .Values.kubevirt.replicas }}}}'
   imagePullPolicy: IfNotPresent
   workloadUpdateStrategy: {}

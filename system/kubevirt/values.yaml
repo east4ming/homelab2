@@ -4,6 +4,8 @@
 kubevirt:
   # KubeVirt version (embedded in manifest)
   version: v1.8.4
+  # 控制面 replicas — homelab 单副本即可
+  replicas: 1
   # 默认 false — N100 节点支持硬件虚拟化 (/dev/kvm)
   useEmulation: false
   # 控制面组件资源 (virt-api, virt-controller)
