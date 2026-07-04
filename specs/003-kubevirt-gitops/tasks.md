@@ -56,9 +56,9 @@
 - [x] T006 [P] [US1] Create CDI CR 模板 in `system/kubevirt/templates/cdi-cr.yaml` — CDI Custom Resource，触发 operator 部署 CDI 组件
 - [x] T007 [P] [US1] Create KubeVirt Operator 模板 in `system/kubevirt/templates/kubevirt-operator.yaml` — 从上游 https://github.com/kubevirt/kubevirt/releases 获取稳定版 operator YAML，参数化命名空间
 - [x] T008 [P] [US1] Create KubeVirt CR 模板 in `system/kubevirt/templates/kubevirt-cr.yaml` — KubeVirt Custom Resource，引用 values.yaml 中的 `useEmulation` 和 nodePlacement 配置
-- [ ] T009 [US1] 提交代码到 Git 仓库，合并 feature 分支到 `master` 分支并 `git push origin master`，触发 ArgoCD ApplicationSet 自动扫描 `system/` 目录
-- [ ] T010 [US1] 等待 ArgoCD 自动同步完成：在 ArgoCD UI 中确认 Application `system-kubevirt` 创建且同步状态为 `Synced`，或通过 `kubectl get app -n argocd system-kubevirt` 验证
-- [ ] T011 [US1] 验证 KubeVirt 部署完成：`kubectl get kv -n kubevirt kubevirt` 状态 `Deployed`，所有 virt-* Pod Running，CDI Pod Running
+- [x] T009 [US1] 提交代码到 Git 仓库，合并 feature 分支到 `master` 分支并 `git push origin master`
+- [x] T010 [US1] 等待 ArgoCD 自动同步完成：Application `kubevirt` 已创建并同步
+- [x] T011 [US1] KubeVirt 部署完成：`kv` Deployed, 所有 virt-*/CDI Pod Running
 
 **Checkpoint**: KubeVirt 平台就绪 — VM 可以在此之上创建
 
@@ -75,7 +75,7 @@
 - [x] T012 [P] [US2] Create Ubuntu Cloud Image DataVolume 模板 in `system/kubevirt/templates/demo-vm-dv.yaml`
 - [x] T013 [P] [US2] Create cloud-init Secret 模板 in `system/kubevirt/templates/demo-vm-cloudinit.yaml`
 - [x] T014 [US2] Create VirtualMachine 模板 in `system/kubevirt/templates/demo-vm.yaml`
-- [ ] T015 [US2] 提交 VM 清单到 Git 仓库，合并到 `master` 并 push，ArgoCD 自动同步后验证 VM 状态：`kubectl get vm -n kubevirt demo-vm` 显示 `Running`
+- [x] T015 [US2] VM 清单 merge push + ArgoCD sync: `demo-vm` Running (IP: 10.42.1.189)
 - [ ] T016 [US2] 验证数据持久化：登录 VM 控制台写入测试文件 → virtctl restart → 重新登录验证文件存在
 
 **Checkpoint**: 带持久化磁盘的 VM 可正常运行，数据重启不丢失
