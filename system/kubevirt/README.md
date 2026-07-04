@@ -9,6 +9,41 @@ KubeVirt Operator → virt-api + virt-controller + virt-handler (DaemonSet)
 CDI Operator      → cdi-deployment + cdi-uploadproxy
 ```
 
+## 安全配置
+
+### 方式 1: 内联 SSH 公钥
+
+修改 `values.yaml`，不提交到 Git（本地覆盖或 Ansible Vault）：
+
+```yaml
+vm:
+  sshPublicKey: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA..."
+```
+
+### 方式 2: 外部 cloud-init Secret（推荐，public repo 安全）
+
+```bash
+# 手动创建 Secret
+kubectl create secret generic my-vm-cloudinit -n kubevirt \
+  --from-literal=userdata='#cloud-config
+hostname: demo-vm
+users:
+  - name: ubuntu
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    lock_passwd: true
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA...
+'
+```
+
+修改 `values.yaml`：
+```yaml
+vm:
+  cloudInitSecretName: "my-vm-cloudinit"
+```
+
+设置 `cloudInitSecretName` 后，模板不会渲染 `demo-vm-cloudinit` Secret，VM 直接引用外部 Secret。结合 External Secrets Operator 可自动从 Gitea/外部 KMS 同步。
+
 ## 快速运维
 
 ### 检查状态

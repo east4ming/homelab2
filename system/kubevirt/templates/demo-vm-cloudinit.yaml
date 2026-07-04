@@ -1,4 +1,6 @@
-# cloud-init Secret: VM 初始化配置 (hostname + SSH 公钥)
+# cloud-init Secret: VM 初始化配置
+# 仅在未指定外部 Secret 时创建（vm.cloudInitSecretName 为空）
+{{- if not .Values.vm.cloudInitSecretName }}
 ---
 apiVersion: v1
 kind: Secret
@@ -14,10 +16,13 @@ stringData:
       - name: ubuntu
         sudo: ALL=(ALL) NOPASSWD:ALL
         lock_passwd: true
+        {{- if .Values.vm.sshPublicKey }}
         ssh_authorized_keys:
-          - {{ .Values.vm.sshPublicKey | default "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPleaseReplaceWithYourActualPublicKey" }}
+          - {{ .Values.vm.sshPublicKey }}
+        {{- end }}
     package_update: true
     packages:
       - qemu-guest-agent
     runcmd:
       - systemctl enable --now qemu-guest-agent
+{{- end }}
