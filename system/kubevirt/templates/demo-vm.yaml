@@ -1,6 +1,5 @@
 # VirtualMachine: Ubuntu 26.04 LTS + 持久化数据磁盘
-# 网络: masquerade (Pod 网络)
-# 存储: rootDisk (DataVolume 导入) + data-disk (空白 PVC, 持久化)
+# 网络: KubeVirt 默认 masquerade (Pod 网络)
 ---
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
@@ -36,9 +35,6 @@ spec:
             - name: datadisk
               disk:
                 bus: virtio
-          interfaces:
-            - name: default
-              slirp: {}
         features:
           acpi: {}
           apic: {}
@@ -53,9 +49,6 @@ spec:
         - name: datadisk
           persistentVolumeClaim:
             claimName: demo-vm-datadisk
-      networks:
-        - name: default
-          pod: {}
   dataVolumeTemplates:
     - metadata:
         name: demo-vm-datadisk
