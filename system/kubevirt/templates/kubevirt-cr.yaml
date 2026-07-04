@@ -1,0 +1,20 @@
+# KubeVirt Custom Resource — 触发 Operator 部署 KubeVirt 组件
+# 参数化: useEmulation 开关、节点调度策略
+---
+apiVersion: kubevirt.io/v1
+kind: KubeVirt
+metadata:
+  name: kubevirt
+  namespace: kubevirt
+spec:
+  certificateRotateStrategy: {}
+  configuration:
+    developerConfiguration:
+      featureGates: []
+      {{- if .Values.kubevirt.useEmulation }}
+      useEmulation: true
+      {{- end }}
+    imagePullPolicy: IfNotPresent
+  customizeComponents: {}
+  imagePullPolicy: IfNotPresent
+  workloadUpdateStrategy: {}

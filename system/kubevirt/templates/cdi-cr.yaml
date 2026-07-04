@@ -1,0 +1,23 @@
+# CDI Custom Resource — 触发 Operator 部署 Containerized Data Importer 组件
+# CDI 提供 DataVolume CRD 用于导入 VM 磁盘镜像
+---
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: CDI
+metadata:
+  name: cdi
+  namespace: kubevirt
+spec:
+  config:
+    featureGates:
+    - HonorWaitForFirstConsumer
+    - WebhookPvcRendering
+    {{- if .Values.cdi.scratchStorageClass }}
+    scratchSpaceStorageClass: {{ .Values.cdi.scratchStorageClass }}
+    {{- end }}
+  imagePullPolicy: IfNotPresent
+  infra:
+    nodeSelector:
+      kubernetes.io/os: linux
+  workload:
+    nodeSelector:
+      kubernetes.io/os: linux

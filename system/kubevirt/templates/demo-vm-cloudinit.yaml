@@ -1,0 +1,23 @@
+# cloud-init Secret: VM 初始化配置 (hostname + SSH 公钥)
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: demo-vm-cloudinit
+  namespace: kubevirt
+type: Opaque
+stringData:
+  userData: |
+    #cloud-config
+    hostname: demo-vm
+    users:
+      - name: ubuntu
+        sudo: ALL=(ALL) NOPASSWD:ALL
+        lock_passwd: true
+        ssh_authorized_keys:
+          - {{ .Values.vm.sshPublicKey | default "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPleaseReplaceWithYourActualPublicKey" }}
+    package_update: true
+    packages:
+      - qemu-guest-agent
+    runcmd:
+      - systemctl enable --now qemu-guest-agent

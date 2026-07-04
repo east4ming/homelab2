@@ -1,0 +1,66 @@
+# VirtualMachine: Ubuntu 26.04 LTS + 持久化数据磁盘
+# 网络: masquerade (Pod 网络)
+# 存储: rootDisk (DataVolume 导入) + data-disk (空白 PVC, 持久化)
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: demo-vm
+  namespace: kubevirt
+  labels:
+    app: demo-vm
+    kubevirt.io/vm: demo-vm
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: demo-vm
+    spec:
+      domain:
+        cpu:
+          cores: {{ .Values.vm.cpu }}
+        resources:
+          requests:
+            memory: {{ .Values.vm.memory }}
+        devices:
+          disks:
+            - name: rootdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+            - name: datadisk
+              disk:
+                bus: virtio
+        features:
+          acpi: {}
+          apic: {}
+      volumes:
+        - name: rootdisk
+          dataVolume:
+            name: demo-vm-rootdisk
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            userDataSecretRef:
+              name: demo-vm-cloudinit
+        - name: datadisk
+          persistentVolumeClaim:
+            claimName: demo-vm-datadisk
+      networks:
+        - name: default
+          pod: {}
+  dataVolumeTemplates:
+    - metadata:
+        name: demo-vm-datadisk
+      spec:
+        pvc:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: {{ .Values.vm.dataDiskSize }}
+          storageClassName: {{ .Values.vm.storageClass }}
+        source:
+          blank: {}

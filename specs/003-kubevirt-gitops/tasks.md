@@ -26,8 +26,8 @@
 
 **Purpose**: 验证集群节点硬件虚拟化支持，确保 KubeVirt 部署前提条件满足
 
-- [ ] T001 验证所有集群节点 `/dev/kvm` 存在且 KVM 内核模块已加载，在 `system/kubevirt/` 目录创建前完成节点巡检
-- [ ] T002 如有节点缺少 `/dev/kvm`（参考 quickstart.md 前置条件），安装 `qemu-kvm` 包并加载 `kvm_intel` 内核模块
+- [x] T001 验证所有集群节点 `/dev/kvm` 存在且 KVM 内核模块已加载，在 `system/kubevirt/` 目录创建前完成节点巡检
+- [x] T002 如有节点缺少 `/dev/kvm`（参考 quickstart.md 前置条件），安装 `qemu-kvm` 包并加载 `kvm_intel` 内核模块
 
 ---
 
@@ -37,8 +37,8 @@
 
 **⚠️ CRITICAL**: 无 Chart.yaml + values.yaml 则 ArgoCD 无法发现此 Chart
 
-- [ ] T003 Create `system/kubevirt/Chart.yaml` — umbrella chart，声明 KubeVirt 和 CDI 的上游清单依赖关系
-- [ ] T004 Create `system/kubevirt/values.yaml` — 参数化配置：KubeVirt 版本号、useEmulation 开关（默认 false）、组件资源 limits/requests、workload/infra nodePlacement
+- [x] T003 Create `system/kubevirt/Chart.yaml` — umbrella chart，声明 KubeVirt 和 CDI 的上游清单依赖关系
+- [x] T004 Create `system/kubevirt/values.yaml` — 参数化配置：KubeVirt 版本号、useEmulation 开关（默认 false）、组件资源 limits/requests、workload/infra nodePlacement
 
 **Checkpoint**: Chart 骨架就绪 — 可开始填充模板
 
@@ -52,10 +52,10 @@
 
 ### Implementation for User Story 1
 
-- [ ] T005 [P] [US1] Create CDI Operator 模板 in `system/kubevirt/templates/cdi-operator.yaml` — 从上游 https://github.com/kubevirt/containerized-data-importer/releases 获取稳定版 operator YAML，参数化命名空间为 `kubevirt`
-- [ ] T006 [P] [US1] Create CDI CR 模板 in `system/kubevirt/templates/cdi-cr.yaml` — CDI Custom Resource，触发 operator 部署 CDI 组件
-- [ ] T007 [P] [US1] Create KubeVirt Operator 模板 in `system/kubevirt/templates/kubevirt-operator.yaml` — 从上游 https://github.com/kubevirt/kubevirt/releases 获取稳定版 operator YAML，参数化命名空间
-- [ ] T008 [P] [US1] Create KubeVirt CR 模板 in `system/kubevirt/templates/kubevirt-cr.yaml` — KubeVirt Custom Resource，引用 values.yaml 中的 `useEmulation` 和 nodePlacement 配置
+- [x] T005 [P] [US1] Create CDI Operator 模板 in `system/kubevirt/templates/cdi-operator.yaml` — 从上游 https://github.com/kubevirt/containerized-data-importer/releases 获取稳定版 operator YAML，参数化命名空间为 `kubevirt`
+- [x] T006 [P] [US1] Create CDI CR 模板 in `system/kubevirt/templates/cdi-cr.yaml` — CDI Custom Resource，触发 operator 部署 CDI 组件
+- [x] T007 [P] [US1] Create KubeVirt Operator 模板 in `system/kubevirt/templates/kubevirt-operator.yaml` — 从上游 https://github.com/kubevirt/kubevirt/releases 获取稳定版 operator YAML，参数化命名空间
+- [x] T008 [P] [US1] Create KubeVirt CR 模板 in `system/kubevirt/templates/kubevirt-cr.yaml` — KubeVirt Custom Resource，引用 values.yaml 中的 `useEmulation` 和 nodePlacement 配置
 - [ ] T009 [US1] 提交代码到 Git 仓库，合并 feature 分支到 `master` 分支并 `git push origin master`，触发 ArgoCD ApplicationSet 自动扫描 `system/` 目录
 - [ ] T010 [US1] 等待 ArgoCD 自动同步完成：在 ArgoCD UI 中确认 Application `system-kubevirt` 创建且同步状态为 `Synced`，或通过 `kubectl get app -n argocd system-kubevirt` 验证
 - [ ] T011 [US1] 验证 KubeVirt 部署完成：`kubectl get kv -n kubevirt kubevirt` 状态 `Deployed`，所有 virt-* Pod Running，CDI Pod Running
@@ -72,9 +72,9 @@
 
 ### Implementation for User Story 2
 
-- [ ] T012 [P] [US2] Create Ubuntu Cloud Image DataVolume 模板 in `system/kubevirt/templates/demo-vm-dv.yaml` — DataVolume 从 Ubuntu Cloud Image URL 导入 qcow2 镜像到 PVC（storageClassName: standard-rwo, 10Gi）
-- [ ] T013 [P] [US2] Create cloud-init Secret 模板 in `system/kubevirt/templates/demo-vm-cloudinit.yaml` — 注入 SSH 公钥和 hostname 配置，使用 Kubernetes Secret 存储 cloud-init user-data
-- [ ] T014 [US2] Create VirtualMachine 模板 in `system/kubevirt/templates/demo-vm.yaml` — 引用 DataVolume 作为 rootDisk，挂载持久化数据磁盘 PVC（data-disk, 10Gi, standard-rwo），配置 runStrategy: Always，2 vCPU / 4Gi RAM，网络使用 masquerade 模式
+- [x] T012 [P] [US2] Create Ubuntu Cloud Image DataVolume 模板 in `system/kubevirt/templates/demo-vm-dv.yaml`
+- [x] T013 [P] [US2] Create cloud-init Secret 模板 in `system/kubevirt/templates/demo-vm-cloudinit.yaml`
+- [x] T014 [US2] Create VirtualMachine 模板 in `system/kubevirt/templates/demo-vm.yaml`
 - [ ] T015 [US2] 提交 VM 清单到 Git 仓库，合并到 `master` 并 push，ArgoCD 自动同步后验证 VM 状态：`kubectl get vm -n kubevirt demo-vm` 显示 `Running`
 - [ ] T016 [US2] 验证数据持久化：登录 VM 控制台写入测试文件 → virtctl restart → 重新登录验证文件存在
 
@@ -92,7 +92,7 @@
 
 - [ ] T017 [US3] 验证 virtctl console 访问：`virtctl console -n kubevirt demo-vm` → 出现登录提示，使用 cloud-init 配置的凭据登录
 - [ ] T018 [US3] 验证 VM 生命周期管理：执行 virtctl stop / start / restart，确认 VM 状态转换正确（Running ↔ Stopped）
-- [ ] T019 [US3] 编写 VM 运维操作文档 in `system/kubevirt/README.md` — 常用 virtctl 命令、故障排查、镜像更新流程
+- [x] T019 [US3] 编写 VM 运维操作文档 in `system/kubevirt/README.md`
 
 **Checkpoint**: VM 可完全通过 virtctl 管理，运维文档就绪
 
@@ -102,8 +102,8 @@
 
 **Purpose**: 质量门禁、文档验证、最终检查
 
-- [ ] T020 [P] 运行 `helm lint system/kubevirt/` — 确保 Chart 通过 helmlint 校验（Constitution I）
-- [ ] T021 [P] 运行 `yamllint system/kubevirt/` — 确保所有 YAML 通过 yamllint 校验（Constitution I）
+- [x] T020 [P] 运行 `helm lint system/kubevirt/` — 确保 Chart 通过 helmlint 校验（Constitution I）
+- [x] T021 [P] 运行 `yamllint system/kubevirt/` — 确保所有 YAML 通过 yamllint 校验（Constitution I）
 - [ ] T022 [P] 运行 `kubectl get events -n kubevirt --sort-by='.lastTimestamp'` — 检查无异常事件
 - [ ] T023 按 quickstart.md 执行端到端验证流程：部署 → 创建 VM → 控制台访问 → 数据持久化 → 生命周期管理
 - [ ] T024 将 KubeVirt 组件状态检查纳入 `make smoke-test` 冒烟测试（可选增强，需在测试脚本中添加 `kubectl get kv -n kubevirt` 状态检查）

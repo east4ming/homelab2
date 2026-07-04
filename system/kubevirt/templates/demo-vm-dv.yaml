@@ -1,0 +1,19 @@
+# DataVolume: 从 Ubuntu Cloud Image 导入操作系统镜像到 PVC
+---
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: demo-vm-rootdisk
+  namespace: kubevirt
+spec:
+  source:
+    http:
+      url: {{ .Values.vm.image | quote }}
+  pvc:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: {{ .Values.vm.rootDiskSize }}
+    storageClassName: {{ .Values.vm.storageClass }}
+    volumeMode: Filesystem
