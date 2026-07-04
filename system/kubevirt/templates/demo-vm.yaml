@@ -45,7 +45,7 @@ spec:
             name: demo-vm-rootdisk
         - name: cloudinitdisk
           cloudInitNoCloud:
-            userDataSecretRef:
+            secretRef:
               name: demo-vm-cloudinit
         - name: datadisk
           persistentVolumeClaim:
