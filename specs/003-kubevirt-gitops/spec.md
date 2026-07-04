@@ -22,7 +22,7 @@
 
 1. **Given** `system/kubevirt/` 目录包含 KubeVirt Helm Chart，**When** ArgoCD ApplicationSet 扫描 system 目录，**Then** Application `system-kubevirt` 被自动创建且同步状态为 `Synced`
 2. **Given** ArgoCD 已同步 KubeVirt Application，**When** KubeVirt Operator 处理 KubeVirt CR，**Then** virt-api、virt-controller Deployment 和 virt-handler DaemonSet 在 `kubevirt` 命名空间中 Running
-3. **Given** 集群节点不支持硬件虚拟化（嵌套虚拟化不可用），**When** KubeVirt CR 中配置 `useEmulation: true`，**Then** KubeVirt 组件仍正常启动，虚拟机可使用软件模拟运行
+3. **Given** 集群节点支持硬件虚拟化（`/dev/kvm` 可用），**When** KubeVirt CR 中默认不启用 `useEmulation`，**Then** 虚拟机使用 KVM 硬件加速运行（非软件模拟）
 
 ---
 
@@ -100,10 +100,10 @@
 ## Assumptions
 
 - 目标 k3s 集群已安装 ArgoCD 并配置 ApplicationSet 自动发现 `system/` 目录下的 Helm Chart
-- k3s 集群使用 containerd 作为容器运行时（KubeVirt 官方支持）
-- 集群节点可能不支持硬件虚拟化嵌套，因此 KubeVirt 需要默认启用软件模拟（`useEmulation: true`）作为后备方案
+- k3s 集群节点 Intel N100 支持硬件虚拟化（VT-x），部署前需验证所有节点 `/dev/kvm` 存在且 KVM 内核模块已加载；若有节点缺失，需安装 `qemu-kvm` 包并加载 KVM 模块
+- 集群节点支持硬件虚拟化，KubeVirt 使用 KVM 硬件加速（若未来迁移至不支持虚拟化的节点，可通过 CR 配置 `useEmulation: true` 作为后备）
 - 集群已配置持久化存储（如 Rook-Ceph 或 local-path-provisioner），可动态供给 PVC
-- 虚拟机操作系统镜像使用公开可访问的容器镜像或 HTTP URL（如 Fedora Cloud、Ubuntu Cloud Image 等 cloud-init 兼容镜像）
+- 虚拟机操作系统镜像使用 Ubuntu Cloud Image 26.04 LTS（qcow2 格式），通过 cloud-init 注入 SSH 公钥和用户数据进行初始化配置
 - 运维人员本地安装 `virtctl` CLI 工具，且 kubeconfig 已配置指向目标集群
 - 虚拟机网络采用 KubeVirt 默认的 Pod 网络模式（masquerade 或 bridge），不需要 Multus 多网络
 - 本功能 MVP 范围为单虚拟机场景，多 VM 编排、实时迁移、快照等高级功能不在 v1 范围

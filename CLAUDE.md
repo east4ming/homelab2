@@ -1,5 +1,5 @@
 # Homelab2
 
 <!-- SPECKIT START -->
-当前 Plan: [specs/002-helm-chart-migration/plan.md](specs/002-helm-chart-migration/plan.md)
+当前 Plan: [specs/003-kubevirt-gitops/plan.md](specs/003-kubevirt-gitops/plan.md)
 <!-- SPECKIT END -->
