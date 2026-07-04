@@ -38,7 +38,7 @@ spec:
                 bus: virtio
           interfaces:
             - name: default
-              bridge: {}
+              slirp: {}
         features:
           acpi: {}
           apic: {}
