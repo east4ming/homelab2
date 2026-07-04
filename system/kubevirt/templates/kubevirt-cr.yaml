@@ -21,11 +21,11 @@ spec:
     patches:
       - resourceType: Deployment
         resourceName: virt-api
-        type: strategic
-        patch: '{"spec":{"replicas":{{ .Values.kubevirt.replicas }}}}'
+        type: json
+        patch: '[{"op":"replace","path":"/spec/replicas","value":{{ .Values.kubevirt.replicas }}}]'
       - resourceType: Deployment
         resourceName: virt-controller
-        type: strategic
-        patch: '{"spec":{"replicas":{{ .Values.kubevirt.replicas }}}}'
+        type: json
+        patch: '[{"op":"replace","path":"/spec/replicas","value":{{ .Values.kubevirt.replicas }}}]'
   imagePullPolicy: IfNotPresent
   workloadUpdateStrategy: {}
