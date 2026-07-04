@@ -6,6 +6,8 @@ kind: KubeVirt
 metadata:
   name: kubevirt
   namespace: kubevirt
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   certificateRotateStrategy: {}
   configuration:

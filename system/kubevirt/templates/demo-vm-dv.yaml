@@ -5,6 +5,8 @@ kind: DataVolume
 metadata:
   name: demo-vm-rootdisk
   namespace: kubevirt
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   source:
     http:

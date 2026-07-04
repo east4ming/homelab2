@@ -10,6 +10,8 @@ metadata:
   labels:
     app: demo-vm
     kubevirt.io/vm: demo-vm
+  annotations:
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   runStrategy: Always
   template:
