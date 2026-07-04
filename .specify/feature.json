@@ -1,1 +1,3 @@
-{"feature_directory": "specs/002-helm-chart-migration"}
+{
+  "feature_directory": "specs/003-kubevirt-gitops"
+}
