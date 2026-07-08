@@ -45,9 +45,12 @@ vm:
   dataDiskSize: 10Gi
   # StorageClass
   storageClass: standard-rwo
-  # SSH 公钥 — 可选，为空则不注入密钥（此时只能通过 virtctl console 登录）
+  # SSH 公钥 — 可选，为空则不注入密钥
   sshPublicKey: ""
-  # 使用已存在的 cloud-init Secret（优先级高于 sshPublicKey）
+  # VM 默认用户密码 — 仅在 cloudInitSecretName 为空时生效
+  # cloud-init chpasswd { expire: false } 确保首次登录不需改密
+  password: "atomic"
+  # 使用已存在的 cloud-init Secret（优先级高于上述内联配置）
   # 例如通过 ExternalSecret 或手动创建的 Secret
-  # Secret 中至少包含 userdata key（cloud-config 格式）
-  cloudInitSecretName: "my-vm-cloudinit"
+  # Secret 中必须包含 userdata key（cloud-config 格式）
+  cloudInitSecretName: ""

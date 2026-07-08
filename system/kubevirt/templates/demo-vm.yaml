@@ -38,7 +38,6 @@ spec:
           interfaces:
             - name: default
               masquerade: {}
-              macAddress: "02:42:ac:11:00:01"
         features:
           acpi: {}
           apic: {}

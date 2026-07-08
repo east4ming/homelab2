@@ -1,5 +1,6 @@
 # cloud-init Secret: VM 初始化配置
 # 仅在未指定外部 Secret 时创建（vm.cloudInitSecretName 为空）
+# 参考: https://kubevirt.io/user-guide/user_workloads/startup_scripts/
 {{- if not .Values.vm.cloudInitSecretName }}
 ---
 apiVersion: v1
@@ -12,14 +13,15 @@ stringData:
   userdata: |
     #cloud-config
     hostname: demo-vm
-    users:
-      - name: ubuntu
-        sudo: ALL=(ALL) NOPASSWD:ALL
-        lock_passwd: true
-        {{- if .Values.vm.sshPublicKey }}
-        ssh_authorized_keys:
-          - {{ .Values.vm.sshPublicKey }}
-        {{- end }}
+    {{- $password := .Values.vm.password | default "atomic" }}
+    password: {{ $password }}
+    chpasswd:
+      expire: false
+    ssh_pwauth: true
+    {{- if .Values.vm.sshPublicKey }}
+    ssh_authorized_keys:
+      - {{ .Values.vm.sshPublicKey }}
+    {{- end }}
     package_update: true
     packages:
       - qemu-guest-agent

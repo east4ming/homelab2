@@ -27,12 +27,12 @@ vm:
 kubectl create secret generic my-vm-cloudinit -n kubevirt \
   --from-literal=userdata='#cloud-config
 hostname: demo-vm
-users:
-  - name: ubuntu
-    sudo: ALL=(ALL) NOPASSWD:ALL
-    lock_passwd: true
-    ssh_authorized_keys:
-      - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA...
+password: atomic
+chpasswd:
+  expire: false
+ssh_pwauth: true
+ssh_authorized_keys:
+  - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA...
 '
 ```
 
@@ -150,19 +150,13 @@ kubectl delete vm -n kubevirt demo-vm
 | 2 | CR 与 CRD 同批部署失败 | ArgoCD 校验 CR 时 CRD 尚未注册 | CR 资源加 `argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true` |
 | 3 | cloud-init 字段名错误 | KubeVirt v1 API 字段为 `secretRef`，非 `userDataSecretRef` | 修正为 `secretRef` |
 | 4 | cloud-init Secret key 大小写 | KubeVirt 期望 key 为 `userdata`（全小写），非 `userData` | 修正为 `userdata` |
-| 5 | **Cilium netkit MAC 地址** | Cilium `bpf.datapathMode: netkit` 将 pod MAC 设为 `00:00:00:00:00:00`，KubeVirt 无法解析 → libvirt XML error | VM 接口显式指定 `macAddress: "02:42:ac:11:00:01"` |
+| 5 | **Cilium netkit MAC 地址** | Cilium `bpf.datapathMode: netkit` 将 pod MAC 设为 `00:00:00:00:00:00` | 切换到 `bpf.datapathMode: netkit-l2`（Cilium ≥ v1.17.3） |
 | 6 | `customizeComponents` patch 格式 | Operator 期望 JSON Patch 数组（RFC 6902），非 strategic merge 对象 | `type: json` + `patch: '[{"op":"replace","path":"/spec/replicas","value":1}]'` |
 | 7 | VM spec 更新后不生效 | KubeVirt VirtualMachine 类似 StatefulSet OnDelete 策略，`spec.template` 变更不自动重启 | 删除 VMI 触发重建：`kubectl delete vmi -n kubevirt demo-vm` |
 
 ### Cilium netkit 与 KubeVirt 兼容性
 
-Cilium `bpf.datapathMode: netkit`（homelab 默认）不分配有效 pod MAC 地址，导致 KubeVirt 虚拟机无法启动。三种方案：
-
-| 方案 | 改动 | 说明 |
-|------|------|------|
-| 显式 MAC 地址 | VM spec 加 `macAddress` | ✅ 已采用，改动最小 |
-| 切换到 netkit-l2 | Cilium `bpf.datapathMode: netkit-l2` | 需 Cilium ≥ v1.17.3 |
-| 回退到 veth | Cilium `bpf.datapathMode: veth` | 兼容性最好，性能略降 |
+Cilium `bpf.datapathMode: netkit` 不分配有效 pod MAC 地址。已切换为 `netkit-l2`。
 
 参考：[kubevirt/kubevirt#13782](https://github.com/kubevirt/kubevirt/issues/13782) [cilium/cilium#37265](https://github.com/cilium/cilium/issues/37265)
 
