@@ -31,26 +31,4 @@ cdi:
   # CDI scratch space storage class (used during image import)
   scratchStorageClass: standard-rwo
 
-# VM 默认配置
-vm:
-  # 操作系统镜像
-  image: https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-amd64.img
-  # vCPU 数量
-  cpu: 2
-  # 内存
-  memory: 4Gi
-  # 根磁盘大小
-  rootDiskSize: 10Gi
-  # 数据磁盘大小
-  dataDiskSize: 10Gi
-  # StorageClass
-  storageClass: standard-rwo
-  # SSH 公钥 — 可选，为空则不注入密钥
-  sshPublicKey: ""
-  # VM 默认用户密码 — 仅在 cloudInitSecretName 为空时生效
-  # cloud-init chpasswd { expire: false } 确保首次登录不需改密
-  password: "atomic"
-  # 使用已存在的 cloud-init Secret（优先级高于上述内联配置）
-  # 例如通过 ExternalSecret 或手动创建的 Secret
-  # Secret 中必须包含 userdata key（cloud-config 格式）
-  cloudInitSecretName: ""
+# VM 配置参考 examples/demo-vm.yaml（暂不通过 Helm 部署，需解决 cloud-init 登录问题后重新纳入）
