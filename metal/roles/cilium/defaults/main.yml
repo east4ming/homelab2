@@ -67,9 +67,7 @@ cilium_values:
   bpf:
     masquerade: true
     # netkit
-    # Kubevirt VMs not running with Cilium netkit enabled #37265
-    # https://github.com/cilium/cilium/issues/37265
-    datapathMode: netkit-l2
+    datapathMode: netkit
   ipam:
     mode: kubernetes
   # enable DSR
