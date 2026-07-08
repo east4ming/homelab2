@@ -67,4 +67,6 @@ grafana:
     limits:
       memory: 512Mi
   imageRenderer:
+    networkPolicy:
+      limitIngress: false
     enabled: true
