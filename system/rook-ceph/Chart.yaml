@@ -14,7 +14,7 @@ dependencies:
   #   - Role/RoleBinding (leader-election leases)
   # Ref: https://rook.io/docs/rook/latest-release/Upgrade/rook-upgrade/#helm
   - name: ceph-csi-drivers
-    version: 1.0.1
+    version: 1.0.3
     repository: https://ceph.github.io/ceph-csi-operator
   - name: rook-ceph-cluster
     version: v1.20.1
