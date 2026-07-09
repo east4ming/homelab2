@@ -89,6 +89,13 @@ app-template:
       globalMounts:
         - path: /dev/dri
           readOnly: false
+    dbus-socket:
+      enabled: true
+      type: hostPath
+      hostPath: /run/dbus/system_bus_socket  # 宿主机的 dbus 套接字
+      globalMounts:
+        - path: /var/run/dbus/system_bus_socket  # 容器内标准 dbus 套接字路径
+          readOnly: false
     shm-volume:
       enabled: true
       type: emptyDir
