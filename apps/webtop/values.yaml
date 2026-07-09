@@ -9,7 +9,7 @@ app-template:
         webtop:
           image:
             repository: lscr.io/linuxserver/webtop
-            tag: ubuntu-xfce
+            tag: latest #XFCE Alpine *Wayland Support
           env:
             - name: PGID
               value: "1000"
@@ -88,13 +88,6 @@ app-template:
       hostPath: /dev/dri
       globalMounts:
         - path: /dev/dri
-          readOnly: false
-    dbus-socket:
-      enabled: true
-      type: hostPath
-      hostPath: /run/dbus/system_bus_socket  # 宿主机的 dbus 套接字
-      globalMounts:
-        - path: /var/run/dbus/system_bus_socket  # 容器内标准 dbus 套接字路径
           readOnly: false
     shm-volume:
       enabled: true
