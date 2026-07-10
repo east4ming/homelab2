@@ -134,7 +134,7 @@ spec:
               value: lobechat
             - name: REDIS_TLS
               value: "0"
-          image: docker.io/lobehub/lobehub:2.2.6
+          image: docker.io/lobehub/lobehub:2.2.9
           imagePullPolicy: Always
           name: lobe-chat
           ports:
