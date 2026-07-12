@@ -1,0 +1,32 @@
+# 临时 VirtualMachineInstance — VMI 生命周期测试
+# VMI 是底层 Pod VM，不与 VM 资源绑定
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachineInstance
+metadata:
+  name: test-vmi-ephemeral
+  namespace: kubevirt-test
+  labels:
+    app.kubernetes.io/test: kubevirt-suite
+spec:
+  domain:
+    cpu:
+      cores: 1
+    resources:
+      requests:
+        memory: 256Mi
+    devices:
+      disks:
+        - name: containerdisk
+          disk:
+            bus: virtio
+      interfaces:
+        - name: default
+          masquerade: {}
+  volumes:
+    - name: containerdisk
+      containerDisk:
+        image: quay.io/kubevirt/cirros-container-disk-demo
+  networks:
+    - name: default
+      pod: {}

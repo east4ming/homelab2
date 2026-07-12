@@ -1,5 +1,5 @@
 # Homelab2
 
 <!-- SPECKIT START -->
-当前 Plan: [specs/003-kubevirt-gitops/plan.md](specs/003-kubevirt-gitops/plan.md)
+当前 Plan: [specs/004-kubevirt-testing/plan.md](specs/004-kubevirt-testing/plan.md)
 <!-- SPECKIT END -->

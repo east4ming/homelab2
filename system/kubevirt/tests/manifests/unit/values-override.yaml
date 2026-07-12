@@ -1,0 +1,11 @@
+# 单元测试 values 覆盖 — 验证 helm template 自定义参数传递
+# 与默认 values.yaml 不同的值，用于断言覆盖生效
+
+kubevirt:
+  version: v1.9.0
+  replicas: 2
+  useEmulation: true
+
+cdi:
+  version: v1.66.0
+  scratchStorageClass: custom-sc

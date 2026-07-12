@@ -1,0 +1,56 @@
+# VM + ClusterIP Service — 验证流量路由到 VM
+---
+# Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-vm-svc
+  namespace: kubevirt-test
+  labels:
+    app.kubernetes.io/test: kubevirt-suite
+spec:
+  type: ClusterIP
+  selector:
+    kubevirt.io/vm: test-vm-svc
+  ports:
+    - name: ssh
+      port: 22
+      targetPort: 22
+      protocol: TCP
+---
+# VirtualMachine (CirrOS 支持 SSH)
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: test-vm-svc
+  namespace: kubevirt-test
+  labels:
+    app.kubernetes.io/test: kubevirt-suite
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: test-vm-svc
+    spec:
+      domain:
+        cpu:
+          cores: 1
+        resources:
+          requests:
+            memory: 512Mi
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/kubevirt/cirros-container-disk-demo
+      networks:
+        - name: default
+          pod: {}

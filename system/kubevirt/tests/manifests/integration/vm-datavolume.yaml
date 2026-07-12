@@ -1,0 +1,38 @@
+# VM 引用 DataVolume 启动 — VM + DataVolume 组合集成测试
+# 先创建 DataVolume 导入镜像，成功后再创建 VM 引用该 DataVolume
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: test-vm-dv
+  namespace: kubevirt-test
+  labels:
+    app.kubernetes.io/test: kubevirt-suite
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: test-vm-dv
+    spec:
+      domain:
+        cpu:
+          cores: 1
+        resources:
+          requests:
+            memory: 512Mi
+        devices:
+          disks:
+            - name: rootdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+      volumes:
+        - name: rootdisk
+          dataVolume:
+            name: test-dv-cirros
+      networks:
+        - name: default
+          pod: {}

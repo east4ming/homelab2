@@ -1,0 +1,38 @@
+# 最小化 CirrOS VirtualMachine — 单资源生命周期测试
+# 使用 containerDisk 直接启动，无需 DataVolume/PVC
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: test-vm-cirros
+  namespace: kubevirt-test
+  labels:
+    app.kubernetes.io/test: kubevirt-suite
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: test-vm-cirros
+    spec:
+      domain:
+        cpu:
+          cores: 1
+        resources:
+          requests:
+            memory: 512Mi
+        devices:
+          disks:
+            - name: containerdisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+      volumes:
+        - name: containerdisk
+          containerDisk:
+            image: quay.io/kubevirt/cirros-container-disk-demo
+      networks:
+        - name: default
+          pod: {}

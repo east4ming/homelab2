@@ -1,0 +1,6 @@
+# Ignore test directory and venv from Helm chart packaging
+tests/
+.venv/
+*.pyc
+__pycache__/
+.pytest_cache/

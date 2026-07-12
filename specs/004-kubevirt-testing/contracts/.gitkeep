@@ -1,0 +1,3 @@
+# Contracts directory intentionally empty
+# KubeVirt 测试体系无外部接口 — 测试脚本通过 kubectl/virtctl CLI
+# 与集群交互，无 API/CLI/UI 契约需要定义。
