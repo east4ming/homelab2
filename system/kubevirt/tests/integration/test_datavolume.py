@@ -7,13 +7,14 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from lib.common import (
     MANIFESTS_DIR,
+    get_resource_phase,
     kubectl_apply,
     kubectl_delete,
     kubectl_get,
     log_info,
     log_success,
-    log_warn,
     run_command,
+    wait_for_condition,
 )
 
 MANIFEST = MANIFESTS_DIR / "integration" / "datavolume-cirros.yaml"
@@ -24,57 +25,40 @@ NAMESPACE = "kubevirt-test"
 DV_TIMEOUT = 300
 
 
-def _wait_for_datavolume(dv_name: str, timeout: int = DV_TIMEOUT, poll_interval: int = 10) -> bool:
-    """轮询等待 DataVolume 进入 Succeeded 或 ImportFailed 状态."""
-    elapsed = 0
-    while elapsed < timeout:
-        result = run_command([
-            "kubectl", "get", f"dv/{dv_name}", "-n", NAMESPACE,
-            "-o", "jsonpath={.status.phase}",
-        ])
-        phase = result.stdout.strip()
-        if phase == "Succeeded":
-            return True
-        if phase in ("Failed", "ImportFailed", "Error"):
-            log_warn(f"DataVolume 进入 {phase} 状态")
-            return False
-        time.sleep(poll_interval)
-        elapsed += poll_interval
-    return False
-
-
 def test_datavolume_import():
-    """测试 DataVolume HTTP 导入 CirrOS 镜像."""
+    """测试 DataVolume HTTP 导入 CirrOS 镜像 → Succeeded."""
     log_info("DataVolume HTTP 导入测试: 创建 → Import → Succeeded")
 
     try:
-        # When: 创建 DataVolume
-        log_info("创建 DataVolume 资源")
+        # Step 1: 创建 DataVolume
+        log_info("Step 1: kubectl apply DataVolume")
         result = kubectl_apply(MANIFEST, NAMESPACE)
         assert result.returncode == 0, f"kubectl apply 失败: {result.stderr}"
 
-        # 确认 PVC 被创建
-        time.sleep(3)
+        # Step 2: 确认 PVC 被创建（CDI 在 DataVolume 创建后立即创建 PVC）
+        time.sleep(5)
         pvc_result = kubectl_get("pvc", DV_NAME, NAMESPACE)
-        assert pvc_result.returncode == 0, f"PVC '{DV_NAME}' 未创建"
+        assert pvc_result.returncode == 0, f"PVC '{DV_NAME}' 未创建 — CDI 可能未就绪"
 
-        # Then: 等待导入完成
-        log_info(f"等待 DataVolume 导入完成 (timeout={DV_TIMEOUT}s)")
-        succeeded = _wait_for_datavolume(DV_NAME, timeout=DV_TIMEOUT)
+        # Step 3: 轮询等待 DataVolume status.phase 变为 Succeeded
+        log_info(f"Step 2: 等待 DataVolume 导入完成 (timeout={DV_TIMEOUT}s)")
+        succeeded = wait_for_condition(f"dv/{DV_NAME}", "Succeeded", timeout=DV_TIMEOUT, poll_interval=10, namespace=NAMESPACE)
         assert succeeded, f"DataVolume '{DV_NAME}' 在 {DV_TIMEOUT}s 内未完成导入"
 
-        # 验证 PVC 存在且有数据
-        result = kubectl_get("dv", DV_NAME, NAMESPACE, output="jsonpath={.status.phase}")
-        assert "Succeeded" in result.stdout, f"DataVolume 状态异常: {result.stdout}"
+        # Step 4: 独立验证 — kubectl get dv -o json 确认 status.phase == Succeeded
+        log_info("Step 3: 独立验证 DataVolume status.phase == Succeeded")
+        phase = get_resource_phase(f"dv/{DV_NAME}", NAMESPACE)
+        assert phase == "Succeeded", f"DataVolume status.phase 期望 'Succeeded'，实际 '{phase}'"
 
-        log_success(f"DataVolume '{DV_NAME}' 导入成功 (Succeeded)")
+        # Step 5: 验证底层 PVC 存在且已绑定
+        pvc_phase = get_resource_phase(f"pvc/{DV_NAME}", NAMESPACE)
+        log_info(f"PVC 状态: {pvc_phase}")
+        assert pvc_phase in ("Bound", "Succeeded"), f"PVC 期望 Bound，实际 '{pvc_phase}'"
+
+        log_success(f"DataVolume '{DV_NAME}' 导入成功 — status.phase=Succeeded, PVC={pvc_phase}")
     finally:
-        # When: 删除 DataVolume
-        log_info("清理: 删除 DataVolume 资源")
+        log_info("清理: 删除 DataVolume + PVC")
         kubectl_delete(MANIFEST, NAMESPACE)
-
-        # 确保 PVC 也被删除
-        log_info("确保关联 PVC 也被清理")
         run_command(
             ["kubectl", "delete", "pvc", DV_NAME, "-n", NAMESPACE, "--ignore-not-found=true"],
             timeout=10,

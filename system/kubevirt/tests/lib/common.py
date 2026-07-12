@@ -95,6 +95,39 @@ def kubectl_get(
 # --- 等待与条件检查 ---
 
 
+def _get_resource_jsonpath(
+    resource: str,
+    jsonpath: str,
+    namespace: str = "kubevirt-test",
+) -> str:
+    """获取单个 jsonpath 的值，失败返回空字符串."""
+    result = run_command([
+        "kubectl", "get", resource, "-n", namespace,
+        "-o", f"jsonpath={{{jsonpath}}}",
+    ])
+    if result.returncode == 0:
+        return result.stdout.strip()
+    return ""
+
+
+def get_resource_phase(resource: str, namespace: str = "kubevirt-test") -> str:
+    """获取资源的当前 phase/status.
+
+    KubeVirt 不同资源的状态字段不同:
+    - VMI / DataVolume: .status.phase
+    - VM: .status.printableStatus
+
+    此函数依次尝试，返回第一个非空值.
+    """
+    for path in (".status.phase", ".status.printableStatus"):
+        val = _get_resource_jsonpath(resource, path, namespace)
+        if val:
+            return val
+    # 最终兜底: kubectl get -o jsonpath={.status}
+    status = _get_resource_jsonpath(resource, ".status", namespace)
+    return status if status else "Unknown"
+
+
 def wait_for_condition(
     resource: str,
     expected_status: str,
@@ -104,8 +137,12 @@ def wait_for_condition(
 ) -> bool:
     """轮询等待资源达到预期状态.
 
+    自动适配 KubeVirt 不同资源的状态字段:
+    - VMI / DataVolume: .status.phase
+    - VM: .status.printableStatus
+
     Args:
-        resource: 资源标识，如 "vm/my-vm" 或 "vmi/my-vmi"
+        resource: 资源标识，如 "vm/my-vm" / "vmi/my-vmi" / "dv/my-dv"
         expected_status: 预期状态值，如 "Running"、"Succeeded"
         timeout: 超时秒数
         poll_interval: 轮询间隔秒数
@@ -116,18 +153,8 @@ def wait_for_condition(
     """
     elapsed = 0
     while elapsed < timeout:
-        result = run_command([
-            "kubectl", "get", resource, "-n", namespace,
-            "-o", "jsonpath={.status.phase}",
-        ])
-        # DataVolume 使用 .status.phase，VM/VMI 使用 .status.printableStatus
-        if result.returncode != 0:
-            # 尝试 printableStatus（VM 用）
-            result = run_command([
-                "kubectl", "get", resource, "-n", namespace,
-                "-o", "jsonpath={.status.printableStatus}",
-            ])
-        if result.returncode == 0 and result.stdout.strip() == expected_status:
+        phase = get_resource_phase(resource, namespace)
+        if phase == expected_status:
             return True
         time.sleep(poll_interval)
         elapsed += poll_interval
@@ -138,22 +165,8 @@ def get_resource_status(
     resource: str,
     namespace: str = "kubevirt-test",
 ) -> str:
-    """获取资源当前状态."""
-    # 先尝试 .status.phase (VMI/DataVolume)
-    result = run_command([
-        "kubectl", "get", resource, "-n", namespace,
-        "-o", "jsonpath={.status.phase}",
-    ])
-    if result.returncode == 0 and result.stdout.strip():
-        return result.stdout.strip()
-    # 再尝试 .status.printableStatus (VM)
-    result = run_command([
-        "kubectl", "get", resource, "-n", namespace,
-        "-o", "jsonpath={.status.printableStatus}",
-    ])
-    if result.returncode == 0:
-        return result.stdout.strip()
-    return "Unknown"
+    """获取资源当前状态 (get_resource_phase 的别名)."""
+    return get_resource_phase(resource, namespace)
 
 
 # --- 断言函数 ---
