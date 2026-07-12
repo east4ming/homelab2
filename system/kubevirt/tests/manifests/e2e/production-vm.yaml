@@ -1,0 +1,115 @@
+# 生产级 VM — 端到端测试
+# Fedora 40, 2C4G, PVC 启动盘 + 数据盘, cloud-init SSH 密钥注入, masquerade 网络
+---
+# 启动盘 PVC (从 containerDisk 克隆)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prod-vm-rootdisk
+  namespace: kubevirt-test
+  labels:
+    app.kubernetes.io/test: kubevirt-suite
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+# 持久化数据盘 PVC
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prod-vm-datadisk
+  namespace: kubevirt-test
+  labels:
+    app.kubernetes.io/test: kubevirt-suite
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+# Secret: cloud-init SSH 密钥 (测试时由脚本临时生成并 apply)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: prod-vm-cloudinit
+  namespace: kubevirt-test
+  labels:
+    app.kubernetes.io/test: kubevirt-suite
+type: Opaque
+stringData:
+  userdata: |
+    #cloud-config
+    ssh_pwauth: true
+    password: fedora
+    chpasswd:
+      expire: false
+    users:
+      - name: fedora
+        sudo: ALL=(ALL) NOPASSWD:ALL
+        ssh_authorized_keys:
+          - SSH_PUBLIC_KEY_PLACEHOLDER
+    packages:
+      - qemu-guest-agent
+    runcmd:
+      - systemctl enable --now qemu-guest-agent
+      - mkdir -p /persistent
+      - mount /dev/vdb /persistent || true
+      - echo "/dev/vdb /persistent ext4 defaults 0 2" >> /etc/fstab || true
+---
+# VirtualMachine
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: prod-vm
+  namespace: kubevirt-test
+  labels:
+    app.kubernetes.io/test: kubevirt-suite
+spec:
+  runStrategy: Always
+  template:
+    metadata:
+      labels:
+        kubevirt.io/vm: prod-vm
+    spec:
+      domain:
+        cpu:
+          cores: 2
+        resources:
+          requests:
+            memory: 4Gi
+        devices:
+          disks:
+            - name: rootdisk
+              disk:
+                bus: virtio
+            - name: cloudinitdisk
+              disk:
+                bus: virtio
+            - name: datadisk
+              disk:
+                bus: virtio
+          interfaces:
+            - name: default
+              masquerade: {}
+        features:
+          acpi: {}
+          apic: {}
+      volumes:
+        - name: rootdisk
+          containerDisk:
+            image: quay.io/containerdisks/fedora:40
+            imagePullPolicy: IfNotPresent
+        - name: cloudinitdisk
+          cloudInitNoCloud:
+            secretRef:
+              name: prod-vm-cloudinit
+        - name: datadisk
+          persistentVolumeClaim:
+            claimName: prod-vm-datadisk
+      networks:
+        - name: default
+          pod: {}

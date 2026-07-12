@@ -1,0 +1,20 @@
+# DataVolume — HTTP 导入 CirrOS 镜像
+# 验证 CDI 镜像导入功能
+---
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
+metadata:
+  name: test-dv-cirros
+  namespace: kubevirt-test
+  labels:
+    app.kubernetes.io/test: kubevirt-suite
+spec:
+  source:
+    http:
+      url: https://download.cirros-cloud.net/0.6.3/cirros-0.6.3-x86_64-disk.img
+  pvc:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 2Gi

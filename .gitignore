@@ -1,4 +1,7 @@
 .venv/
+__pycache__/
+*.pyc
+uv.lock
 book/
 
 *.iso

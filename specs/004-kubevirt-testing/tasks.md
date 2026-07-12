@@ -24,9 +24,9 @@
 
 **Purpose**: 创建项目骨架和依赖管理
 
-- [ ] T001 创建目录结构：`system/kubevirt/tests/{lib,manifests/unit,manifests/integration,manifests/e2e,unit,integration,e2e}`
-- [ ] T002 初始化 `system/kubevirt/tests/pyproject.toml`，声明 uv 依赖（pytest, pyyaml, kubernetes, pexpect, rich）
-- [ ] T003 [P] 在 `system/kubevirt/tests/pyproject.toml` 中配置 ruff lint 规则，与项目惯例对齐
+- [x] T001 创建目录结构：`system/kubevirt/tests/{lib,manifests/unit,manifests/integration,manifests/e2e,unit,integration,e2e}`
+- [x] T002 初始化 `system/kubevirt/tests/pyproject.toml`，声明 uv 依赖（pytest, pyyaml, kubernetes, pexpect, rich）
+- [x] T003 [P] 在 `system/kubevirt/tests/pyproject.toml` 中配置 ruff lint 规则，与项目惯例对齐
 
 ---
 
@@ -36,10 +36,10 @@
 
 **⚠️ CRITICAL**: 用户故事实现本阶段完成前不能开始
 
-- [ ] T004 创建 `system/kubevirt/tests/lib/__init__.py` 包初始化，导出公共 API
-- [ ] T005 [P] 实现 `system/kubevirt/tests/lib/common.py`：subprocess 封装（kubectl/helm/virtctl 调用）、wait_for_condition()、断言函数、日志函数
-- [ ] T006 [P] 实现 `system/kubevirt/tests/lib/resource_limiter.py`：check_vm_limit()、validate_vm_resources()、wait_for_slot()、current_count property
-- [ ] T007 [P] 实现 `system/kubevirt/tests/lib/report_generator.py`：TestResult/Summary dataclass、generate_markdown_report()、支持按套件分组统计
+- [x] T004 创建 `system/kubevirt/tests/lib/__init__.py` 包初始化，导出公共 API
+- [x] T005 [P] 实现 `system/kubevirt/tests/lib/common.py`：subprocess 封装（kubectl/helm/virtctl 调用）、wait_for_condition()、断言函数、日志函数
+- [x] T006 [P] 实现 `system/kubevirt/tests/lib/resource_limiter.py`：check_vm_limit()、validate_vm_resources()、wait_for_slot()、current_count property
+- [x] T007 [P] 实现 `system/kubevirt/tests/lib/report_generator.py`：TestResult/Summary dataclass、generate_markdown_report()、支持按套件分组统计
 
 **Checkpoint**: 共享库就绪 — 用户故事实现可开始
 
@@ -53,10 +53,10 @@
 
 ### Implementation for User Story 1
 
-- [ ] T008 [P] [US1] 创建 `system/kubevirt/tests/manifests/unit/values-override.yaml` 和 `system/kubevirt/tests/unit/test_helm_template.py`：验证 Chart 默认渲染 + 自定义 values 覆盖，断言 4 个核心资源（CDI Operator、KubeVirt Operator、KubeVirt CR、CDI CR）存在
-- [ ] T009 [P] [US1] 创建 `system/kubevirt/tests/manifests/integration/vm-cirros.yaml` 和 `system/kubevirt/tests/integration/test_vm_lifecycle.py`：测试 VM 创建→Running（≤120s）→kubectl delete→资源清理验证
-- [ ] T010 [P] [US1] 创建 `system/kubevirt/tests/manifests/integration/vmi-ephemeral.yaml` 和 `system/kubevirt/tests/integration/test_vmi_lifecycle.py`：测试 VMI 创建→Running→删除，≤120s 超时
-- [ ] T011 [P] [US1] 创建 `system/kubevirt/tests/manifests/integration/datavolume-cirros.yaml` 和 `system/kubevirt/tests/integration/test_datavolume.py`：测试 DataVolume HTTP 导入 CirrOS 镜像→Succeeded，验证状态转换和超时处理
+- [x] T008 [P] [US1] 创建 `system/kubevirt/tests/manifests/unit/values-override.yaml` 和 `system/kubevirt/tests/unit/test_helm_template.py`：验证 Chart 默认渲染 + 自定义 values 覆盖，断言 4 个核心资源（CDI Operator、KubeVirt Operator、KubeVirt CR、CDI CR）存在
+- [x] T009 [P] [US1] 创建 `system/kubevirt/tests/manifests/integration/vm-cirros.yaml` 和 `system/kubevirt/tests/integration/test_vm_lifecycle.py`：测试 VM 创建→Running（≤120s）→kubectl delete→资源清理验证
+- [x] T010 [P] [US1] 创建 `system/kubevirt/tests/manifests/integration/vmi-ephemeral.yaml` 和 `system/kubevirt/tests/integration/test_vmi_lifecycle.py`：测试 VMI 创建→Running→删除，≤120s 超时
+- [x] T011 [P] [US1] 创建 `system/kubevirt/tests/manifests/integration/datavolume-cirros.yaml` 和 `system/kubevirt/tests/integration/test_datavolume.py`：测试 DataVolume HTTP 导入 CirrOS 镜像→Succeeded，验证状态转换和超时处理
 
 **Checkpoint**: US1 独立可测 — 4 个单资源测试全部通过
 
@@ -70,8 +70,8 @@
 
 ### Implementation for User Story 2
 
-- [ ] T012 [P] [US2] 创建 `system/kubevirt/tests/manifests/integration/vm-datavolume.yaml` 和 `system/kubevirt/tests/integration/test_vm_datavolume.py`：先创建 DataVolume，待 Succeeded 后创建 VM 引用该 DV，验证 VM 正常启动
-- [ ] T013 [P] [US2] 创建 `system/kubevirt/tests/manifests/integration/vm-service.yaml` 和 `system/kubevirt/tests/integration/test_vm_service.py`：创建 VM + ClusterIP Service，验证从集群内可访问 Service 端口
+- [x] T012 [P] [US2] 创建 `system/kubevirt/tests/manifests/integration/vm-datavolume.yaml` 和 `system/kubevirt/tests/integration/test_vm_datavolume.py`：先创建 DataVolume，待 Succeeded 后创建 VM 引用该 DV，验证 VM 正常启动
+- [x] T013 [P] [US2] 创建 `system/kubevirt/tests/manifests/integration/vm-service.yaml` 和 `system/kubevirt/tests/integration/test_vm_service.py`：创建 VM + ClusterIP Service，验证从集群内可访问 Service 端口
 
 **Checkpoint**: US1 + US2 均可独立通过
 
@@ -85,9 +85,9 @@
 
 ### Implementation for User Story 3
 
-- [ ] T014 [P] [US3] 创建 `system/kubevirt/tests/manifests/e2e/production-vm.yaml`（Fedora 40, 2C4G, PVC 启动盘 + 数据盘, cloud-init SSH 密钥注入, masquerade 网络）和 `system/kubevirt/tests/manifests/e2e/cloud-init-secret.yaml`
-- [ ] T015 [US3] 实现 `system/kubevirt/tests/e2e/test_production_vm.py`：VM 创建→Running→SSH 登录→virtctl console 登录→文件写入持久化盘→virtctl restart→SSH 再次登录验证文件存在→dnf install nginx→nginx 启动验证→多次重启稳定性
-- [ ] T016 [US3] 实现 `system/kubevirt/tests/e2e/test_vm_connectivity.py`：创建 2 个 VM→VM 间 ping 互通→VM 内 ping 外部地址（DNS/公网）→验证网络连通性
+- [x] T014 [P] [US3] 创建 `system/kubevirt/tests/manifests/e2e/production-vm.yaml`（Fedora 40, 2C4G, PVC 启动盘 + 数据盘, cloud-init SSH 密钥注入, masquerade 网络）和 `system/kubevirt/tests/manifests/e2e/cloud-init-secret.yaml`
+- [x] T015 [US3] 实现 `system/kubevirt/tests/e2e/test_production_vm.py`：VM 创建→Running→SSH 登录→virtctl console 登录→文件写入持久化盘→virtctl restart→SSH 再次登录验证文件存在→dnf install nginx→nginx 启动验证→多次重启稳定性
+- [x] T016 [US3] 实现 `system/kubevirt/tests/e2e/test_vm_connectivity.py`：创建 2 个 VM→VM 间 ping 互通→VM 内 ping 外部地址（DNS/公网）→验证网络连通性
 
 **Checkpoint**: US1 + US2 + US3 全部通过 — 三层测试覆盖完成
 
@@ -101,7 +101,7 @@
 
 ### Implementation for User Story 4
 
-- [ ] T017 [US4] 创建 `system/kubevirt/tests/unit/test_report_generator.py`：单元测试验证 report_generator 输出包含必要字段（标题、执行时间、摘要表、详细结果表、通过率），以及边界情况（0 用例、全部失败、全部跳过）
+- [x] T017 [US4] 创建 `system/kubevirt/tests/unit/test_report_generator.py`：单元测试验证 report_generator 输出包含必要字段（标题、执行时间、摘要表、详细结果表、通过率），以及边界情况（0 用例、全部失败、全部跳过）
 
 **Checkpoint**: 报告生成逻辑已验证
 
@@ -111,9 +111,9 @@
 
 **Purpose**: 主入口、文档、端到端验证
 
-- [ ] T018 实现 `system/kubevirt/tests/run.py`：CLI 入口（argparse: --suite, --verbose, --report），Phase 0 环境检查（kubectl/virtctl/helm/KubeVirt/CDI/CSI），按序执行 suite，资源清理确保，退出码映射
-- [ ] T019 [P] 创建 `system/kubevirt/tests/README.md`：使用说明、依赖安装、命令示例、报告样例
-- [ ] T020 按 `specs/004-kubevirt-testing/quickstart.md` 完整走一遍流程，验证所有步骤可执行且输出符合预期
+- [x] T018 实现 `system/kubevirt/tests/run.py`：CLI 入口（argparse: --suite, --verbose, --report），Phase 0 环境检查（kubectl/virtctl/helm/KubeVirt/CDI/CSI），按序执行 suite，资源清理确保，退出码映射
+- [x] T019 [P] 创建 `system/kubevirt/tests/README.md`：使用说明、依赖安装、命令示例、报告样例
+- [x] T020 按 `specs/004-kubevirt-testing/quickstart.md` 完整走一遍流程，验证所有步骤可执行且输出符合预期
 
 ---
 
