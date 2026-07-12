@@ -57,8 +57,8 @@ stringData:
     runcmd:
       - systemctl enable --now qemu-guest-agent
       - mkdir -p /persistent
-      - mount /dev/vdb /persistent || true
-      - echo "/dev/vdb /persistent ext4 defaults 0 2" >> /etc/fstab || true
+      - mount /dev/vdc /persistent || true
+      - echo "/dev/vdc /persistent ext4 defaults 0 2" >> /etc/fstab || true
 ---
 # VirtualMachine
 apiVersion: kubevirt.io/v1

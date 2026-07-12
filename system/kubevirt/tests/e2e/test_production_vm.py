@@ -157,9 +157,9 @@ def test_production_vm():
         # Step 4: 持久化存储验证
         log_info("Step 4: 持久化存储写入 + 重启验证")
         # 格式化数据盘并写入
-        _ssh_exec(key_path, vm_ip, "sudo mkfs.ext4 -F /dev/vdb 2>/dev/null || true")
+        _ssh_exec(key_path, vm_ip, "sudo mkfs.ext4 -F /dev/vdc 2>/dev/null || true")
         _ssh_exec(key_path, vm_ip, "sudo mkdir -p /persistent")
-        _ssh_exec(key_path, vm_ip, "sudo mount /dev/vdb /persistent 2>/dev/null || true")
+        _ssh_exec(key_path, vm_ip, "sudo mount /dev/vdc /persistent 2>/dev/null || true")
         _ssh_exec(key_path, vm_ip, "sudo chown fedora:fedora /persistent")
         # 写入测试文件
         test_content = f"kubevirt-e2e-test-{int(time.time())}"
@@ -185,7 +185,11 @@ def test_production_vm():
         # containerDisk 的 rootfs 是临时的，重启后挂载点会被清除
         log_info("重启后手动挂载数据盘")
         _ssh_exec(key_path, vm_ip, "sudo mkdir -p /persistent")
-        _ssh_exec(key_path, vm_ip, "sudo mount /dev/vdb /persistent 2>/dev/null || sudo mount -a || true")
+        mount_result = _ssh_exec(key_path, vm_ip, "sudo mount /dev/vdc /persistent")
+        if mount_result.returncode != 0:
+            log_warn(f"挂载失败 (stderr): {mount_result.stderr.strip()}")
+            # 尝试 mount -a 作为备用
+            _ssh_exec(key_path, vm_ip, "sudo mount -a")
 
         # 验证文件持久化
         ssh_result = _ssh_exec(key_path, vm_ip, "sudo cat /persistent/data.txt")
