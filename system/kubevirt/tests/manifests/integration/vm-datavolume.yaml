@@ -32,7 +32,7 @@ spec:
       volumes:
         - name: rootdisk
           dataVolume:
-            name: test-dv-boot
+            name: test-dv-cirros
       networks:
         - name: default
           pod: {}
