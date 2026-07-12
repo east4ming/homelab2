@@ -18,6 +18,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from lib.common import (
     MANIFESTS_DIR,
+    get_resource_phase,
     kubectl_apply,
     kubectl_delete,
     log_info,
@@ -125,8 +126,16 @@ def test_production_vm():
         _patch_cloudinit_ssh_key(pubkey)
         log_success(f"SSH 密钥已生成")
 
-        # Step 1: 等待 VM Running
-        log_info(f"Step 1: 等待 VM Running (timeout={VM_START_TIMEOUT}s)")
+        # Step 1: 等待 DataVolume 导入完成 (CDI 从 registry 拉取 Fedora 镜像到 PVC)
+        log_info(f"Step 1: 等待 DataVolume 导入完成 (timeout=600s)")
+        dv_ok = wait_for_condition(f"dv/{VM_NAME}-rootdisk", "Succeeded", timeout=600, poll_interval=15, namespace=NAMESPACE)
+        assert dv_ok, f"DataVolume '{VM_NAME}-rootdisk' 导入超时或失败"
+        dv_phase = get_resource_phase(f"dv/{VM_NAME}-rootdisk", NAMESPACE)
+        assert dv_phase == "Succeeded", f"DataVolume 状态异常: {dv_phase}"
+        log_success("DataVolume 就绪 — rootdisk PVC 已创建")
+
+        # Step 2: 等待 VM Running (DataVolume 就绪后 VM 才会启动)
+        log_info(f"Step 2: 等待 VM Running (timeout={VM_START_TIMEOUT}s)")
         running = wait_for_condition(f"vm/{VM_NAME}", "Running", timeout=VM_START_TIMEOUT, namespace=NAMESPACE)
         assert running, f"VM '{VM_NAME}' 在 {VM_START_TIMEOUT}s 内未进入 Running"
 
@@ -181,15 +190,19 @@ def test_production_vm():
         vm_ip = _get_vm_ip()
         log_info(f"重启后 VM IP: {vm_ip}")
 
-        # 重启后: 重新创建挂载点并挂载数据盘
-        # containerDisk 的 rootfs 是临时的，重启后挂载点会被清除
-        log_info("重启后手动挂载数据盘")
-        _ssh_exec(key_path, vm_ip, "sudo mkdir -p /persistent")
-        mount_result = _ssh_exec(key_path, vm_ip, "sudo mount /dev/vdc /persistent")
-        if mount_result.returncode != 0:
-            log_warn(f"挂载失败 (stderr): {mount_result.stderr.strip()}")
-            # 尝试 mount -a 作为备用
-            _ssh_exec(key_path, vm_ip, "sudo mount -a")
+        # 重启后: 重新挂载数据盘
+        # rootdisk 现在是 PVC 持久化，/persistent 目录和 fstab 重启后保留
+        log_info("重启后挂载数据盘 (fstab 应已自动挂载)")
+        # 先检查是否已挂载，未挂载则手动挂载
+        check = _ssh_exec(key_path, vm_ip, "mountpoint -q /persistent && echo mounted || echo not-mounted")
+        if "not-mounted" in check.stdout:
+            log_info("/persistent 未自动挂载，手动挂载")
+            mount_result = _ssh_exec(key_path, vm_ip, "sudo mount /dev/vdc /persistent")
+            if mount_result.returncode != 0:
+                log_warn(f"挂载失败: {mount_result.stderr.strip()}")
+                _ssh_exec(key_path, vm_ip, "sudo mount -a")
+        else:
+            log_success("/persistent 已自动挂载 (fstab 生效)")
 
         # 验证文件持久化
         ssh_result = _ssh_exec(key_path, vm_ip, "sudo cat /persistent/data.txt")
@@ -226,6 +239,7 @@ def test_production_vm():
         # 清理
         log_info("清理: 删除生产级 VM 及相关资源")
         kubectl_delete(MANIFEST, NAMESPACE)
+        run_command(["kubectl", "delete", "dv", "prod-vm-rootdisk", "-n", NAMESPACE, "--ignore-not-found=true"], timeout=10)
         run_command(["kubectl", "delete", "pvc", "prod-vm-rootdisk", "-n", NAMESPACE, "--ignore-not-found=true"], timeout=10)
         run_command(["kubectl", "delete", "pvc", "prod-vm-datadisk", "-n", NAMESPACE, "--ignore-not-found=true"], timeout=10)
         run_command(["kubectl", "delete", "secret", "prod-vm-cloudinit", "-n", NAMESPACE, "--ignore-not-found=true"], timeout=10)

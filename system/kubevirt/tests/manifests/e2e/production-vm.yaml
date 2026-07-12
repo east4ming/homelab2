@@ -1,20 +1,25 @@
 # 生产级 VM — 端到端测试
 # Fedora 40, 2C4G, PVC 启动盘 + 数据盘, cloud-init SSH 密钥注入, masquerade 网络
+# rootdisk 使用 DataVolume (registry 导入) → PVC 持久化，重启后系统变更保留
 ---
-# 启动盘 PVC (从 containerDisk 克隆)
-apiVersion: v1
-kind: PersistentVolumeClaim
+# DataVolume: 从容器镜像导入 Fedora 40 到 PVC (CDI registry import)
+apiVersion: cdi.kubevirt.io/v1beta1
+kind: DataVolume
 metadata:
   name: prod-vm-rootdisk
   namespace: kubevirt-test
   labels:
     app.kubernetes.io/test: kubevirt-suite
 spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 20Gi
+  source:
+    registry:
+      url: docker://quay.io/containerdisks/fedora:40
+  pvc:
+    accessModes:
+      - ReadWriteOnce
+    resources:
+      requests:
+        storage: 20Gi
 ---
 # 持久化数据盘 PVC
 apiVersion: v1
@@ -60,7 +65,7 @@ stringData:
       - mount /dev/vdc /persistent || true
       - echo "/dev/vdc /persistent ext4 defaults 0 2" >> /etc/fstab || true
 ---
-# VirtualMachine
+# VirtualMachine (rootdisk 从 DataVolume PVC 启动，可写持久化)
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
@@ -100,9 +105,8 @@ spec:
           apic: {}
       volumes:
         - name: rootdisk
-          containerDisk:
-            image: quay.io/containerdisks/fedora:40
-            imagePullPolicy: IfNotPresent
+          dataVolume:
+            name: prod-vm-rootdisk
         - name: cloudinitdisk
           cloudInitNoCloud:
             secretRef:
