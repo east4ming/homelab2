@@ -156,13 +156,15 @@ def test_production_vm():
 
         # Step 4: 持久化存储验证
         log_info("Step 4: 持久化存储写入 + 重启验证")
-        # 格式化数据盘 (如果未格式化)
+        # 格式化数据盘并写入
         _ssh_exec(key_path, vm_ip, "sudo mkfs.ext4 -F /dev/vdb 2>/dev/null || true")
+        _ssh_exec(key_path, vm_ip, "sudo mkdir -p /persistent")
         _ssh_exec(key_path, vm_ip, "sudo mount /dev/vdb /persistent 2>/dev/null || true")
         _ssh_exec(key_path, vm_ip, "sudo chown fedora:fedora /persistent")
         # 写入测试文件
         test_content = f"kubevirt-e2e-test-{int(time.time())}"
         _ssh_exec(key_path, vm_ip, f"echo '{test_content}' | sudo tee /persistent/data.txt")
+        log_success(f"测试文件已写入 /persistent/data.txt")
 
         # 重启 VM
         log_info("重启 VM (virtctl restart)")
@@ -170,13 +172,20 @@ def test_production_vm():
 
         # 等待 VM 回到 Running
         log_info("等待 VM 重启完成 (timeout=180s)")
-        time.sleep(15)  # 给 VM 一点关闭时间
+        time.sleep(15)
         running = wait_for_condition(f"vm/{VM_NAME}", "Running", timeout=180, namespace=NAMESPACE)
         assert running, "VM 重启后未恢复 Running"
 
-        # 等待 SSH
+        # 等待 SSH 就绪
         time.sleep(30)
         vm_ip = _get_vm_ip()
+        log_info(f"重启后 VM IP: {vm_ip}")
+
+        # 重启后: 重新创建挂载点并挂载数据盘
+        # containerDisk 的 rootfs 是临时的，重启后挂载点会被清除
+        log_info("重启后手动挂载数据盘")
+        _ssh_exec(key_path, vm_ip, "sudo mkdir -p /persistent")
+        _ssh_exec(key_path, vm_ip, "sudo mount /dev/vdb /persistent 2>/dev/null || sudo mount -a || true")
 
         # 验证文件持久化
         ssh_result = _ssh_exec(key_path, vm_ip, "sudo cat /persistent/data.txt")

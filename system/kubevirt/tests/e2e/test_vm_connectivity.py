@@ -148,8 +148,29 @@ def test_vm_connectivity():
         log_success("VM 网络连通性测试通过")
     finally:
         log_info("清理 VM 资源")
-        if vm1_applied:
-            run_command(["kubectl", "delete", "vm", "test-conn-vm1", "-n", NAMESPACE, "--ignore-not-found=true"], timeout=30)
-        if vm2_applied:
-            run_command(["kubectl", "delete", "vm", "test-conn-vm2", "-n", NAMESPACE, "--ignore-not-found=true"], timeout=30)
+        # 逐个删除，各自 try/except 防止一个失败阻止另一个
+        for vm_name in ["test-conn-vm1", "test-conn-vm2"]:
+            try:
+                run_command(
+                    ["kubectl", "delete", "vm", vm_name, "-n", NAMESPACE,
+                     "--ignore-not-found=true", "--wait=false"],
+                    timeout=30,
+                )
+                log_info(f"  已触发 {vm_name} 删除")
+            except Exception as e:
+                log_warn(f"  删除 {vm_name} 失败: {e}")
+                # 备用: 直接删 VMI 再删 VM
+                try:
+                    run_command(
+                        ["kubectl", "delete", "vmi", vm_name, "-n", NAMESPACE,
+                         "--ignore-not-found=true", "--wait=false"],
+                        timeout=10,
+                    )
+                    run_command(
+                        ["kubectl", "delete", "vm", vm_name, "-n", NAMESPACE,
+                         "--ignore-not-found=true", "--wait=false"],
+                        timeout=10,
+                    )
+                except Exception:
+                    pass
         log_success("VM 连通性测试资源清理完毕")
