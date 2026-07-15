@@ -3,7 +3,7 @@ name: rook-ceph
 version: 0.0.0
 dependencies:
   - name: rook-ceph
-    version: v1.20.1
+    version: v1.20.2
     repository: https://charts.rook.io/release
   # [v1.20+] ceph-csi-drivers chart is required for CSI ServiceAccount and RBAC management.
   # The ceph-csi-operator subchart (included in rook-ceph) deploys the operator, while
@@ -14,10 +14,10 @@ dependencies:
   #   - Role/RoleBinding (leader-election leases)
   # Ref: https://rook.io/docs/rook/latest-release/Upgrade/rook-upgrade/#helm
   - name: ceph-csi-drivers
-    version: 1.0.3
+    version: 1.0.4
     repository: https://ceph.github.io/ceph-csi-operator
   - name: rook-ceph-cluster
-    version: v1.20.1
+    version: v1.20.2
     repository: https://charts.rook.io/release
   - name: snapshot-controller
     version: 5.1.1
