@@ -16,6 +16,12 @@ spec:
       {{- if .Values.kubevirt.useEmulation }}
       useEmulation: true
       {{- end }}
+      logVerbosity:
+        virtLauncher: 0
+        virtHandler: 0
+        virtController: 0
+        virtAPI: 0
+        virtOperator: 0
     imagePullPolicy: IfNotPresent
   customizeComponents:
     patches:
