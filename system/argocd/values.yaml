@@ -3,6 +3,9 @@ argo-cd:
     domain: argocd.west-beta.ts.net
     networkPolicy:
       create: false
+    logging:
+      # -- Set the global logging level. One of: `debug`, `info`, `warn` or `error`
+      level: warn
   configs:
     params:
       server.insecure: true
