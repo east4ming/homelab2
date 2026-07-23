@@ -159,6 +159,7 @@ rook-ceph:
             memory: 64Mi
 
   enableDiscoveryDaemon: true
+  logLevel: WARNING
 # [v1.20+] ceph-csi-drivers chart — manages CSI Driver CRs, ServiceAccounts, and RBAC.
 # This chart is REQUIRED since v1.20.0. Without it, CSI components will fail with
 # ServiceAccount not found or RBAC permission denied errors.
