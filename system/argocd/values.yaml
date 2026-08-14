@@ -37,6 +37,16 @@ argo-cd:
       tls: true
       annotations:
         tailscale.com/proxy-group: ingress-proxies
+    env:
+      - name: GOMEMLIMIT
+        value: "450MiB"
+    resources:
+      requests:
+        cpu: 25m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
     metrics: &metrics
       enabled: true
       serviceMonitor:
@@ -44,6 +54,22 @@ argo-cd:
   dex:
     enabled: false
   controller:
+    env:
+      # Split large application trees into multiple Redis keys to reduce controller<->Redis traffic
+      # Ref: https://argo-cd.readthedocs.io/en/stable/operator-manual/high_availability/#argocd-application-controller
+      - name: ARGOCD_APPLICATION_TREE_SHARD_SIZE
+        value: "100"
+      # Force Go GC before the k8s memory limit to mitigate OOMKilled on memory spikes (~88% of limit)
+      # Ref: https://argo-cd.readthedocs.io/en/stable/operator-manual/high_availability/#mitigating-oomkilled-events-from-memory-spikes
+      - name: GOMEMLIMIT
+        value: "900MiB"
+    resources:
+      requests:
+        cpu: 150m
+        memory: 256Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
     metrics:
       enabled: true
       serviceMonitor:
@@ -76,15 +102,52 @@ argo-cd:
                 12 hours which means that the state of this cloud has drifted away from the
                 state inside Git.
   repoServer:
+    env:
+      - name: GOMEMLIMIT
+        value: "450MiB"
+    resources:
+      requests:
+        cpu: 50m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
     metrics: *metrics
   redis:
     metrics: *metrics
     image:
       repository: docker.io/redis
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+      limits:
+        cpu: 250m
+        memory: 256Mi
   applicationSet:
     metrics: *metrics
+    extraEnv:
+      - name: GOMEMLIMIT
+        value: "220MiB"
+    resources:
+      requests:
+        cpu: 25m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi
   notifications:
     metrics: *metrics
+    extraEnv:
+      - name: GOMEMLIMIT
+        value: "220MiB"
+    resources:
+      requests:
+        cpu: 10m
+        memory: 64Mi
+      limits:
+        cpu: 250m
+        memory: 256Mi
 argocd-apps:
   applicationsets:
     root:
@@ -93,7 +156,14 @@ argocd-apps:
         - git:
             # TODO:
             repoURL: &repoURL http://gitea-http.gitea:3000/ops/homelab2
-            revision: &revision master
+            # Use fully qualified git references: avoids iterating through all refs
+            # when resolving short names (perf win on the repo-server).
+            # Ref: https://argo-cd.readthedocs.io/en/stable/operator-manual/high_availability/#use-fully-qualified-git-references
+            revision: &revision refs/heads/master
+            # Reduce git-generator polling: default is 180s, each requeue triggers a
+            # git ls-remote against the repo (observed ~7000 ls-remote calls / 30d).
+            # 10m detection latency is fine for a homelab.
+            requeueAfterSeconds: 600
             directories:
               - path: system/*
               - path: platform/*
@@ -105,6 +175,16 @@ argocd-apps:
       template:
         metadata:
           name: "{{path.basename}}"
+          annotations:
+            # Manifest Paths Annotation: every app only consumes its own directory
+            # (no cross-dir refs exist in this repo), so a commit touching one path
+            # must not invalidate the manifest cache / trigger refreshes of all 35 apps.
+            # "." resolves to the app's source path (i.e. its own directory).
+            # Ref: https://argo-cd.readthedocs.io/en/stable/operator-manual/high_availability/#manifest-paths-annotation
+            # NOTE: keep a FULL clone for this repo (no `depth` on the repo secret) —
+            # shallow clones skip the non-webhook Git-history comparison this
+            # annotation relies on, and no webhooks are configured for gitea.
+            argocd.argoproj.io/manifest-generate-paths: "."
         spec:
           destination:
             name: in-cluster

@@ -16,12 +16,18 @@ argocd-apps:
       generators:
         - git:
             repoURL: &repoURL https://github.com/east4ming/homelab2
-            revision: &revision master
+            # Use fully qualified git references (perf win on the repo-server)
+            revision: &revision refs/heads/master
+            requeueAfterSeconds: 600
             directories:
               - path: system/*
               - path: platform/*
               - path: apps/*
       template:
+        metadata:
+          annotations:
+            # Only refresh apps whose own directory changed
+            argocd.argoproj.io/manifest-generate-paths: "."
         spec:
           source:
             repoURL: *repoURL
