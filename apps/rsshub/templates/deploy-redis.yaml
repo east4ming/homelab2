@@ -29,7 +29,7 @@ spec:
         io.kompose.service: redis
     spec:
       containers:
-        - image: redis:alpine
+        - image: redis:8.10-alpine
           imagePullPolicy: IfNotPresent
           name: redis
           ports:
