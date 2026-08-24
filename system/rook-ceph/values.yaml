@@ -215,7 +215,7 @@ rook-ceph-cluster:
     resources:
       mgr:
         limits:
-          memory: 1366Mi
+          memory: 1536Mi
         requests:
           cpu: 7m
           memory: 584Mi
