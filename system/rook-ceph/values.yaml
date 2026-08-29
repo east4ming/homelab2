@@ -211,6 +211,13 @@ rook-ceph-cluster:
       ssl: false
     logCollector:
       enabled: false
+    # CVE-2025-30156: rotate core Ceph daemon keys to the AES256K cipher.
+    # CSI keys intentionally stay on `aes` until all nodes run Linux kernel 7.0+.
+    security:
+      cephx:
+        daemon:
+          keyRotationPolicy: KeyGeneration
+          keyGeneration: 2
     removeOSDsIfOutAndSafeToRemove: true
     resources:
       mgr:
