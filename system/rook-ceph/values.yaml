@@ -218,6 +218,19 @@ rook-ceph-cluster:
         daemon:
           keyRotationPolicy: KeyGeneration
           keyGeneration: 2
+    healthCheck:
+      muteHealthWarning:
+        # Expected until all clients/CSI keys can use AES256K (kernel 7.0+).
+        AUTH_INSECURE_CLIENT_KEY_TYPE:
+          policy: mute
+        AUTH_INSECURE_KEYS_ALLOWED:
+          policy: mute
+        AUTH_INSECURE_KEYS_CREATABLE:
+          policy: mute
+        # Stale mgr module crash alert from the known nfs module issue;
+        # archive/unmute after reviewing `ceph crash ls-new`.
+        RECENT_MGR_MODULE_CRASH:
+          policy: mute
     removeOSDsIfOutAndSafeToRemove: true
     resources:
       mgr:
