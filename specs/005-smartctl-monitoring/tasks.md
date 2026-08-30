@@ -44,4 +44,4 @@
 - [x] T012 运行 `helm template` 验证 subchart 与 dashboard 渲染
 - [x] T013 运行可用的静态检查（`yamllint` / `helm lint` / `helm template`）
 - [x] T014 更新 `.specify/feature.json` 与 `CLAUDE.md` 指向 005
-- [ ] T015 提交并推送 feature branch
+- [x] T015 提交并推送 feature branch
