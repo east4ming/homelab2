@@ -7,4 +7,4 @@ dependencies:
     repository: https://prometheus-community.github.io/helm-charts
   - name: prometheus-smartctl-exporter
     version: 0.17.1
-    repository: file://charts/prometheus-smartctl-exporter
+    repository: https://prometheus-community.github.io/helm-charts

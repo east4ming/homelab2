@@ -64,8 +64,6 @@ system/monitoring-system/values.yaml                     # smartctl-exporter 配
 system/monitoring-system/files/dashboards/
 └── smartctl-exporter-dashboard.json                     # 官方 dashboard 22604
 system/monitoring-system/templates/dashboard-smartctl.yaml # Grafana ConfigMap
-system/monitoring-system/templates/smartctl-wrapper.yaml   # smartctl wrapper ConfigMap
-system/monitoring-system/charts/prometheus-smartctl-exporter/  # 本地化 subchart（扩展 extraVolumes/extraVolumeMounts）
 ```
 
 **Structure Decision**: 将 exporter 作为 `system/monitoring-system` 的 subchart，与现有 kube-prometheus-stack 同 namespace，复用 Prometheus、Alertmanager、Grafana sidecar 和 ArgoCD 自动发现。
