@@ -174,3 +174,25 @@ kube-prometheus-stack:
         memory: 39Mi
       limits:
         memory: 80Mi
+prometheus-smartctl-exporter:
+  serviceMonitor:
+    enabled: true
+    interval: 60s
+    scrapeTimeout: 30s
+  prometheusRules:
+    enabled: true
+  rbac:
+    # The chart default RoleBinding references the unrestricted-psp ClusterRole,
+    # which is not guaranteed to exist on modern K3s. The exporter does not need
+    # Kubernetes API access, so RBAC is disabled.
+    create: false
+  service:
+    port: 9633
+  tolerations:
+    - operator: Exists
+  resources:
+    requests:
+      cpu: 5m
+      memory: 32Mi
+    limits:
+      memory: 64Mi

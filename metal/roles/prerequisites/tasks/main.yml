@@ -7,7 +7,9 @@
 - name: Install Dependent Ubuntu Packages
   when: ansible_distribution in ['Ubuntu']
   ansible.builtin.apt:
-    name: policycoreutils  # Used by install script to restore SELinux context
+    name:
+      - policycoreutils  # Used by install script to restore SELinux context
+      - smartmontools    # Provides smartctl for disk SMART monitoring
     update_cache: true
 
 - name: Adjust kernel parameters
