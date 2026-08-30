@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: smartctl-wrapper
+  namespace: {{ .Release.Namespace }}
+data:
+  smartctl: |
+    #!/bin/sh
+    # Workaround for smartmontools failing to read the default 16 NVMe
+    # error-log entries on some drives (PRP Offset Invalid / exit status 4).
+    # The exporter always passes --log=error; rewrite it to --log=error,64
+    # for NVMe devices, which is supported by these drives.
+    rewrite=0
+    for arg in "$@"; do
+      if [ "$arg" = "--device=nvme" ]; then
+        rewrite=1
+      fi
+    done
+
+    if [ "$rewrite" -ne 1 ]; then
+      exec /usr/sbin/smartctl "$@"
+    fi
+
+    for arg in "$@"; do
+      if [ "$arg" = "--log=error" ]; then
+        set -- "$@" "--log=error,64"
+      else
+        set -- "$@" "$arg"
+      fi
+      shift
+    done
+    exec /usr/sbin/smartctl "$@"

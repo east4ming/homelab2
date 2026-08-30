@@ -175,6 +175,20 @@ kube-prometheus-stack:
       limits:
         memory: 80Mi
 prometheus-smartctl-exporter:
+  common:
+    config:
+      # Use a wrapper that rewrites --log=error to --log=error,64.
+      # Some NVMe drives (e.g. ZHITAI TiPro7000) fail with PRP Offset Invalid
+      # when smartmontools requests the default 16 error-log entries.
+      smartctl_location: /opt/smartctl-wrapper/smartctl
+  extraVolumes:
+    - name: smartctl-wrapper
+      configMap:
+        name: smartctl-wrapper
+        defaultMode: 0755
+  extraVolumeMounts:
+    - name: smartctl-wrapper
+      mountPath: /opt/smartctl-wrapper
   serviceMonitor:
     enabled: true
     interval: 60s
