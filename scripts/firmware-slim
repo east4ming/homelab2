@@ -1,0 +1,220 @@
+#!/usr/bin/env bash
+#
+# Trim unneeded Linux firmware vendor sub-packages on the N100 nodes.
+#
+# Ubuntu 24.04 splits linux-firmware into one sub-package per vendor, so the
+# blobs for hardware we do not own can be dropped. Do NOT remove those
+# sub-packages directly: linux-image-generic depends on the linux-firmware
+# metapackage, so apt would remove linux-generic/linux-image-generic with it and
+# the node would stop receiving kernel upgrades. Installing the empty
+# linux-firmware-minimal stub (Conflicts/Replaces/Provides: linux-firmware) in
+# the same transaction keeps the kernel metapackages while allowing the vendor
+# sub-packages to go.
+#
+# See docs/how-to-guides/trim-linux-firmware-packages.md
+#
+set -euo pipefail
+
+DEFAULT_HOSTS=(n100-cheshi-0 n100-jumper-0 n100-jumper-1 n100-jumper-2)
+SSH_USER=${SSH_USER:-casey}
+SSH_OPTS=${SSH_OPTS:-}
+ASSUME_YES=0
+
+usage() {
+  cat <<EOF
+Usage: ${0##*/} [audit|plan|apply] [--yes] [host ...]
+
+  audit  (default)  read-only report: OS, firmware packages, hardware
+  plan              print the apt transaction that apply would run (apt-get -s)
+  apply             pin the kept packages, then run that transaction
+
+Hosts default to: ${DEFAULT_HOSTS[*]}
+
+Environment:
+  SSH_USER  ssh user (default: ${SSH_USER})
+  SSH_OPTS  extra ssh options, e.g. SSH_OPTS='-F /dev/null'
+EOF
+}
+
+# Remote payload, executed as: ssh HOST bash -s -- MODE
+remote_script() {
+  cat <<'EOS'
+set -euo pipefail
+mode=${1:-audit}
+
+# Sub-packages kept on every node, with the hardware that needs them.
+KEPT=(
+  linux-firmware-intel-graphics   # i915 GuC/HuC (cmdline has i915.enable_guc=2)
+  linux-firmware-intel-misc
+  linux-firmware-intel-wireless   # iwlwifi + Bluetooth on the jumper nodes
+  linux-firmware-misc
+  linux-firmware-realtek          # RTL8111 / RTL8125 NICs on the jumper nodes
+  linux-firmware-amd-misc
+  firmware-sof-signed             # Intel SOF audio firmware (separate package)
+)
+
+# Vendor sub-packages dropped on every node: no matching hardware anywhere.
+DROPPED=(
+  linux-firmware-amd-graphics
+  linux-firmware-broadcom-wireless
+  linux-firmware-marvell-prestera
+  linux-firmware-marvell-wireless
+  linux-firmware-mellanox-spectrum
+  linux-firmware-mediatek
+  linux-firmware-netronome
+  linux-firmware-nvidia-graphics
+  linux-firmware-qlogic
+  linux-firmware-qualcomm-graphics
+  linux-firmware-qualcomm-misc
+  linux-firmware-qualcomm-wireless
+)
+
+STUB=linux-firmware-minimal
+# These must survive the transaction, otherwise kernel upgrades stop.
+PROTECTED='linux-generic|linux-image-generic'
+
+drop_args=()
+for pkg in "${DROPPED[@]}"; do
+  drop_args+=("${pkg}-")
+done
+
+simulate() {
+  apt-get -s install --no-install-recommends "${STUB}" "${drop_args[@]}" 2>&1
+}
+
+# Print the simulated transaction and refuse to go on if apt wants to remove a
+# kernel metapackage.
+preview() {
+  local out
+  out=$(simulate)
+  printf '%s\n' "${out}"
+  if printf '%s\n' "${out}" | sed -n '/will be REMOVED/,/^[^ ]/p' | grep -qE "${PROTECTED}"; then
+    echo "!! ABORT: this transaction would remove a kernel metapackage" >&2
+    return 1
+  fi
+}
+
+case "${mode}" in
+  audit)
+    . /etc/os-release
+    printf 'os: %s kernel=%s\n' "${PRETTY_NAME}" "$(uname -r)"
+    printf 'disk: %s\n' "$(df -h / | tail -1)"
+    echo
+    echo "-- installed firmware packages (KB, largest first) --"
+    dpkg-query -W -f='${Installed-Size}\t${Package}\n' 'linux-firmware*' | sort -rn
+    printf 'total: '
+    dpkg-query -W -f='${Installed-Size}\n' 'linux-firmware*' | awk '{s+=$1} END {printf "%.0f MB\n", s/1024}'
+    echo
+    echo "-- hardware not made by Intel --"
+    lspci -nn | grep -viE 'intel corporation' || echo "(none)"
+    echo "-- Wi-Fi / Bluetooth --"
+    lspci -nn | grep -iE 'network controller|wireless' || echo "(no Wi-Fi PCI device)"
+    lsusb | grep -viE '1d6b:' || echo "(no non-hub USB device)"
+    echo "-- drivers in use --"
+    lspci -nnk | grep 'Kernel driver in use' | sed 's/^[[:space:]]*//' | sort -u
+    ;;
+  plan)
+    preview
+    echo
+    echo "Nothing was changed (apt-get -s)."
+    ;;
+  apply)
+    # Pin what we keep, so a later 'apt autoremove' cannot take i915 or Wi-Fi
+    # firmware away once the metapackage that pulled it in is gone.
+    present=()
+    for pkg in "${KEPT[@]}"; do
+      if dpkg -s "${pkg}" >/dev/null 2>&1; then
+        present+=("${pkg}")
+      fi
+    done
+    if ((${#present[@]})); then
+      sudo apt-mark manual "${present[@]}"
+    fi
+
+    preview
+    sudo apt-get install --no-install-recommends -y "${STUB}" "${drop_args[@]}"
+
+    echo
+    echo "-- remaining firmware packages --"
+    dpkg-query -W -f='${Package} ' 'linux-firmware*'
+    echo
+    dpkg -s linux-image-generic | grep -E '^(Status|Depends)'
+    df -h / | tail -1
+    echo
+    echo "NOTE: do not run 'apt autoremove' on this host."
+    ;;
+  *)
+    echo "unknown mode: ${mode}" >&2
+    exit 2
+    ;;
+esac
+EOS
+}
+
+confirm() {
+  if ((ASSUME_YES)); then
+    return 0
+  fi
+  if [[ ! -t 0 ]]; then
+    echo "Refusing to apply without a TTY; re-run with --yes to confirm." >&2
+    exit 2
+  fi
+  echo "About to install linux-firmware-minimal and drop 12 vendor firmware"
+  echo "sub-packages on: ${hosts[*]}"
+  read -r -p "Type 'yes' to continue: " reply
+  [[ ${reply} == yes ]]
+}
+
+mode=audit
+case "${1:-}" in
+  audit | plan | apply)
+    mode=$1
+    shift
+    ;;
+  "" | -h | --help)
+    usage
+    exit 0
+    ;;
+  *)
+    echo "unknown mode: $1" >&2
+    usage >&2
+    exit 2
+    ;;
+esac
+
+hosts=()
+while (($#)); do
+  case "$1" in
+    -y | --yes) ASSUME_YES=1 ;;
+    -*)
+      echo "unknown option: $1" >&2
+      exit 2
+      ;;
+    *) hosts+=("$1") ;;
+  esac
+  shift
+done
+if ((${#hosts[@]} == 0)); then
+  hosts=("${DEFAULT_HOSTS[@]}")
+fi
+
+ssh_opts=(-o BatchMode=yes -o ConnectTimeout=10 -o User="${SSH_USER}")
+if [[ -n ${SSH_OPTS} ]]; then
+  read -r -a extra_opts <<<"${SSH_OPTS}"
+  ssh_opts=("${extra_opts[@]}" "${ssh_opts[@]}")
+fi
+
+if [[ ${mode} == apply ]]; then
+  confirm
+fi
+
+payload=$(remote_script)
+for host in "${hosts[@]}"; do
+  printf '\n=========== %s (%s) ===========\n' "${host}" "${mode}"
+  ssh "${ssh_opts[@]}" "${host}" bash -s -- "${mode}" <<<"${payload}"
+done
+
+if [[ ${mode} == apply ]]; then
+  echo
+  echo "Done. Reboot at your convenience and check 'journalctl -b -k | grep -i firmware'."
+fi
