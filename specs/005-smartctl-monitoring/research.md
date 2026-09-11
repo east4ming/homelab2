@@ -36,6 +36,16 @@ chart 默认 `rbac.create: true` 会创建指向 `unrestricted-psp` ClusterRole 
 - 通过 Grafana sidecar 从 `monitoring-system` namespace 自动加载。
 - 需将 `${DS_PROMETHEUS}` 替换为 kube-prometheus-stack datasource UID `prometheus`，并移除 `__inputs`/`__requires`。
 
+
+## 已知问题：NVMe Error Log 读取失败
+
+- 部分 NVMe（本环境为 ZHITAI TiPro7000）在 smartmontools 7.4 默认 `-l error`（读取 16 entries）时返回 `PRP Offset Invalid (0x013)` / exit status 4。
+- `smartctl_exporter` 固定调用 `--log=error`，一旦 smartctl 返回 error 级 message 就会丢弃整个设备数据，导致该节点没有 SMART 指标。
+- 使用 `--log=error,64` 可正常读取该磁盘。
+- 由于上游 chart 不支持额外 volumeMount，本仓库将 `prometheus-smartctl-exporter` 0.17.1 chart 本地化（vendored），扩展 `extraVolumes` / `extraVolumeMounts`，并注入 retry wrapper：
+  - 正常磁盘：按原参数执行，行为不变。
+  - 仅当原始 `smartctl` 输出包含 `PRP Offset Invalid` 时，才重试 `--log=error,64`，避免影响其他正常 NVMe。
+
 ## 参考
 
 - https://github.com/prometheus-community/smartctl_exporter
