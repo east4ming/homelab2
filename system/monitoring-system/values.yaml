@@ -194,8 +194,44 @@ prometheus-smartctl-exporter:
     enabled: true
     interval: 60s
     scrapeTimeout: 30s
+    # Add node hostname / node IP labels to every smartctl metric, so Grafana
+    # panels and alert annotations no longer show only the exporter Pod IP.
+    relabelings:
+      - action: replace
+        sourceLabels:
+          - __meta_kubernetes_pod_node_name
+        targetLabel: node
+      - action: replace
+        sourceLabels:
+          - __meta_kubernetes_pod_host_ip
+        targetLabel: node_ip
   prometheusRules:
     enabled: true
+    rules:
+      smartCTLDeviceMediaErrors:
+        annotations:
+          summary: '[{{ $labels.node }}] Device {{ $labels.device }} has media errors'
+          description: 'Device {{ $labels.device }} on node {{ $labels.node }} ({{ $labels.node_ip }}) has media errors'
+      smartCTLDeviceCriticalWarning:
+        annotations:
+          summary: '[{{ $labels.node }}] Device {{ $labels.device }} has critical controller warnings'
+          description: 'Device {{ $labels.device }} on node {{ $labels.node }} ({{ $labels.node_ip }}) has critical controller warnings'
+      smartCTLDeviceAvailableSpareUnderThreshold:
+        annotations:
+          summary: '[{{ $labels.node }}] Device {{ $labels.device }} is under available spare threshold'
+          description: 'Device {{ $labels.device }} on node {{ $labels.node }} ({{ $labels.node_ip }}) is under available spare threshold'
+      smartCTLDeviceStatus:
+        annotations:
+          summary: '[{{ $labels.node }}] Device {{ $labels.device }} has bad status'
+          description: 'Device {{ $labels.device }} on node {{ $labels.node }} ({{ $labels.node_ip }}) has bad status'
+      smartCTLDInterfaceSlow:
+        annotations:
+          summary: '[{{ $labels.node }}] Device {{ $labels.device }} interface is slower than it should be'
+          description: 'Device {{ $labels.device }} on node {{ $labels.node }} ({{ $labels.node_ip }}) interface is slower than it should be'
+      smartCTLDDeviceTemperature:
+        annotations:
+          summary: '[{{ $labels.node }}] Device {{ $labels.device }} temperature higher than 60°C'
+          description: 'Device {{ $labels.device }} on node {{ $labels.node }} ({{ $labels.node_ip }}) has temperature higher than 60°C'
   rbac:
     # The chart default RoleBinding references the unrestricted-psp ClusterRole,
     # which is not guaranteed to exist on modern K3s. The exporter does not need

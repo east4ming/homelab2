@@ -118,13 +118,13 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "avg(smartctl_device_temperature{instance=~\"$node\", device=~\"$disk\"} * on(instance, device) group_left(interface,serial_number,model_name) smartctl_device{interface=~\"$type\",serial_number=~\"$serial_number\",model_name=~\"$device_model\"}) by (instance,device,model_name)",
+          "expr": "avg(smartctl_device_temperature{node=~\"$node\", device=~\"$disk\"} * on(instance, device) group_left(interface,serial_number,model_name) smartctl_device{interface=~\"$type\",serial_number=~\"$serial_number\",model_name=~\"$device_model\"}) by (node,node_ip,device,model_name)",
           "format": "time_series",
           "hide": false,
           "instant": false,
           "interval": "1m",
           "intervalFactor": 1,
-          "legendFormat": "{{instance}} {{device}} {{model_name}}",
+          "legendFormat": "{{node}} ({{node_ip}}) {{device}} {{model_name}}",
           "refId": "B"
         }
       ],
@@ -187,7 +187,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum(smartctl_device{instance=~\"$node\", device=~\"$disk\", interface=~\"$type\",serial_number=~\"$serial_number\",model_name=~\"$device_model\"})",
+          "expr": "sum(smartctl_device{node=~\"$node\", device=~\"$disk\", interface=~\"$type\",serial_number=~\"$serial_number\",model_name=~\"$device_model\"})",
           "instant": false,
           "range": true,
           "refId": "A"
@@ -397,13 +397,13 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "smartctl_device_media_errors{instance=~\"$node\", device=~\"$disk\"} * on(instance, device) group_left(interface,serial_number,model_family,model_name) smartctl_device{interface=~\"$type\",serial_number=~\"$serial_number\",model_name=~\"$device_model\"} > 0",
+          "expr": "smartctl_device_media_errors{node=~\"$node\", device=~\"$disk\"} * on(instance, device) group_left(interface,serial_number,model_family,model_name) smartctl_device{interface=~\"$type\",serial_number=~\"$serial_number\",model_name=~\"$device_model\"} > 0",
           "format": "time_series",
           "hide": false,
           "instant": false,
           "interval": "",
           "intervalFactor": 1,
-          "legendFormat": "{{instance}} {{device}} {{model_name}}",
+          "legendFormat": "{{node}} ({{node_ip}}) {{device}} {{model_name}}",
           "range": true,
           "refId": "A"
         }
@@ -474,7 +474,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "count((smartctl_device_smart_status{instance=~\"$node\",device=~\"$disk\"} * on(instance, device) group_left(interface,serial_number,model_family,model_name) smartctl_device) == 0)",
+          "expr": "count((smartctl_device_smart_status{node=~\"$node\",device=~\"$disk\"} * on(instance, device) group_left(interface,serial_number,model_family,model_name) smartctl_device) == 0)",
           "format": "table",
           "instant": true,
           "intervalFactor": 1,
@@ -607,11 +607,11 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "smartctl_device_critical_warning{instance=~\"$node\", device=~\"$disk\"} * on(instance, device) group_left(interface,serial_number,model_family,model_name) smartctl_device{interface=~\"$type\",serial_number=~\"$serial_number\",model_name=~\"$device_model\"} > 0",
+          "expr": "smartctl_device_critical_warning{node=~\"$node\", device=~\"$disk\"} * on(instance, device) group_left(interface,serial_number,model_family,model_name) smartctl_device{interface=~\"$type\",serial_number=~\"$serial_number\",model_name=~\"$device_model\"} > 0",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 2,
-          "legendFormat": "Critical Warnings {{device}}",
+          "legendFormat": "{{node}} ({{node_ip}}) Critical Warnings {{device}}",
           "range": true,
           "refId": "A"
         }
@@ -683,7 +683,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "count(count(smartctl_device) by (instance))",
+          "expr": "count(count(smartctl_device) by (node))",
           "instant": true,
           "legendFormat": "nodes",
           "range": false,
@@ -811,12 +811,12 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "instance"
+              "options": "node"
             },
             "properties": [
               {
                 "id": "displayName",
-                "value": "Node"
+                "value": "Hostname"
               }
             ]
           },
@@ -891,6 +891,25 @@
                 "value": 117
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node_ip"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Node IP"
+              },
+              {
+                "id": "custom.align"
+              },
+              {
+                "id": "custom.width",
+                "value": 140
+              }
+            ]
           }
         ]
       },
@@ -929,7 +948,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "max(smartctl_device_power_on_seconds{instance=~\"$node\", device=~\"$disk\"} * on(instance, device) group_left(interface,serial_number,model_family,model_name) smartctl_device{interface=~\"$type\",serial_number=~\"$serial_number\",model_name=~\"$device_model\"}) by (instance, device, model_name)",
+          "expr": "max(smartctl_device_power_on_seconds{node=~\"$node\", device=~\"$disk\"} * on(instance, device) group_left(interface,serial_number,model_family,model_name) smartctl_device{interface=~\"$type\",serial_number=~\"$serial_number\",model_name=~\"$device_model\"}) by (node, node_ip, device, model_name)",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -943,7 +962,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "max(smartctl_device_power_cycle_count{instance=~\"$node\", device=~\"$disk\"} * on(instance, device) group_left(interface,serial_number,model_family,model_name) smartctl_device{interface=~\"$type\",serial_number=~\"$serial_number\",model_name=~\"$device_model\"}) by (instance, device, model_name)",
+          "expr": "max(smartctl_device_power_cycle_count{node=~\"$node\", device=~\"$disk\"} * on(instance, device) group_left(interface,serial_number,model_family,model_name) smartctl_device{interface=~\"$type\",serial_number=~\"$serial_number\",model_name=~\"$device_model\"}) by (node, node_ip, device, model_name)",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -1065,12 +1084,12 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "instance"
+              "options": "node"
             },
             "properties": [
               {
                 "id": "displayName",
-                "value": "Node"
+                "value": "Hostname"
               }
             ]
           },
@@ -1101,12 +1120,12 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "instance"
+              "options": "node"
             },
             "properties": [
               {
                 "id": "custom.width",
-                "value": 77
+                "value": 140
               }
             ]
           },
@@ -1143,6 +1162,25 @@
               {
                 "id": "custom.width",
                 "value": 123
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "node_ip"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Node IP"
+              },
+              {
+                "id": "custom.align"
+              },
+              {
+                "id": "custom.width",
+                "value": 140
               }
             ]
           }
@@ -1182,7 +1220,7 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "max(smartctl_device_bytes_written{instance=~\"$node\", device=~\"$disk\"} * on(instance, device) group_left(interface,serial_number,model_family,model_name) smartctl_device{interface=~\"$type\",serial_number=~\"$serial_number\",model_name=~\"$device_model\"}) by (device, instance, model_name, serial_number)",
+          "expr": "max(smartctl_device_bytes_written{node=~\"$node\", device=~\"$disk\"} * on(instance, device) group_left(interface,serial_number,model_family,model_name) smartctl_device{interface=~\"$type\",serial_number=~\"$serial_number\",model_name=~\"$device_model\"}) by (device, node, node_ip, model_name, serial_number)",
           "format": "table",
           "instant": true,
           "interval": "",
@@ -1197,7 +1235,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "max((smartctl_device_attribute{attribute_name=\"Total_LBAs_Written\", attribute_value_type=\"raw\"} * on (instance,device) smartctl_device_block_size{blocks_type=\"physical\"}) * on(instance, device) group_left(interface,serial_number,model_family,model_name) smartctl_device{interface=~\"$type\",serial_number=~\"$serial_number\",model_name=~\"$device_model\"}) by (device, instance, model_name, serial_number)\n",
+          "expr": "max((smartctl_device_attribute{attribute_name=\"Total_LBAs_Written\", attribute_value_type=\"raw\"} * on (instance,device) smartctl_device_block_size{blocks_type=\"physical\"}) * on(instance, device) group_left(interface,serial_number,model_family,model_name) smartctl_device{interface=~\"$type\",serial_number=~\"$serial_number\",model_name=~\"$device_model\"}) by (device, node, node_ip, model_name, serial_number)\n",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -1250,7 +1288,8 @@
               "names": [
                 "Time",
                 "device",
-                "instance",
+                "node",
+                "node_ip",
                 "model_name",
                 "serial_number",
                 "Total Written"
@@ -1326,12 +1365,12 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "sort_desc(100 - smartctl_device_attribute{instance=~\"$node\", device=~\"$disk\", attribute_name=\"Wear_Leveling_Count\",attribute_value_type=\"value\"} * on(instance, device) group_left(interface,serial_number,model_family,model_name) smartctl_device{interface=~\"sat\",serial_number=~\"$serial_number\",model_name=~\"$device_model\"})",
+          "expr": "sort_desc(100 - smartctl_device_attribute{node=~\"$node\", device=~\"$disk\", attribute_name=\"Wear_Leveling_Count\",attribute_value_type=\"value\"} * on(instance, device) group_left(interface,serial_number,model_family,model_name) smartctl_device{interface=~\"sat\",serial_number=~\"$serial_number\",model_name=~\"$device_model\"})",
           "format": "time_series",
           "instant": true,
           "interval": "",
           "intervalFactor": 1,
-          "legendFormat": "{{instance}}:{{device}}",
+          "legendFormat": "{{node}} ({{node_ip}}):{{device}}",
           "refId": "A"
         }
       ],
@@ -1403,12 +1442,12 @@
             "uid": "prometheus"
           },
           "editorMode": "code",
-          "expr": "sort_desc(smartctl_device_percentage_used{instance=~\"$node\", device=~\"$disk\"} * on(instance, device) group_left(interface,serial_number,model_family,model_name) smartctl_device{interface=~\"nvme\",serial_number=~\"$serial_number\",model_name=~\"$device_model\"})\n",
+          "expr": "sort_desc(smartctl_device_percentage_used{node=~\"$node\", device=~\"$disk\"} * on(instance, device) group_left(interface,serial_number,model_family,model_name) smartctl_device{interface=~\"nvme\",serial_number=~\"$serial_number\",model_name=~\"$device_model\"})\n",
           "format": "time_series",
           "instant": true,
           "interval": "",
           "intervalFactor": 1,
-          "legendFormat": "{{instance}}:{{device}}",
+          "legendFormat": "{{node}} ({{node_ip}}):{{device}}",
           "refId": "A"
         }
       ],
@@ -1431,20 +1470,21 @@
           "type": "prometheus",
           "uid": "prometheus"
         },
-        "definition": "label_values(smartctl_version,instance)",
+        "definition": "label_values(smartctl_version, node)",
         "includeAll": true,
         "multi": true,
         "name": "node",
         "options": [],
         "query": {
           "qryType": 1,
-          "query": "label_values(smartctl_version,instance)",
+          "query": "label_values(smartctl_version, node)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 1,
         "regex": "",
         "sort": 1,
-        "type": "query"
+        "type": "query",
+        "label": "Node Hostname"
       },
       {
         "current": {},
