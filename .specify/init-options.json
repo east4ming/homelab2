@@ -2,7 +2,7 @@
   "ai": "claude",
   "ai_skills": true,
   "branch_numbering": "sequential",
-  "context_file": "CLAUDE.md",
+  "context_file": "AGENTS.md",
   "here": true,
   "integration": "claude",
   "script": "sh",
