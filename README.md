@@ -2,7 +2,7 @@
 
 **[Features](#features) • [Get Started](#get-started) • [Documentation](https://homelab2.e-whisper.com)**
 
-[![tag](https://img.shields.io/github/v/tag/east4ming/homelab2?style=flat-square&logo=semver&logoColor=white)](https://github.com/east4ming/homelab2/tags)
+[![tag](https://img.shields.io/github/v/release/east4ming/homelab2?style=flat-square&logo=semver&logoColor=white)](https://github.com/east4ming/homelab2/releases)
 [![document](https://img.shields.io/website?label=document&logo=gitbook&logoColor=white&style=flat-square&url=https%3A%2F%2Fhomelab2.e-whisper.com)](https://homelab2.e-whisper.com)
 [![license](https://img.shields.io/github/license/east4ming/homelab2?style=flat-square&logo=gnu&logoColor=white)](https://www.gnu.org/licenses/gpl-3.0.html)
 [![stars](https://img.shields.io/github/stars/east4ming/homelab2?logo=github&logoColor=white&color=gold&style=flat-square)](https://github.com/east4ming/homelab2)
@@ -36,11 +36,13 @@ If you encounter an issue, please create [a bug report](https://github.com/khued
 
 ## Overview
 
-Project status: **ALPHA**
+Project status: **Production** — running continuously for 600+ days, hosting day-to-day family services.
 
-This project is still in the experimental stage, and I don't use anything critical on it.
-Expect breaking changes that may require a complete redeployment.
-A proper upgrade path is planned for the stable release.
+This repository is a *state repository*, not a library.
+`master` is deployed continuously by ArgoCD (`automated` + `selfHeal` + `prune`), so every merge goes live within minutes.
+Version tags therefore mark known-good cluster states for rollback, and double as the change index.
+See [versioning](https://homelab2.e-whisper.com/reference/versioning) for the full scheme.
+
 More information can be found in [the roadmap](#roadmap) below.
 
 ### Hardware

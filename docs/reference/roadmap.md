@@ -2,7 +2,8 @@
 
 !!! info
 
-    Current status: **ALPHA**
+    Current status: **Production**.
+    Version scheme and release process: [versioning](versioning.md).
 
 ## East4Ming/Homelab2 Roadmap
 
@@ -131,10 +132,6 @@
 - [ ] Add more examples
 - [ ] Add more templates
 - [ ] Modify code/configuration/documentation related to the git repo
-
-## Alpha requirements
-
-Literally anything that works.
 
 ## Beta requirements
 

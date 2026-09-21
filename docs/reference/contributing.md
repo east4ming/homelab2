@@ -2,6 +2,20 @@
 
 ## How to contribute
 
+### Commits and versions
+
+Commit messages follow [Conventional Commits](https://www.conventionalcommits.org):
+
+```
+<type>(<scope>): <subject>
+```
+
+- Allowed types: `feat` `fix` `docs` `chore` `refactor` `perf` `build` `test` `ci` `revert`.
+- The subject may be written in Chinese.
+- Do not use `[Spec Kit] ...` prefixes, bare `update` / `fixed` subjects, or a plain paragraph as the subject line.
+
+Version tags, branches and releases are described in [versioning](versioning.md).
+
 ### Bug report
 
 You can [create a new GitHub issue](https://github.com/east4ming/homelab2/issues/new/choose) with the bug report template.
