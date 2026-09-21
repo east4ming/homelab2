@@ -113,6 +113,6 @@
 - **修订流程** — 修订需通过 PR 提交，注明修订理由和影响范围，经审查后合入
 - **版本管理** — 遵循语义化版本：MAJOR（不兼容的原则移除/重新定义）、MINOR（新增原则/章节）、PATCH（措辞澄清、拼写修正）
 - **合规审查** — 每次 Code Review 需对照 Constitution 检查合规性；复杂性增加必须在 plan.md 中明确说明理由
-- **运行时指引** — 详细开发指引参见项目 `CLAUDE.md` 和各 `apps/*/CLAUDE.md` 文件
+- **运行时指引** — 详细开发指引参见项目 `AGENTS.md` 和各 `apps/*/AGENTS.md` 文件
 
-**Version**: 1.0.0 | **Ratified**: 2026-05-22 | **Last Amended**: 2026-05-22
+**Version**: 1.0.1 | **Ratified**: 2026-05-22 | **Last Amended**: 2026-09-21
