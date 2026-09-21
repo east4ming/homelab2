@@ -1,6 +1,66 @@
 # Changelog
 
-## v20250217
+版本号格式与发布流程见 [版本管理](versioning.md)。新条目置顶，标题即 git 标签名。
+
+## v2026.09.21
+
+自 `v2025.02.17` 以来的状态快照，覆盖 830 个非合并提交。完整明细见 `git log v2025.02.17..v2026.09.21`。
+
+### 新增应用
+
+- **RustFS**：S3 兼容对象存储，启用 TLS、日志轮转与 Tailscale Ingress；lobe-chat 的对象存储由 MinIO 迁移至此
+- **RSSHub**：RSS 聚合服务，含 PostgreSQL
+- **Upsnap**：网络唤醒（Wake-on-LAN）管理面板
+- **SearXNG**：自建元搜索引擎，并接入 lobe-chat
+- **Semaphore**：任务编排面板，配置了 dnsPolicy 与时区
+- **Kube Explorer**：Kubernetes 资源浏览器
+- **Eraser**：节点镜像清理
+
+### 移除
+
+- **Webtop** 与 **MinIO**：不再使用，已移除部署与相关 egress 配置
+
+### KubeVirt 虚拟机
+
+- 引入 KubeVirt 与 CDI，新增虚拟机测试套件（unit / integration / e2e）
+- 用 DataVolume PVC 作为 rootdisk，替换 containerDisk
+- 支持从外部 Secret 注入 cloud-init，避免在公开仓库中泄露凭据
+- control-plane 副本数降为 1，适配 4 节点规模
+- Cilium datapathMode 由 `netkit` 调整为 `netkit-l2`
+
+### 网络与 Tailscale
+
+- Tailscale Operator 接管 Ingress / DNS / 证书 / Funnel，替代 nginx-ingress、external-dns、cert-manager、cloudflared
+- 新增出口代理组（proxygroup）、proxyclass 与出口服务配置
+- 多个外部服务补齐 HTTPS 端口与 proxy-class 注解
+- Cilium 由 1.19.1 升级到 1.19.6，保持 native routing、BPF masquerade、DSR、netkit、Bandwidth Manager
+- 因内核与 datapathMode 变更导致带 NetworkPolicy 的 Pod 异常，临时禁用本仓库全部 NetworkPolicy
+
+### 系统与升级
+
+- 新增系统升级流程，配合 kured 完成滚动重启
+- csi-driver-nfs 补齐 resources requests/limits
+- 适配 k3s 移除 kube-proxy IPVS 模式
+- journald 日志接入
+- 清理 linux-firmware 中不再需要的厂商子包
+
+### 可观测性
+
+- 4 个节点全部接入磁盘 SMART 监控，含仪表盘与告警规则（展示节点主机名与 IP）
+- 新增 VolSync 与 kube-explorer 相关监控
+- Grafana 12：启用 git sync、图像渲染器等新特性
+
+### 文档与工程
+
+- 重组 troubleshooting 文档结构，新增节点挂起故障排除指南
+- 更新架构文档，移除 Zot Registry 相关内容
+- 新增 KubeVirt、SMART 监控等能力的 Spec Kit 规格（`specs/`）
+
+### 依赖
+
+- Renovate 持续更新 Helm Chart 与容器镜像，非 major 依赖按周聚合合并
+
+## v2025.02.17
 
 - 进入 homelab2 目录后自动运行: `nix develop --extra-experimental-features nix-command --extra-experimental-features flakes`
 
@@ -76,12 +136,17 @@
    source ~/.zshrc
    ```
 
-## v20250216
+## v2025.02.16
 
 - Remove Loki-stack, as Loki-stack is no longer actively maintained.
 - Use Grafana Cloud -> grafana/k8s-monitoring to monitor logs and Profiles. See [kubernetes-monitoring/configuration](https://grafana.com/docs/grafana-cloud/monitor-infrastructure/kubernetes-monitoring/configuration/) for more details. Since this involves Grafana Cloud secrets, install directly using helm-dashboard; the helm chart's values.yaml is not maintained in this repo.
 
-## v0.0.8
+## 上游历史（fork 前）
+
+以下条目继承自上游 [khuedoan/homelab](https://github.com/khuedoan/homelab)，正文逐字保留。
+其中的版本号与 `-alpha` 后缀属于上游命名，不适用本仓库的 [CalVer 版式](versioning.md)。
+
+### v0.0.8
 
 Notable changes:
 
@@ -100,7 +165,7 @@ Notable changes:
 
 Please see git log for full change log.
 
-## 0.0.7-alpha
+### 0.0.7-alpha
 
 - Replace standard Vault with Vault Operator
 - Automatically initialize and unseal Vault
@@ -120,7 +185,7 @@ Please see git log for full change log.
 - Enable monitor for the majority of applications
 - Many code refactorings and bug fixes
 
-## 0.0.6-alpha
+### 0.0.6-alpha
 
 - Upgrade to Kubernetes 1.23
 - Support external resources:
@@ -139,7 +204,7 @@ Please see git log for full change log.
 - Generate MetalLB address pool automatically (default to the last `/27` subnet)
 - Some bug fixes
 
-## 0.0.5-alpha
+### 0.0.5-alpha
 
 - Add convenience scripts
 - Add Loki for logging
@@ -158,7 +223,7 @@ Please see git log for full change log.
 - Various code clean up
 - Add more documents
 
-## 0.0.4-alpha
+### 0.0.4-alpha
 
 - Switch to Rocky Linux
 - Some optimization for bare metal provisioning
@@ -172,14 +237,14 @@ Please see git log for full change log.
 - Enable TLS on all Ingresses (using [cert-manager](https://cert-manager.io))
 - Add some new applications
 
-## 0.0.3-alpha
+### 0.0.3-alpha
 
 - Generate Terraform backend config automatically
 - Switch to CoreOS
 - Better PXE boot setup
 - Diagrams as code
 
-## 0.0.2-alpha
+### 0.0.2-alpha
 
 - Ensure idempotency for bare metal provisioning
 - Extract instead of mounting the OS ISO file
@@ -188,7 +253,7 @@ Please see git log for full change log.
 - Remove LXD
 - Move etcd (Terraform state backend) back to Docker
 
-## 0.0.1-alpha
+### 0.0.1-alpha
 
 - Bare metal provisioning with PXE
 - LXD cluster
