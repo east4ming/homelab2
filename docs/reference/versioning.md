@@ -115,10 +115,12 @@ tea releases create -r ops/homelab2 --tag v2026.09.21 \
   --title v2026.09.21 --note-file /tmp/release-note.md
 
 # GitHub（镜像）
-gh release create v2026.09.21 --verify-tag \
+# 必须显式指定 -R：origin 的 fetch URL 指向 Gitea，gh 无法自行推断 GitHub 仓库
+gh release create v2026.09.21 -R east4ming/homelab2 --verify-tag \
   --title v2026.09.21 --notes-file /tmp/release-note.md
 ```
 
+- `tea releases create` 的 `-r` 与 `gh release create` 的 `-R` 均不可省略：本仓库的 `origin` 指向 Gitea，两个 CLI 都需要显式指定目标仓库。
 - `--verify-tag` 不可省略：它阻止 `gh` 在标签不存在时自行从默认分支创建标签。
 - Release 正文与 changelog 中同一标签的条目保持一致。
 - 若某侧 Release 已存在，改用 `tea releases edit` / `gh release edit`，不要重复创建。
