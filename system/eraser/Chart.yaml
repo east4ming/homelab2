@@ -3,5 +3,5 @@ name: eraser
 version: 0.0.0
 dependencies:
   - name: eraser
-    version: 1.5.0-beta.0
+    version: 1.5.0-beta.1
     repository: https://eraser-dev.github.io/eraser/charts
