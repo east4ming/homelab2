@@ -69,6 +69,7 @@ virtctl console -n default testvm
 | 4 | Cilium netkit MAC 地址 | netkit 模式 pod MAC 为全零 | 切换到 `bpf.datapathMode: netkit-l2` |
 | 5 | `customizeComponents` patch | Operator 期望 JSON Patch 数组 | `type: json` + RFC 6902 格式 |
 | 6 | VM spec 更新不生效 | VirtualMachine 类似 OnDelete 策略 | `kubectl delete vmi` 触发重建 |
+| 7 | 应用反复 OutOfSync | CDI operator 每次 reconcile 都会把 CRD 中非最新版本（`v1alpha1`）从 `spec.versions` 删除，与 Git 中声明的版本列表来回拉锯 | 从 `templates/cdi-operator.yaml` 的 `cdis.cdi.kubevirt.io` CRD 中移除 `v1alpha1` 版本块，只保留 operator 认可的 `v1beta1` |
 
 ### Cilium netkit 与 KubeVirt 兼容性
 
