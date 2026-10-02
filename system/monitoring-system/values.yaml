@@ -9,6 +9,27 @@ kube-prometheus-stack:
       serviceMonitorSelectorNilUsesHelmValues: false
       podMonitorSelectorNilUsesHelmValues: false
       probeSelectorNilUsesHelmValues: false
+      # Tailscale client metrics from the 4 nodes (tailscale-metrics.service,
+      # read-only listener on 5252). Nodes are scraped over the LAN IP, the same
+      # way node-exporter is scraped. Keeping the targets here means they are
+      # tracked in Git alongside metal/inventories/prod.yml.
+      additionalScrapeConfigs:
+        - job_name: tailscale-nodes
+          scrape_interval: 60s
+          scrape_timeout: 10s
+          static_configs:
+            - targets: ["192.168.3.226:5252"]
+              labels:
+                node: n100-jumper-0
+            - targets: ["192.168.3.174:5252"]
+              labels:
+                node: n100-jumper-1
+            - targets: ["192.168.3.158:5252"]
+              labels:
+                node: n100-jumper-2
+            - targets: ["192.168.3.154:5252"]
+              labels:
+                node: n100-cheshi-0
       storageSpec:
         volumeClaimTemplate:
           spec:

@@ -27,6 +27,7 @@
   until: crd.resources | length > 0
   retries: 5
   delay: 10
+  tags: tailscale-cr
 
 - name: Apply Tailscale resources
   kubernetes.core.k8s:
@@ -35,3 +36,4 @@
     - dnsconfig.yaml
     - proxygroup.yaml
     - proxyclass.yaml
+  tags: tailscale-cr

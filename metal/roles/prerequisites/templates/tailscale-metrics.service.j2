@@ -1,0 +1,16 @@
+[Unit]
+Description=Tailscale read-only metrics endpoint
+Documentation=https://tailscale.com/docs/reference/tailscale-client-metrics
+After=network-online.target tailscaled.service
+Wants=tailscaled.service
+
+[Service]
+Type=simple
+# Read-only web server: serves /metrics on the node's LAN IP for Prometheus.
+# --readonly keeps Tailscale's writable control UI off the network.
+ExecStart=/usr/bin/tailscale web --readonly --listen {{ ansible_host }}:5252
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

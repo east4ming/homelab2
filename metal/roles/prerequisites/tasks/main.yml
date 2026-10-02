@@ -180,6 +180,22 @@
       - "Add '--prefer-bundled-bin' to extra_server_args variable to use the bundled iptables binary."
   ignore_errors: true
 
+- name: Configure Tailscale metrics service unit
+  ansible.builtin.template:
+    src: tailscale-metrics.service.j2
+    dest: /etc/systemd/system/tailscale-metrics.service
+    mode: "0644"
+  register: tailscale_metrics_unit
+  tags: tailscale
+
+- name: Enable and start Tailscale metrics service
+  ansible.builtin.systemd:
+    name: tailscale-metrics
+    enabled: true
+    state: "{{ 'restarted' if tailscale_metrics_unit.changed else 'started' }}"
+    daemon_reload: true
+  tags: tailscale
+
 - name: Setup optional private registry configuration
   when: registries_config_yaml is defined
   block:
