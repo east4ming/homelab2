@@ -419,6 +419,7 @@ Helm chart 安装/升级的依赖顺序已由 Chart.yaml 自动处理，等效�
 
 ## 相关文件
 
+- OSD `down/out` 的另一种成因（mon secret FSID 失配）见 [Rook-Ceph OSD down/out 修复：mon secret FSID 失配](rook-ceph-osd1-fsid-mismatch-recovery.md)
 - Helm Chart: `system/rook-ceph/Chart.yaml`
 - Values: `system/rook-ceph/values.yaml`
 - 部署目标: `rook-ceph` namespace

@@ -2,6 +2,30 @@
 
 版本号格式与发布流程见 [版本管理](versioning.md)。新条目置顶，标题即 git 标签名。
 
+## v2026.10.02.3
+
+Rook-Ceph CephX 密钥加固，以及 OSD `down/out` 故障的排查文档补全。
+
+### 修复
+
+- `fix(rook-ceph)`：按 Rook CVE-2025-30156 指南，将 CSI 与 RBD mirror peer 密钥轮换到 `aes256k`
+  （节点内核均已升级到 7.0+）
+- `fix(rook-ceph)`：密钥迁移完成后删除旧 CSI 密钥，并移除临时告警 mute
+- `fix(rook-ceph)`：将 CephX allowed ciphers 限制为 `aes256k`
+
+### 文档
+
+- 新增 [Rook-Ceph OSD down/out 修复：mon secret FSID 失配](../how-to-guides/troubleshooting/rook-ceph-osd1-fsid-mismatch-recovery.md)：
+  `rook-ceph-osd-1` 在 `n100-cheshi-0` 升级后长期 `down/out` 的完整根因分析。
+  根因是 `rook-ceph-mon` Secret 的 `fsid` 过期，operator 据此判定 OSD 磁盘
+  「属于另一个 Ceph 集群」而拒绝创建 OSD Deployment —— **磁盘数据自始至终完好**。
+  修复只需改回真实 `ceph fsid`，无需 `ceph osd purge` 或重建 OSD
+- 修正 [Ubuntu 24.04 → 26.04 升级指南](../how-to-guides/upgrade-ubuntu-24-04-to-26-04.md)
+  「检查 7」中错误的 OSD 恢复建议：原文要求 `ceph osd purge` + 抹掉分区，
+  会销毁完好副本；现改为指向上述 FSID 修复流程
+- 将两份 Rook-Ceph 排障文档从 `system/rook-ceph/docs/` 迁入 `docs/` 并加入 mkdocs 导航
+  （此前未发布）
+
 ## v2026.10.02.2
 
 修正 `metal/roles/*/defaults/main.yml` 中落后的版本 pin，使仓库与集群实跑版本一致。

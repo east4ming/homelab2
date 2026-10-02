@@ -265,10 +265,25 @@ kubectl -n kubevirt get pods -l kubevirt.io=virt-handler
     （`/dev/nvme0n1p3`）完好、fsid 也正是本集群的 fsid，但没有
     `rook-ceph-osd-1`，`osd-prepare` 反复报
     `skipping osd.1: ... belonging to a different ceph cluster`（Rook v1.20.7）。
-    重启 operator 无效；恢复需要人工 `ceph osd purge` + 抹掉该分区让 Rook 重建。
+    重启 operator 无效。
+
+    **根因是 `rook-ceph-mon` Secret 里的 `fsid` 过期**（operator 拿它当期望值去比对磁盘），
+    而不是磁盘或数据损坏。修复只需把该字段改成 `ceph fsid` 的真实值并重启 operator，
+    OSD 会被自动接管并恢复原 crush weight：
+
+    ```sh
+    FSID=$(kubectl -n rook-ceph exec deploy/rook-ceph-tools -- ceph fsid | tr -d '\r\n')
+    kubectl -n rook-ceph patch secret rook-ceph-mon --type merge \
+      -p "{\"data\":{\"fsid\":\"$(printf '%s' "$FSID" | base64 -w0)\"}}"
+    kubectl -n rook-ceph delete pod -l app=rook-ceph-operator --wait=false
+    ```
+
+    **不要**对该 OSD 执行 `ceph osd purge` 或抹掉分区：那会永久销毁一个完好副本，
+    且在单副本仅剩 3 个 OSD 时毫无必要。完整证据、验证与预防措施见
+    [Rook-Ceph OSD down/out 修复：mon secret FSID 失配](../how-to-guides/troubleshooting/rook-ceph-osd1-fsid-mismatch-recovery.md)。
+
     只要 pool 是 `size=2/min_size=1` 且 PG 全 `active+clean`，数据是安全的，
     但冗余已经降级 —— 升级后务必确认 `ceph -s` 里 **4 个 OSD 全 up/in**。
-    相关上游问题：[rook#15523](https://github.com/rook/rook/issues/15523)、[rook#17114](https://github.com/rook/rook/issues/17114)。
 
 !!! note "KubeVirt 的 virt-handler 会跟着 inotify 一起挂"
 
