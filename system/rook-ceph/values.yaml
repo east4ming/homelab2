@@ -215,6 +215,8 @@ rook-ceph-cluster:
     # remaining non-daemon client keys to the AES256K cipher.
     security:
       cephx:
+        allowedCiphers:
+          - aes256k
         daemon:
           keyRotationPolicy: KeyGeneration
           keyGeneration: 2
