@@ -30,6 +30,9 @@ kube-prometheus-stack:
             - targets: ["192.168.3.154:5252"]
               labels:
                 node: n100-cheshi-0
+            - targets: ["192.168.3.246:5252"]
+              labels:
+                node: casey-desktop
       storageSpec:
         volumeClaimTemplate:
           spec:
