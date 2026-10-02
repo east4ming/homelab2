@@ -2,6 +2,45 @@
 
 版本号格式与发布流程见 [版本管理](versioning.md)。新条目置顶，标题即 git 标签名。
 
+## v2026.10.02.4
+
+Tailscale 指标监控上线：4 台节点与 operator ProxyGroup 代理的客户端指标接入 Prometheus，
+配套告警规则与 Grafana dashboard；同时消除 KubeVirt CDI CRD 的持续 `OutOfSync`。
+
+### 新增
+
+- **Tailscale 节点指标**（spec-kit `006-tailscale-monitoring`）：4 台节点由新增的
+  `tailscale-metrics.service` 以只读方式暴露 `tailscale web --readonly --listen <node-ip>:5252`，
+  Prometheus 通过 `additionalScrapeConfigs` 的 `tailscale-nodes` job 采集并附加 `node` 标签
+- **operator 代理指标**：新增 `tailscale-metrics` ProxyClass（metrics + ServiceMonitor），
+  由 `ingress-proxies` / `egress-proxies` 两个 ProxyGroup 通过 `spec.proxyClass` 引用，共 8 个采集目标。
+  实测否决了更省事的 `PROXY_DEFAULT_CLASS` 方案：8 个带
+  `experimental-forward-cluster-traffic-via-ingress` 注解的独立 Ingress 代理上游不支持 metrics，
+  默认类会为它们建出永远失败的 target 并触发 `TargetDown` 误报
+- **告警与可视化**：新增 3 条告警规则（节点健康消息、节点异常丢包、代理健康消息）与
+  Grafana `Tailscale` dashboard（14 面板）；抓取中断复用既有 `TargetDown` / `KubePodNotReady`
+
+### 修复
+
+- `fix(kubevirt)`：从 vendored `system/kubevirt/templates/cdi-operator.yaml` 的
+  `cdis.cdi.kubevirt.io` CRD 中移除 `v1alpha1` 版本块（2517 行），只保留 operator 认可的 `v1beta1`。
+  CDI operator 每次 reconcile 都会删除非最新版本，与 Git 中声明的版本列表来回拉锯，
+  导致应用持续 `OutOfSync`；README 排障表补上该条
+
+### 依赖与构建
+
+- `chore(deps)`：kube-prometheus-stack `91.5.1` → `91.5.2`、renovate chart `46.317.2` → `46.321.2`
+- `chore`：Cilium pin `1.20.1` → `1.20.2`、Tailscale pin → `1.102.4`
+- `chore(lobe-chat)`：lobe-chat 镜像更新到 `2.2.18`
+- `chore`：合并上游 khuedoan/homelab master，补上落后的提交（含 `build: containerize docs`
+  带来的 `Dockerfile` / `.dockerignore`）
+
+### 文档
+
+- [同时使用 GitHub 和 Gitea](../how-to-guides/use-both-github-and-gitea.md) 新增
+  「upstream remote 与从 GitHub 同步上游」章节
+- `docs(006)`：Tailscale 监控的 spec-kit 文档（spec / plan / research / tasks / quickstart / checklist）
+
 ## v2026.10.02.3
 
 Rook-Ceph CephX 密钥加固，以及 OSD `down/out` 故障的排查文档补全。
