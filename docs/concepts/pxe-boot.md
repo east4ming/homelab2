@@ -43,7 +43,7 @@ Currently, we use Netboot.xyz as the PXE boot source by default. After the devic
 
 1. Choose **Installers -> Linux Installers**
 2. Choose **Operating Systems -> Ubuntu**
-3. Choose **UUbuntu 24.04 LTS**
+3. Choose **Ubuntu 26.04.1 LTS (Resolute Raccoon)**
 
 Sample steps are as follows:
 

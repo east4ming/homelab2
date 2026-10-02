@@ -14,7 +14,7 @@
 - [x] NTP Server
 - [ ] Add domains to `/etc/hosts` and coredns configmap
 
-### Change OS To Ubuntu 24.04
+### Change OS To Ubuntu 26.04.1
 
 - [x] pxe - use netboot.xyz
 - [x] cloud-init - use **subiquity autoinstall**

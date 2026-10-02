@@ -1,7 +1,8 @@
 # Trim unneeded Linux firmware packages
 
 Ubuntu 24.04 turned `linux-firmware` into a metapackage that pulls in 18 vendor
-sub-packages ([announcement](https://www.omgubuntu.co.uk/2026/09/ubuntu-firmware-split-packages-24-04)).
+sub-packages ([announcement](https://www.omgubuntu.co.uk/2026/09/ubuntu-firmware-split-packages-24-04));
+26.04.1 ships the same layout.
 The four N100 nodes only need a fraction of those blobs, so the rest can be
 dropped: roughly **450 MB per node**, and firmware upgrades for the vendors we no
 longer ship stop being downloaded.

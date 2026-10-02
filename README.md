@@ -14,7 +14,7 @@ The project forked from [khuedoan/homelab](https://github.com/khuedoan/homelab),
 Compared to the [khuedoan/homelab](https://github.com/khuedoan/homelab) project, the following adjustments have been made to this project:
 
 - 🥾 Automated bare metal provisioning with [netboot.xyz](https://netboot.xyz/)
-- 🐧 OS changed to Ubuntu 24.04
+- 🐧 OS changed to Ubuntu 26.04.1 LTS
 - 🕸 Use [Tailscale Operator](https://tailscale.com/kb/1236/kubernetes-operator) replace nginx ingress/cert-manager/cloudflared/external-dns...; Install tailscale on node
 - 🐝Cilium Tuning
 

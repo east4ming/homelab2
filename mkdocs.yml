@@ -65,6 +65,7 @@ nav:
       - how-to-guides/run-commands-on-multiple-nodes.md
       - how-to-guides/single-node-cluster-adjustments.md
       - how-to-guides/trim-linux-firmware-packages.md
+      - how-to-guides/upgrade-ubuntu-24-04-to-26-04.md
       - how-to-guides/disable-dhcp-proxy-in-dnsmasq.md
       - how-to-guides/media-management.md
       - how-to-guides/alternate-nas-nfs-setup.md

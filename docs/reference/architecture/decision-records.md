@@ -19,15 +19,16 @@ They are not permanent, we can change them in the future if better alternatives 
 
     - CHANGEME
 
-## OS Changed To Ubuntu 24.04
+## OS Changed To Ubuntu 26.04.1
 
 **Context**
 
-Personal preference.
+Personal preference. Originally 24.04 LTS; all four nodes were upgraded in
+place to 26.04.1 LTS (Resolute Raccoon) on 2026-10-01.
 
 **Decision**
 
-OS Changed To Ubuntu 24.04
+OS Changed To Ubuntu 26.04.1
 
 **Consequences**
 

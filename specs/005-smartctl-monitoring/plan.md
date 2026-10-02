@@ -18,7 +18,7 @@
 
 **Testing**: `helm template` 渲染校验、`pre-commit` / `yamllint` / `helmlint`、集群部署后人工验证
 
-**Target Platform**: K3s / Ubuntu 24.04，4 节点（3 master + 1 worker）
+**Target Platform**: K3s / Ubuntu 26.04.1，4 节点（3 master + 1 worker）
 
 **Project Type**: GitOps 基础设施变更
 

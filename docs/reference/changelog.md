@@ -2,6 +2,35 @@
 
 版本号格式与发布流程见 [版本管理](versioning.md)。新条目置顶，标题即 git 标签名。
 
+## v2026.10.02
+
+4 台节点由 Ubuntu 24.04 LTS 就地升级到 26.04 LTS（Resolute Raccoon）后的适配与修复。
+完整明细见 `git log v2026.09.21..v2026.10.02 --no-merges`。
+
+### 修复
+
+- **内核参数持久化**：`prerequisites` 角色原先把 sysctl 写入 `/etc/sysctl.conf`，而 26.04 的
+  `procps` 将其标记为 `remove-on-upgrade` 并在升级时删除，导致 `fs.inotify.max_user_instances`
+  从 8192 掉回 128，`fwupd` 每小时失败、KubeVirt `virt-handler` 在 inotify 用量高的节点上
+  CrashLoopBackOff。四组 sysctl 全部改写到 `/etc/sysctl.d/90-homelab-prerequisites.conf`
+- **PXE/autoinstall 适配 26.04.1**：ISO 与 netboot.xyz squash 资源更新到 26.04.1；
+  autoinstall 包列表移除 26.04 已不存在的 `libpcre3`/`libpcre3-dev`，`dnsutils` 换成
+  `bind9-dnsutils`（否则全新装机在 `packages:` 阶段失败）；netplan 由 `gateway4` 改为 `routes`
+- `fix(lobe-chat)`：`.helmignore` 排除 `AGENTS.md` 而非已不存在的 `CLAUDE.md`
+- `fix(docs)`：修复 CLAUDE.md 重命名后遗留的悬空引用
+
+### 文档
+
+- 新增 [Ubuntu 24.04 LTS 升级到 26.04 LTS](../how-to-guides/upgrade-ubuntu-24-04-to-26-04.md)：
+  升级流程 + 升级后必查清单（sysctl 丢失、第三方 apt 源被禁用、残留 conffile 导致 logrotate 失败、
+  旧内核残留、netplan 弃用、Ceph OSD 未被 Rook 接管）
+- 全仓库的 24.04 版本描述更新为 26.04.1：README、PXE 引导、沙箱、路线图、决策记录、固件裁剪说明
+- `docs(versioning)`：补上 `gh release create` 必需的 `-R` 参数
+
+### 依赖
+
+- Renovate 持续更新 Helm Chart 与容器镜像，非 major 依赖按周聚合合并（含 rustfs 1.x、renovate 46.310.0、pymdown-extensions 12）
+
 ## v2026.09.21
 
 自 `v2025.02.17` 以来的状态快照，覆盖 830 个非合并提交。完整明细见 `git log v2025.02.17..v2026.09.21`。

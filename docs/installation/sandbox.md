@@ -52,7 +52,7 @@ Create 3 new VM with the following settings:
 - Processors: 4
 - Disk size: 50 GiB
 - Network: `NAT`
-- OS: `Ubuntu 24.04`
+- OS: `Ubuntu 26.04.1`
 - Installation type: `ISO`
 
 **homelab-dev-master**
