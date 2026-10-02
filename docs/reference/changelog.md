@@ -2,6 +2,17 @@
 
 版本号格式与发布流程见 [版本管理](versioning.md)。新条目置顶，标题即 git 标签名。
 
+## v2026.10.02.2
+
+修正 `metal/roles/*/defaults/main.yml` 中落后的版本 pin，使仓库与集群实跑版本一致。
+修正前 Cilium pin 为 `1.20.0`、k3s pin 为 `v1.35.4+k3s1`，而集群实跑 `1.20.1` / `v1.36.5+k3s1`，
+直接执行 `make -C metal cluster` 会把两者一起回退。
+
+### 修复
+
+- `fix(cilium)`：Cilium 版本 pin 由 `1.20.0` 更新为 `1.20.1`，与集群实跑 chart 版本一致
+- `fix(k3s)`：k3s 版本 pin 由 `v1.35.4+k3s1` 更新为 `v1.36.5+k3s1`，与节点实跑版本一致
+
 ## v2026.10.02
 
 4 台节点由 Ubuntu 24.04 LTS 就地升级到 26.04 LTS（Resolute Raccoon）后的适配与修复。

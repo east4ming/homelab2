@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 uv.lock
 book/
+site/
 
 *.iso
 *.log
