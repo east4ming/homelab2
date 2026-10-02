@@ -6,6 +6,8 @@ metadata:
 spec:
   type: ingress
   replicas: 4
+  # Expose client metrics on the shared ingress proxies (see proxyclass.yaml).
+  proxyClass: tailscale-metrics
 ---
 apiVersion: tailscale.com/v1alpha1
 kind: ProxyGroup
@@ -14,3 +16,5 @@ metadata:
 spec:
   type: egress
   replicas: 4
+  # Expose client metrics on the egress proxies as well.
+  proxyClass: tailscale-metrics

@@ -5,3 +5,17 @@ metadata:
 spec:
   tailscale:
     acceptRoutes: true
+---
+# Serves client metrics on every ingress proxy at :9002/metrics and lets the
+# operator create the matching ServiceMonitor. Used as the operator's default
+# proxy class, so Ingresses and ProxyGroups that do not name a class get it.
+# Egress proxies are skipped by the operator (metrics are not supported).
+apiVersion: tailscale.com/v1alpha1
+kind: ProxyClass
+metadata:
+  name: tailscale-metrics
+spec:
+  metrics:
+    enable: true
+    serviceMonitor:
+      enable: true

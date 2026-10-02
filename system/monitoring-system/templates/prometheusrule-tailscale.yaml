@@ -1,0 +1,52 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: tailscale
+  namespace: {{ .Release.Namespace }}
+spec:
+  groups:
+    - name: tailscale
+      rules:
+        # Availability is already covered by the kube-prometheus-stack defaults:
+        # TargetDown fires when a scrape target stops responding (both the
+        # tailscale-nodes static targets and the operator-created proxy
+        # ServiceMonitors), and KubePodNotReady / KubeStatefulSetReplicasMismatch
+        # cover a proxy pod that disappears. The rules below only add the
+        # Tailscale-specific signals those generic rules cannot see.
+        - alert: TailscaleNodeHealthMessages
+          annotations:
+            description: |-
+              tailscaled on node {{ `{{ $labels.node }}` }} reports {{ `{{ $value }}` }} health message(s) of type {{ `{{ $labels.type }}` }}.
+              Inspect the node with `tailscale status`, `tailscale netcheck` and `journalctl -u tailscaled`.
+            summary: '[Tailscale] Node {{ `{{ $labels.node }}` }} reports {{ `{{ $labels.type }}` }} health messages'
+          expr: |
+            tailscaled_health_messages{job="tailscale-nodes"} > 0
+          for: 15m
+          labels:
+            severity: warning
+        - alert: TailscaleNodeDroppedPackets
+          annotations:
+            description: |-
+              Node {{ `{{ $labels.node }}` }} drops outbound Tailscale packets with reason {{ `{{ $labels.reason }}` }}
+              ({{ `{{ $value | humanize }}` }}/s). `acl` means the tailnet policy file blocks the traffic,
+              `error` means the packet could not be sent.
+            summary: '[Tailscale] Node {{ `{{ $labels.node }}` }} drops packets ({{ `{{ $labels.reason }}` }})'
+          expr: |
+            sum by (node, reason) (
+              rate(tailscaled_outbound_dropped_packets_total{job="tailscale-nodes", reason=~"acl|error"}[5m])
+            ) > 0
+          for: 15m
+          labels:
+            severity: warning
+        - alert: TailscaleProxyHealthMessages
+          annotations:
+            description: |-
+              Tailscale {{ `{{ $labels.ts_proxy_type }}` }} proxy for {{ `{{ $labels.ts_proxy_parent_name }}` }} reports
+              {{ `{{ $value }}` }} health message(s) of type {{ `{{ $labels.type }}` }}.
+              Check the proxy pod in namespace {{ `{{ $labels.namespace }}` }}.
+            summary: '[Tailscale] Proxy {{ `{{ $labels.ts_proxy_parent_name }}` }} reports {{ `{{ $labels.type }}` }} health messages'
+          expr: |
+            tailscaled_health_messages{job=~"ts_(proxygroup|ingress_resource|ingress_service)_.+"} > 0
+          for: 15m
+          labels:
+            severity: warning
