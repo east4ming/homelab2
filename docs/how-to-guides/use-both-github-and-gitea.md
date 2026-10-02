@@ -91,3 +91,16 @@ If that fails on credentials, point git at the authenticated `gh` CLI (`gh auth 
 ```sh
 gh auth setup-git
 ```
+
+## Sync the upstream project from GitHub
+
+The upstream [`khuedoan/homelab`](https://github.com/khuedoan/homelab) is tracked as its own remote, fetched from GitHub instead of Gitea:
+
+```sh
+git remote add upstream https://github.com/khuedoan/homelab.git   # once
+git fetch upstream
+git merge upstream/master   # keep this fork's side of any conflict
+git push origin master      # both remotes, as usual
+```
+
+`upstream` tracks `master` only and sets `tagOpt=--no-tags`, so upstream's `0.0.x` tags never enter this repository's tag namespace. This replaces syncing upstream through a `khuedoan-master` branch on Gitea, which has not moved since 2025-06-27.
