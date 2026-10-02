@@ -1,6 +1,6 @@
 # README
 
-## netboot.xyz ubuntu 24.04.1 autoinstall
+## netboot.xyz ubuntu 26.04.1 autoinstall
 
 > 📚️ References:
 >
@@ -34,7 +34,7 @@
 > 🐾**Notice**:
 >
 > Currently netboot.xyz needs to be manually selected on each machine after booting to install the corresponding OS.
-> You need to manually enter the ubuntu 24.04 netboot install menu, and input the cloud-init config url,
+> You need to manually enter the ubuntu 26.04.1 netboot install menu, and input the cloud-init config url,
 > like this: <http://yourip/init-config/00:15:5d:02:20:2f/>
 
 ## Ubuntu Cloud-init

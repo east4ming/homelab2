@@ -18,7 +18,7 @@
 
 - name: Extract netboot.xyz asssets directory path from URL
   set_fact:
-    download_dir: "{{ role_path }}/files/data/netbootxyz-config/assets/{{ ubuntu_24041_initrd_url | regex_replace('https://.*/([^/]+/[^/]+/[^/]+/[^/]+)/.*', '\\1') }}"
+    download_dir: "{{ role_path }}/files/data/netbootxyz-config/assets/{{ ubuntu_26041_initrd_url | regex_replace('https://.*/([^/]+/[^/]+/[^/]+/[^/]+)/.*', '\\1') }}"
 
 - name: Ensure netboot.xyz asssets download directory exists
   file:
@@ -28,18 +28,18 @@
 
 # Hardcoded for now
 # TODO:
-- name: Download netboot.xyz ubuntu 24.04.1 initrd file
+- name: Download netboot.xyz ubuntu 26.04.1 initrd file
   ansible.builtin.get_url:
-    url: "{{ ubuntu_24041_initrd_url }}"
-    dest: "{{ download_dir }}/{{ ubuntu_24041_initrd_url | basename }}"
-    checksum: "{{ ubuntu_24041_initrd_checksum }}"
+    url: "{{ ubuntu_26041_initrd_url }}"
+    dest: "{{ download_dir }}/{{ ubuntu_26041_initrd_url | basename }}"
+    checksum: "{{ ubuntu_26041_initrd_checksum }}"
     mode: 0644
 
-- name: Download netboot.xyz ubuntu 24.04.1 vmlinuz file
+- name: Download netboot.xyz ubuntu 26.04.1 vmlinuz file
   ansible.builtin.get_url:
-    url: "{{ ubuntu_24041_vmlinuz_url }}"
-    dest: "{{ download_dir }}/{{ ubuntu_24041_vmlinuz_url | basename }}"
-    checksum: "{{ ubuntu_24041_vmlinuz_checksum }}"
+    url: "{{ ubuntu_26041_vmlinuz_url }}"
+    dest: "{{ download_dir }}/{{ ubuntu_26041_vmlinuz_url | basename }}"
+    checksum: "{{ ubuntu_26041_vmlinuz_checksum }}"
     mode: 0644
 
 - name: Generate dnsmasq config

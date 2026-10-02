@@ -12,10 +12,15 @@
       - smartmontools    # Provides smartctl for disk SMART monitoring
     update_cache: true
 
+# Write to /etc/sysctl.d instead of the module default (/etc/sysctl.conf):
+# Ubuntu 26.04's procps marks /etc/sysctl.conf remove-on-upgrade, so the
+# upgrade deleted it and silently dropped these values
+# (fs.inotify.max_user_instances back to 128 breaks fwupd).
 - name: Adjust kernel parameters
   ansible.posix.sysctl:
     name: "{{ item.name }}"
     value: "{{ item.value }}"
+    sysctl_file: /etc/sysctl.d/90-homelab-prerequisites.conf
   loop:
     - {name: "fs.inotify.max_queued_events", value: 16384}
     - {name: "fs.inotify.max_user_instances", value: 8192}
@@ -27,6 +32,7 @@
     value: '1'
     state: present
     reload: true
+    sysctl_file: /etc/sysctl.d/90-homelab-prerequisites.conf
 
 - name: Enable IPv6 forwarding
   sysctl:
@@ -34,6 +40,7 @@
     value: '1'
     state: present
     reload: true
+    sysctl_file: /etc/sysctl.d/90-homelab-prerequisites.conf
   when: ansible_all_ipv6_addresses
 
 - name: Enable IPv6 router advertisements
@@ -42,6 +49,7 @@
     value: "2"
     state: present
     reload: true
+    sysctl_file: /etc/sysctl.d/90-homelab-prerequisites.conf
   tags: sysctl
 
 - name: Populate service facts

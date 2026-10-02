@@ -2,8 +2,9 @@
 #
 # Trim unneeded Linux firmware vendor sub-packages on the N100 nodes.
 #
-# Ubuntu 24.04 splits linux-firmware into one sub-package per vendor, so the
-# blobs for hardware we do not own can be dropped. Do NOT remove those
+# Ubuntu 24.04 and later split linux-firmware into one sub-package per vendor
+# (still true on 26.04.1), so the blobs for hardware we do not own can be
+# dropped. Do NOT remove those
 # sub-packages directly: linux-image-generic depends on the linux-firmware
 # metapackage, so apt would remove linux-generic/linux-image-generic with it and
 # the node would stop receiving kernel upgrades. Installing the empty

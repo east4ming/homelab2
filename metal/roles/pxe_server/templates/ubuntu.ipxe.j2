@@ -18,6 +18,7 @@ set install_type sub
 set install_priority critical
 menu ${os} - ${os_arch}
 item --gap Latest Releases
+item resolute ${space} ${os} 26.04 LTS Resolute Raccoon
 item oracular ${space} ${os} 24.10 Oracular Oriole
 item noble ${space} ${os} 24.04 LTS Noble Numbat
 item jammy ${space} ${os} 22.04 LTS Jammy Jellyfish
@@ -132,6 +133,16 @@ goto sub_boot
 set kernel_url ${live_endpoint}/ubuntu-squash/releases/download/24.10-f22a7742/
 set codename oracular
 set version_number 24.10
+goto sub_boot
+:resolute_amd64
+set kernel_url ${live_endpoint}/ubuntu-squash/releases/download/26.04.1-c43af979/
+set codename resolute
+set version_number 26.04.1
+goto sub_boot
+:resolute_arm64
+set kernel_url ${live_endpoint}/ubuntu-squash/releases/download/26.04.1-d4149848/
+set codename resolute
+set version_number 26.04.1
 goto sub_boot
 
 :sub_boot
