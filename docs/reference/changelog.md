@@ -2,6 +2,48 @@
 
 版本号格式与发布流程见 [版本管理](versioning.md)。新条目置顶，标题即 git 标签名。
 
+## v2026.10.03.2
+
+kor 接入集群：以 Prometheus exporter 形式常驻，暴露「无人引用的资源」指标，
+配套 Grafana dashboard；全程只读。
+
+### 新增
+
+- **未使用资源审计**（spec-kit `008-kor-monitoring`）：`system/kor/` 包装上游
+  [yonahd/kor](https://github.com/yonahd/kor) chart `0.2.16`，`namespace=kor`。
+  ApplicationSet 按 `system/*` 自动发现，因此没有新增任何 Application 清单
+- **只启用 exporter 模式**：CronJob 模式需要 Slack webhook 或频道上传来投递报告，
+  而仓库内没有 Slack 凭据（宪法禁止提交凭据），报告只能落进 Pod 日志，故不启用。
+  exporter 每 30 分钟重扫一次（上游默认 10 分钟；每轮是整集群 LIST，对 4 节点
+  homelab 无需如此频繁），暴露 `kubernetes_orphaned_resources{kind,namespace,resourceName}`
+- **抓取无需人工登记**：chart 自带 ServiceMonitor，且被
+  `.Capabilities.APIVersions.Has "monitoring.coreos.com/v1"` 门控。ArgoCD v3.5.3 会把
+  目标集群的 API 版本透传给 `helm template --api-versions`
+  （`controller/state.go` → `argo.APIResourcesToStrings` → `reposerver/repository.go`），
+  因此门控能反映真实集群能力；既有 Prometheus 的
+  `serviceMonitorSelectorNilUsesHelmValues=false` 使其无需额外标签即被发现
+- **Grafana dashboard**：导入上游 19863 到 `system/monitoring-system`（sidecar 只搜索该
+  namespace），改两处：datasource 硬编码 uid `prometheus`；`kind="$kind"` 改正则
+  `kind=~"$kind"`（`$kind` 是 multi + includeAll，All 在等值匹配下匹配不到序列）
+- **只读边界**：RBAC 仅授予 `get`/`list`/`watch`，kor 的 `--delete` 能力不配置；
+  镜像钉 `v0.6.9` + `IfNotPresent`（替代上游默认的 `latest` + `Always`），
+  并显式声明 requests/limits（10m/64Mi、500m/256Mi）
+
+### 修复
+
+- `fix(kor)`：dashboard 的命名空间过滤条件曾按 kor 源码的标签名写成 `namespace`，
+  实测为错——prometheus-operator 会打上目标标签 `namespace="kor"`，Prometheus 把指标
+  自带的同名标签重命名为 `exported_namespace`。改用 `namespace` 后过滤器静默失效
+  （取值只剩 1 个），改回 `exported_namespace` 后为 41 个命名空间取值、
+  `sum by(exported_namespace)` 返回 42 组。教训与实测数据记入 research.md
+
+### 文档
+
+- `docs(008)`：kor 审计的 spec-kit 文档（spec / plan / research / tasks / quickstart /
+  checklist）。research.md 记录了 ServiceMonitor 门控的 ArgoCD 源码取证、
+  `namespace` 与 `exported_namespace` 的踩坑实测，以及 Grafana sidecar 的
+  `grafana_dashboard_folder` 标签实际失效（面板目录来自另一条 provisioning 通道）这一既有现象
+
 ## v2026.10.03
 
 集群外的 QNAP NAS 接入监控：系统指标与磁盘 SMART 采集、告警规则与 Grafana dashboard；
