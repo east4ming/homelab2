@@ -13,6 +13,28 @@ kor:
     # 单位分钟。图表默认 10 分钟，而每轮都是对整个集群的全量 LIST，
     # 对 4 节点 homelab 偏频繁，放慢到 30 分钟。
     exporterInterval: "30"
+    # 覆盖图表的默认 args（默认就是 [exporter]，覆盖时必须带上它）。
+    #
+    # 两个 --exclude-labels 都是为了把「实际在用、但 kor 看不到引用」的东西
+    # 挡在报告之外（kor 只判断有没有 Pod 挂载/引用，看不到被 CR、Ingress、
+    # sidecar、operator 按名字使用的情况）：
+    #
+    #   app.kubernetes.io/managed-by=Helm
+    #     声明式对象由 Git 管理，不该按 Pod 使用情况判定。实测代价：ReplicaSet
+    #     会从 Pod 模板继承这个标签，因此 486 个旧 RS 里有 183 个会一起从报告
+    #     里消失；集群级 CRD 不受影响（kor v0.6.9 的 crds.go 把过滤器参数丢掉了，
+    #     对 CRD 传的是空 Options，已实测无效）。
+    #
+    #   tailscale.com/managed=true
+    #     Tailscale operator 管理的 Secret（21 张 Ingress 证书 + 8 个 ProxyGroup/
+    #     operator 状态）。这批对象无法用 kor/used=true 排除——operator 会重写
+    #     Secret 元数据把外部标签冲掉（已实测）。
+    args:
+      - exporter
+      - --exclude-labels
+      - app.kubernetes.io/managed-by=Helm
+      - --exclude-labels
+      - tailscale.com/managed=true
     deployment:
       image:
         # 图表默认 latest + imagePullPolicy=Always，无法追溯版本；
