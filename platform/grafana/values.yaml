@@ -26,6 +26,12 @@ grafana:
         memory: 256Mi
       limits:
         memory: 512Mi
+  # Only ever existed in the live StatefulSet (added out-of-band), which ArgoCD's
+  # server-side apply does not prune because the list item is not in the manifest.
+  # Declared here so Git is the source of truth; the plugin is already installed on
+  # the persistent volume, so this only matters for a fresh volume.
+  env:
+    GF_INSTALL_PLUGINS: performancecopilot-pcp-app
   envFromSecret: grafana-secrets
   grafana.ini:
     server:
