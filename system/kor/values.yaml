@@ -54,3 +54,36 @@ kor:
           memory: 256Mi
     serviceMonitor:
       enabled: true
+  # 上游 chart 的默认规则表里**没有 nodes 与 csidrivers**，缺了会让 kor 的
+  # VolumeAttachment 分析全部误判：它逐个查 VA 引用的节点，权限不足时 Get 失败，
+  # 于是每条 VA 都被报成「Node xxx does not exist」（实测 25 条全是这么来的，
+  # 而这些 VA 的 PV 与节点其实都存在，属活跃挂载——照报告删会触发卷 detach）。
+  #
+  # 本列表 = 上游 chart 0.2.16 的 values.yaml 默认值 + nodes / csidrivers 两项。
+  # 升级 chart 时必须对照上游默认值复核这份表（charts 的 rbac.rules 是整体覆盖，
+  # 不是追加）。
+  rbac:
+    create: true
+    rules:
+      - apiGroups: [""]
+        resources: ["pods", "configmaps", "secrets", "services", "serviceaccounts", "persistentvolumeclaims", "endpoints", "namespaces", "persistentvolumes", "nodes"]
+      - apiGroups: ["apps"]
+        resources: ["deployments", "statefulsets", "replicasets", "daemonsets"]
+      - apiGroups: ["networking.k8s.io"]
+        resources: ["ingresses", "networkpolicies"]
+      - apiGroups: ["rbac.authorization.k8s.io"]
+        resources: ["roles", "rolebindings", "clusterroles", "clusterrolebindings"]
+      - apiGroups: ["autoscaling"]
+        resources: ["horizontalpodautoscalers"]
+      - apiGroups: ["policy"]
+        resources: ["poddisruptionbudgets"]
+      - apiGroups: ["batch"]
+        resources: ["jobs"]
+      - apiGroups: ["discovery.k8s.io"]
+        resources: ["endpointslices"]
+      - apiGroups: ["storage.k8s.io"]
+        resources: ["storageclasses", "volumeattachments", "csidrivers"]
+      - apiGroups: ["scheduling.k8s.io"]
+        resources: ["priorityclasses"]
+      - apiGroups: ["apiextensions.k8s.io"]
+        resources: ["customresourcedefinitions"]
