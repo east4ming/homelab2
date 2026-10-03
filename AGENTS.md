@@ -1,7 +1,7 @@
 # Homelab2
 
 <!-- SPECKIT START -->
-当前 Plan: [specs/007-nas-monitoring/plan.md](specs/007-nas-monitoring/plan.md)
+当前 Plan: [specs/008-kor-monitoring/plan.md](specs/008-kor-monitoring/plan.md)
 <!-- SPECKIT END -->
 
 ## 版本管理
