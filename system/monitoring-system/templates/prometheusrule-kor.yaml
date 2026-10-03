@@ -1,0 +1,80 @@
+# kor 的告警规则。
+#
+# 为什么不按绝对数量告警：kubernetes_orphaned_resources 的规模受三件事影响——
+# exporter 的 --exclude-labels 配置、集群历史（旧 ReplicaSet/已完成 Job 会一直累积）、
+# 以及 kor 自身的假阳性（它只判断有没有 Pod 引用，看不到被 CR/Ingress/sidecar/operator
+# 按名字使用的情况）。因此「未使用资源有 600 个」不是故障，「一周内涨了 150 个」才是信号。
+#
+# 通用规则的复用：抓取中断由 kube-prometheus-stack 默认的 TargetDown 覆盖，
+# exporter Pod 消失由 KubePodNotReady / KubeDeploymentReplicasMismatch 覆盖，
+# 这里不重复定义，只补 kor 特有的信号。
+#
+# 依赖：kind="VolumeAttachment" 那条依赖 kor 的 RBAC 里有 nodes/csidrivers
+# （system/kor/values.yaml 的 rbac.rules 已补齐，上游 chart 默认值里没有，
+# 缺了会让 kor 把每一条 VA 都误报成「Node does not exist」）。
+# 增长类规则依赖 Prometheus 里有 7 天历史；刚上线时 offset 7d 无数据、不会触发，属正常。
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: kor
+  namespace: {{ .Release.Namespace }}
+spec:
+  groups:
+    - name: kor
+      rules:
+        - alert: KorAuditNoData
+          annotations:
+            description: |-
+              kor exporter 已经连续 1 小时没有暴露任何 kubernetes_orphaned_resources 序列。
+              抓取本身没断（否则由 TargetDown 告警），所以问题在 exporter 内部：扫描循环卡住、
+              RBAC 被改动导致 LIST 全部失败，或 Deployment 被改坏。
+              排查：`kubectl -n kor logs deploy/kor-exporter --tail=50`、
+              `kubectl -n kor get deploy,servicemonitor kor-exporter`。
+              注意每轮扫描要对整个集群做全量 LIST（实测约 3 分钟），刚重启后的几分钟内没有数据是正常的。
+            summary: '[kor] 审计指标已消失 1 小时'
+          expr: |
+            absent(kubernetes_orphaned_resources)
+          for: 1h
+          labels:
+            severity: warning
+        - alert: KorUnusedResourcesGrowing
+          annotations:
+            description: |-
+              未使用资源总数比 7 天前多了 {{ `{{ $value | humanize }}` }} 个。
+              该类计数会随时间单调增长（旧 ReplicaSet、已完成 Job、CSI 残留），
+              通常意味着该做一轮清理，或某个工作日负载在持续堆积。
+              分级与清理流程见 docs/how-to-guides/prune-unused-resources.md（scripts/kor-audit）。
+            summary: '[kor] 未使用资源 7 天内增长 {{ `{{ $value | humanize }}` }} 个'
+          expr: |
+            count(kubernetes_orphaned_resources)
+              - count(kubernetes_orphaned_resources offset 7d) > 150
+          for: 6h
+          labels:
+            severity: warning
+        - alert: KorStaleVolumeAttachments
+          annotations:
+            description: |-
+              有 {{ `{{ $value }}` }} 条 VolumeAttachment 指向不存在的 PV / 节点 / CSIDriver。
+              这类残留通常来自节点退役或卷在挂载状态下被删除，且**可能伴随 Ceph 里的孤儿镜像**：
+              先核对 `rbd ls -p standard-rwo` 与 PV 是否一一对应（scripts/kor-audit 的做法），
+              确认没有孤儿镜像后再清理这些 VA 记录。
+            summary: '[kor] {{ `{{ $value }}` }} 条陈旧的 VolumeAttachment'
+          expr: |
+            count(kubernetes_orphaned_resources{kind="VolumeAttachment"}) > 10
+          for: 12h
+          labels:
+            severity: warning
+        - alert: KorUnmountedPvcSpike
+          annotations:
+            description: |-
+              7 天内「没有任何 Pod 挂载」的 PVC 多了 {{ `{{ $value }}` }} 个（已排除 VolSync 的
+              restic 缓存卷，它们会被 VolSync 反复重建、属正常）。
+              未挂载的 PVC 仍占着存储（standard-rwo 是精简置配，但会占 Ceph 的置配额度），
+              也可能是某个工作负载没能正常挂载卷。逐个确认后再决定是否删除。
+            summary: '[kor] 未挂载 PVC 7 天内增长 {{ `{{ $value | humanize }}` }} 个'
+          expr: |
+            count(kubernetes_orphaned_resources{kind="Pvc", resourceName!~"volsync-src-.*"})
+              - count(kubernetes_orphaned_resources{kind="Pvc", resourceName!~"volsync-src-.*"} offset 7d) > 10
+          for: 6h
+          labels:
+            severity: warning
