@@ -2,6 +2,40 @@
 
 版本号格式与发布流程见 [版本管理](versioning.md)。新条目置顶，标题即 git 标签名。
 
+## v2026.10.03
+
+集群外的 QNAP NAS 接入监控：系统指标与磁盘 SMART 采集、告警规则与 Grafana dashboard；
+另为桌面机新增 Tailscale 抓取目标。
+
+### 新增
+
+- **桌面机 Tailscale 抓取**：`tailscale-nodes` job 新增 `192.168.3.246:5252`（`node: casey-desktop`）
+- **QNAP NAS 监控**（spec-kit `007-nas-monitoring`）：`NAS33657A`（TS-453Bmini，QTS 5.2.10）
+  以 Container Station 应用运行两个 collector —— `node-exporter`（9100）与
+  `smartctl-exporter`（9633），均走 host 网络，Prometheus 通过新增的 `nas-node` /
+  `nas-smartctl` 两个静态 job 抓取并附加 `nas` 标签。NAS 是集群外设备，ArgoCD 无法管理其容器，
+  故 compose 入库存放在 `metal/nas/compose.yml` 并由 Container Station 导入
+- **磁盘 SMART 采集**：实测发现该 QNAP 控制器会让 `smartctl --scan-open` 把 4 块 SATA 盘
+  误判为 `scsi`，温度返回 `0` 且 ATA 属性全缺（exporter 照常有输出，属静默失效）。
+  必须使用 `smartctl-exporter:v0.14.0` 并以 `--smartctl.device=/dev/sdX;sat` 强制设备类型。
+  修复后 5 块盘返回真实温度 44–49°C、`smart_status` 全为 1；SMART 指标另加 `disk` 盘位标签
+  （依据 `qcli_storage -d` 实测映射 sdc→bay1、sdd→bay2、sda→bay3、sdb→bay4）
+- **告警与可视化**：新增 6 条告警规则（卷容量两级阈值、卷只读、RAID 失去冗余、SMART 健康失败、
+  磁盘高温）与 Grafana `NAS` dashboard（13 面板）；抓取中断复用既有 `TargetDown`。
+  规则按实测样本逐条评估，排除 QTS 内部固定布局对象（`md9`/`md13` 固件镜像 32 槽位只用 4 槽、
+  `/mnt/ext` 固件 DOM 设计上仅剩 7.69% 可用），否则上线即永久误报
+
+### 依赖与构建
+
+- `chore(deps)`：kube-prometheus-stack `91.5.2` → `91.5.3`、renovate chart `46.321.2` → `46.321.8`、
+  `Markdown` `3.10.3` → `3.11`、`platformdirs` `4.11.12` → `4.11.14`
+- 新增 `.gitignore` 条目 `.helm_ls_cache/`，避免本地 Helm 语言服务缓存入库
+
+### 文档
+
+- `docs(007)`：QNAP NAS 监控的 spec-kit 文档（spec / plan / research / tasks / quickstart / checklist），
+  其中 research.md 记录了 SNMP、Entware、QCLI 等被否决路径的实测依据
+
 ## v2026.10.02.4
 
 Tailscale 指标监控上线：4 台节点与 operator ProxyGroup 代理的客户端指标接入 Prometheus，
