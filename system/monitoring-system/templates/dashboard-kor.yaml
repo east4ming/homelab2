@@ -1,8 +1,13 @@
 # 上游 dashboard：https://grafana.com/grafana/dashboards/19863
-# 相对上游做了三处改动，否则面板会是空的：
+# 相对上游做了两处改动，否则面板会是空的：
 #   - datasource 由 ${datasource} 变量改为硬编码 uid "prometheus"（仓库统一写法）
-#   - exported_namespace 改为 namespace（kor exporter 实际暴露的标签）
-#   - multi 变量的等值匹配改为正则匹配（kind=~"$kind"）
+#   - $kind 是 multi + includeAll，等值匹配 kind="$kind" 在 All 下匹配不到任何
+#     series，改为正则 kind=~"$kind"
+#
+# 注意：面板里的 namespace 一律写作 exported_namespace，不要改成 namespace。
+# kor 源码里的 gauge 标签确实叫 namespace，但 prometheus-operator 抓取时会打上
+# 目标标签 namespace=<exporter 所在 ns>，Prometheus 把冲突的原标签重命名为
+# exported_ 前缀；线上 namespace 恒为 "kor"，资源真正的 ns 在 exported_namespace。
 apiVersion: v1
 kind: ConfigMap
 metadata:
