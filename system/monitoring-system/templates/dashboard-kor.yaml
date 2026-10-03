@@ -1,0 +1,16 @@
+# 上游 dashboard：https://grafana.com/grafana/dashboards/19863
+# 相对上游做了三处改动，否则面板会是空的：
+#   - datasource 由 ${datasource} 变量改为硬编码 uid "prometheus"（仓库统一写法）
+#   - exported_namespace 改为 namespace（kor exporter 实际暴露的标签）
+#   - multi 变量的等值匹配改为正则匹配（kind=~"$kind"）
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kor-dashboard
+  namespace: {{ .Release.Namespace }}
+  labels:
+    grafana_dashboard: "1"
+    grafana_dashboard_folder: "Kor"
+data:
+  kor-dashboard.json: |-
+{{ .Files.Get "files/dashboards/kor.json" | indent 4 }}

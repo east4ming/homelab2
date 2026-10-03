@@ -1,0 +1,30 @@
+# kor：集群内未使用资源（orphaned resources）发现工具。
+#
+# 以 Prometheus exporter 形态常驻运行，暴露 kubernetes_orphaned_resources
+# 指标（标签 kind / namespace / resourceName），由 monitoring-system 的
+# Prometheus 抓取；dashboard 见
+# system/monitoring-system/files/dashboards/kor.json。
+kor:
+  # 不跑 CronJob：仓库内没有 Slack 凭据，CronJob 的报告只能落在 Pod 日志里；
+  # exporter 每 exporterInterval 分钟重扫一次，结果在 Grafana 里持续可见。
+  cronJob:
+    enabled: false
+  prometheusExporter:
+    # 单位分钟。图表默认 10 分钟，而每轮都是对整个集群的全量 LIST，
+    # 对 4 节点 homelab 偏频繁，放慢到 30 分钟。
+    exporterInterval: "30"
+    deployment:
+      image:
+        # 图表默认 latest + imagePullPolicy=Always，无法追溯版本；
+        # 钉住 chart 0.2.16 对应的 appVersion，缓存里有就不再回源拉取。
+        tag: v0.6.9
+      imagePullPolicy: IfNotPresent
+      resources:
+        requests:
+          cpu: 10m
+          memory: 64Mi
+        limits:
+          cpu: 500m
+          memory: 256Mi
+    serviceMonitor:
+      enabled: true
