@@ -42,13 +42,23 @@ scripts/kor-audit --out /tmp/kor-audit.md
     以下对象不再出现在报告里：
 
     - `app.kubernetes.io/managed-by=Helm`：声明式对象由 Git 管理，不该按 Pod 使用情况判定。
-      副作用是 **ReplicaSet 会从 Pod 模板继承该标签，183 个旧 RS 因此不再出现**。
+      副作用是 **ReplicaSet 会从 Pod 模板继承该标签，105 个旧 RS 因此不再出现**。
     - `tailscale.com/managed=true`：Tailscale operator 管理的 21 张 Ingress 证书与
       8 个 ProxyGroup/operator 状态 Secret。这批对象**无法**用 `kor/used=true` 排除——
       operator 会重写 Secret 元数据把外部标签冲掉（实测）。
 
-    两个注意点：**集群级 CRD 不受任何 `--exclude-labels` 影响**（kor v0.6.9 的
-    `crds.go` 把过滤器参数丢掉了，实测该标签过滤对 127 条 CRD 完全无效），
+    同口径实测（`kor all -o json`，过滤前后各跑一次）：**871 → 622**，
+    其中 Crd 126 → 91、ReplicaSet 487 → 381、Secret 62 → 25、ConfigMap 62 → 21。
+    线上指标与之一致（918 → 622，918 里还包含后来被清理掉的 22 个 RBAC/PVC/Service 对象）。
+
+    !!! warning "CRD 的过滤只在 exporter/all 路径生效"
+
+        `processCrds` 有两个调用者：`pkg/kor/all.go` 的 `getUnusedCrds` 会传入真实
+        `filterOpts`（exporter 走这条，**CRD 会被正常过滤**），而 `pkg/kor/crds.go` 的
+        `GetUnusedCrds` 把它丢弃、改用空 `Options`（独立子命令
+        `kor customresourcedefinition` 走这条，过滤器无效）。
+        用子命令去验证本配置会得到相反结论——排查时请用 `kor all` 或直接看指标。
+
     `--ignore-owner-references` 则会把全部派生对象一起藏掉（486 个 RS → 0），不建议使用。
 
 ## 2. kor 的判定语义（决定哪些是假阳性）
