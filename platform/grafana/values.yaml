@@ -60,12 +60,17 @@ grafana:
   useStatefulSet: true
   serviceMonitor:
     enabled: true
+  # Grafana 13 (unified storage + kubernetesDashboards + git sync) idles at ~460Mi
+  # RSS, so the old 512Mi limit had no room for the memory spike every dashboard
+  # provisioning reload causes -> repeated OOMKilled when dashboards are added.
+  # 1Gi is about 2x the observed peak. GOMEMLIMIT is derived from the limit by the
+  # chart (0.9x).
   resources:
     requests:
       cpu: 10m
-      memory: 254Mi
-    limits:
       memory: 512Mi
+    limits:
+      memory: 1Gi
   imageRenderer:
     networkPolicy:
       limitIngress: false
