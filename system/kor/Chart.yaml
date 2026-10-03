@@ -1,0 +1,7 @@
+apiVersion: v2
+name: kor
+version: 0.0.0
+dependencies:
+  - name: kor
+    version: 0.2.16
+    repository: https://yonahd.github.io/kor
