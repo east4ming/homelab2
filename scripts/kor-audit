@@ -40,7 +40,7 @@ RESOURCES = {
 
 # 整类禁止：见 docs/how-to-guides/prune-unused-resources.md
 FORBIDDEN_KINDS = {
-    "Crd": "删除 CRD 会级联删除其全部自定义资源；且 127 个 CRD 都属于已安装的 operator/chart",
+    "Crd": "删除 CRD 会级联删除其全部自定义资源；且被标记的 CRD 都属于已安装的 operator/chart",
     "Secret": "kor 只看 Pod 是否引用；备份仓库凭据、TLS 证书、ESO/operator 生成的密钥都属假阳性",
     "StorageClass": "删除会移除存储类（GitOps 管理，且后续 PVC 仍需使用）",
 }
@@ -108,7 +108,10 @@ def classify(kind, meta):
     """
     if kind in FORBIDDEN_KINDS:
         return "C", FORBIDDEN_KINDS[kind]
-    owners = meta["owner_kinds"]
+    owners = meta.get("owner_kinds", [])
+    if "gitops" not in meta:
+        # 指标里有、集群里已查不到（刚被删掉、或 kubectl 侧改名/换 ns）
+        return "?", "集群里已不存在（指标尚未刷新）"
 
     # --- 派生对象：只看 owner ---
     if owners:
@@ -171,13 +174,14 @@ def main():
     out.append(f"来源：`{args.prometheus}` 的 `kubernetes_orphaned_resources`，与集群实况交叉核对。\n")
     tally = Counter((r["level"], r["kind"]) for r in rows)
     out.append("| 级别 | kind | 数量 |\n| --- | --- | --- |")
-    for level in ("A", "B", "C"):
+    for level in ("A", "B", "C", "?"):
         kinds = sorted(k for (lv, k) in tally if lv == level)
         for k in kinds:
             out.append(f"| {level} | {k} | {tally[(level, k)]} |")
         out.append(f"| **{level} 小计** | | **{sum(v for (lv, _), v in tally.items() if lv == level)}** |")
 
-    for level, title in (("A", "可直接批量清理"), ("B", "需人工确认"), ("C", "禁止删除")):
+    for level, title in (("A", "可直接批量清理"), ("B", "需人工确认"), ("C", "禁止删除"),
+                         ("?", "指标里还在、集群里已不存在（等下一轮扫描刷新）")):
         out.append(f"\n## {level} 类 —— {title}\n")
         by_reason = defaultdict(list)
         for r in rows:
