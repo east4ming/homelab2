@@ -1,0 +1,202 @@
+#!/usr/bin/env python3
+"""对 kor 的未使用资源发现结果做安全分级。
+
+数据来源：kor exporter 暴露的 kubernetes_orphaned_resources 指标（经 Prometheus 查询），
+再与集群实况（kubectl）交叉核对，按「删除后会不会被重建 / 会不会造成故障」分三级：
+
+  A  可直接批量清理：控制器不会重建，且不含数据
+  B  需人工确认：可能被停止中的工作负载引用，或属已卸载组件的遗留
+  C  禁止删除：GitOps/operator 管理（删了会被重建并产生漂移），或删除即丢数据
+
+用法：
+    scripts/kor-audit                      # 打到 stdout
+    scripts/kor-audit --out /tmp/audit.md  # 同时写文件
+    scripts/kor-audit --prometheus http://localhost:9090
+"""
+import argparse
+import json
+import subprocess
+import sys
+import urllib.parse
+import urllib.request
+from collections import Counter, defaultdict
+
+# kind -> (kubectl 资源名, 是否 namespaced)
+RESOURCES = {
+    "ReplicaSet": ("replicasets", True),
+    "Crd": ("crds", False),
+    "Secret": ("secrets", True),
+    "ConfigMap": ("configmaps", True),
+    "Job": ("jobs", True),
+    "Pvc": ("persistentvolumeclaims", True),
+    "ClusterRole": ("clusterroles", False),
+    "VolumeAttachment": ("volumeattachments", False),
+    "Service": ("services", True),
+    "ClusterRoleBinding": ("clusterrolebindings", False),
+    "RoleBinding": ("rolebindings", True),
+    "ServiceAccount": ("serviceaccounts", True),
+    "StorageClass": ("storageclasses", False),
+}
+
+# 整类禁止：见 docs/how-to-guides/prune-unused-resources.md
+FORBIDDEN_KINDS = {
+    "Crd": "删除 CRD 会级联删除其全部自定义资源；且 127 个 CRD 都属于已安装的 operator/chart",
+    "Secret": "kor 只看 Pod 是否引用；备份仓库凭据、TLS 证书、ESO/operator 生成的密钥都属假阳性",
+    "StorageClass": "删除会移除存储类（GitOps 管理，且后续 PVC 仍需使用）",
+}
+
+
+def kubectl(args):
+    out = subprocess.run(["kubectl", *args, "-o", "json"], capture_output=True, text=True)
+    if out.returncode != 0:
+        raise RuntimeError(f"kubectl {' '.join(args)} 失败：{out.stderr.strip()}")
+    return json.loads(out.stdout)
+
+
+def fetch_findings(prometheus):
+    url = f"{prometheus.rstrip('/')}/api/v1/query?" + urllib.parse.urlencode(
+        {"query": "kubernetes_orphaned_resources"}
+    )
+    result = json.load(urllib.request.urlopen(url))["data"]["result"]
+    return [
+        {
+            "kind": s["metric"].get("kind", ""),
+            "namespace": s["metric"].get("exported_namespace", ""),
+            "name": s["metric"].get("resourceName", ""),
+        }
+        for s in result
+    ]
+
+
+def live_meta(kinds):
+    """取集群实况：GitOps 归属、ownerReferences，以及分级需要的少量字段。"""
+    index = {}
+    for kind in kinds:
+        res, namespaced = RESOURCES[kind]
+        for o in kubectl(["get", res, "-A"] if namespaced else ["get", res]).get("items", []):
+            m = o.get("metadata", {})
+            labels, ann = m.get("labels", {}) or {}, m.get("annotations", {}) or {}
+            extra = {}
+            if kind == "Pvc":
+                extra = {"phase": o["status"].get("phase"), "sc": o["spec"].get("storageClassName")}
+            elif kind == "Service":
+                extra = {"clusterIP": o["spec"].get("clusterIP"), "selector": bool(o["spec"].get("selector"))}
+            index[(kind, m.get("namespace", ""), m.get("name", ""))] = {
+                "gitops": bool(
+                    labels.get("argocd.argoproj.io/instance")
+                    or ann.get("argocd.argoproj.io/tracking-id")
+                    or labels.get("app.kubernetes.io/managed-by") == "Helm"
+                    or ann.get("meta.helm.sh/release-name")
+                ),
+                "owner_kinds": [x["kind"] for x in m.get("ownerReferences", []) or []],
+                "name": m.get("name", ""),
+                **extra,
+            }
+    return index
+
+
+def classify(kind, meta):
+    """返回 (级别, 判据)。
+
+    两条容易搞错的分界线：
+
+    1. **有 ownerReferences = 派生对象**（ReplicaSet 由 Deployment 生成、Job 由
+       CronJob 生成、PVC 由 DataVolume 生成）。这类对象的标签与注解是从父对象的
+       模板继承来的，不代表 ArgoCD/Helm 在管理它们，因此只看 owner 判定。
+    2. **无 ownerReferences = 声明式对象**（或 operator 直接创建、未设 owner）。
+       这类才用 GitOps 标记判断「删了会不会被 ArgoCD 重建」。
+    """
+    if kind in FORBIDDEN_KINDS:
+        return "C", FORBIDDEN_KINDS[kind]
+    owners = meta["owner_kinds"]
+
+    # --- 派生对象：只看 owner ---
+    if owners:
+        if kind == "ReplicaSet" and owners == ["Deployment"]:
+            return "A", "Deployment 的旧 revision；删除后不会被重建（仅少一条 rollout 历史）"
+        if kind == "Job" and owners == ["CronJob"]:
+            return "A", "CronJob 已完成的运行历史；CronJob 不重建历史运行"
+        if kind == "Pvc" and "ReplicationSource" in owners:
+            return "B", "VolSync 缓存卷：会被 VolSync 重建，删除无收益"
+        if kind == "Pvc" and "DataVolume" in owners:
+            return "C", "VM 的根盘（由 DataVolume 生成）：删了会连磁盘数据一起丢"
+        return "C", "由控制器/operator 拥有：删了会被重建或影响其工作负载"
+
+    # --- 无 owner：声明式对象，GitOps 标记才有意义 ---
+    if meta["gitops"]:
+        return "C", "GitOps 管理：删除会被重建，并让 ArgoCD 产生漂移"
+    if kind == "VolumeAttachment":
+        return "A", "引用的 PV/节点已不存在，属 CSI 残留记录"
+    if kind == "Job":
+        return "A", "已完成的 Job（kor 判定为完成/失败/挂起）；确认日志不再需要后可删"
+    if kind == "Service" and meta.get("name", "").startswith("wp-hsvc-"):
+        return "A", "Woodpecker 流水线的临时 headless Service 残留"
+    if kind == "Service" and not meta.get("selector") and meta.get("clusterIP") == "None":
+        return "C", "手工 Endpoints 型 headless Service（prometheus-operator 用）"
+    if kind == "Pvc" and meta.get("name", "").startswith("wp-"):
+        return "A", "Woodpecker 流水线工作区残留（删除前确认当前无流水线在跑）"
+    if kind == "Pvc":
+        return "B", "无 owner 的 PVC：可能被已停止的 VM/StatefulSet 引用，且 standard-rwo 的回收策略是 Delete"
+    if kind in ("ConfigMap", "ClusterRole", "ClusterRoleBinding", "RoleBinding", "ServiceAccount"):
+        return "B", "可能被 CR、operator 或 sidecar 按名字引用，需逐个核对"
+    return "B", "需人工确认"
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--prometheus", default="https://prometheus.west-beta.ts.net", help="Prometheus 地址")
+    ap.add_argument("--out", help="同时写入该文件")
+    args = ap.parse_args()
+
+    findings = fetch_findings(args.prometheus)
+    print(f"kor 发现总数：{len(findings)}", file=sys.stderr)
+    by_kind = defaultdict(list)
+    for f in findings:
+        by_kind[f["kind"]].append(f)
+
+    meta = live_meta([k for k in by_kind if k in RESOURCES])
+    rows = []
+    for kind, items in by_kind.items():
+        for f in items:
+            m = meta.get((kind, f["namespace"], f["name"]), {})
+            level, why = classify(kind, m)
+            rows.append({**f, "level": level, "why": why})
+
+    unknown = [r for r in rows if r["kind"] not in RESOURCES]
+    if unknown:
+        print(f"警告：{len(unknown)} 条未识别 kind：{sorted({r['kind'] for r in unknown})}", file=sys.stderr)
+
+    out = []
+    out.append("# kor 未使用资源分级报告\n")
+    out.append(f"来源：`{args.prometheus}` 的 `kubernetes_orphaned_resources`，与集群实况交叉核对。\n")
+    tally = Counter((r["level"], r["kind"]) for r in rows)
+    out.append("| 级别 | kind | 数量 |\n| --- | --- | --- |")
+    for level in ("A", "B", "C"):
+        kinds = sorted(k for (lv, k) in tally if lv == level)
+        for k in kinds:
+            out.append(f"| {level} | {k} | {tally[(level, k)]} |")
+        out.append(f"| **{level} 小计** | | **{sum(v for (lv, _), v in tally.items() if lv == level)}** |")
+
+    for level, title in (("A", "可直接批量清理"), ("B", "需人工确认"), ("C", "禁止删除")):
+        out.append(f"\n## {level} 类 —— {title}\n")
+        by_reason = defaultdict(list)
+        for r in rows:
+            if r["level"] == level:
+                by_reason[r["why"]].append(r)
+        for why, group in sorted(by_reason.items(), key=lambda kv: -len(kv[1])):
+            out.append(f"### {why}（{len(group)}）\n")
+            if level == "C":
+                continue  # C 类数量大，只给判据与计数
+            for r in sorted(group, key=lambda x: (x["namespace"], x["name"])):
+                ns = r["namespace"] or "-"
+                out.append(f"- `{ns}/{r['name']}` ({r['kind']})")
+
+    report = "\n".join(out) + "\n"
+    sys.stdout.write(report)
+    if args.out:
+        open(args.out, "w").write(report)
+        print(f"已写入 {args.out}", file=sys.stderr)
+
+
+if __name__ == "__main__":
+    main()
