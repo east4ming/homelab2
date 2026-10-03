@@ -1,0 +1,101 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: nas
+  namespace: {{ .Release.Namespace }}
+spec:
+  groups:
+    - name: nas
+      rules:
+        # Availability is already covered by TargetDown, which fires on both
+        # nas-node and nas-smartctl. The rules below only add the NAS-specific
+        # signals that rule cannot see.
+        #
+        # Scope is /share/* only. QTS's own filesystems are deliberately left
+        # out: /mnt/ext is a 436MB firmware DOM that sits at ~8% free by design.
+        #
+        # The thresholds are warning-level on purpose: this NAS sits at 71% on
+        # one of its volumes, so anything tighter would page on a normal week of
+        # media being written.
+        - alert: NASVolumeSpaceLow
+          annotations:
+            description: |-
+              Volume {{ `{{ $labels.mountpoint }}` }} on {{ `{{ $labels.nas }}` }} is {{ `{{ $value | humanizePercentage }}` }} full.
+              Grow the volume, move data off it, or lower the snapshot retention for that volume.
+            summary: '[NAS] Volume {{ `{{ $labels.mountpoint }}` }} is {{ `{{ $value | humanizePercentage }}` }} full'
+          expr: |
+            max by (nas, mountpoint) (
+              node_filesystem_avail_bytes{job="nas-node",mountpoint=~"/share/.+",fstype!~"fuse|squashfs"}
+              /
+              node_filesystem_size_bytes{job="nas-node",mountpoint=~"/share/.+",fstype!~"fuse|squashfs"}
+            ) < 0.15
+          for: 30m
+          labels:
+            severity: warning
+        - alert: NASVolumeSpaceCritical
+          annotations:
+            description: |-
+              Volume {{ `{{ $labels.mountpoint }}` }} on {{ `{{ $labels.nas }}` }} is {{ `{{ $value | humanizePercentage }}` }} full.
+              QTS writes to this volume itself; below 5% free it starts refusing writes from apps and shares.
+            summary: '[NAS] Volume {{ `{{ $labels.mountpoint }}` }} is {{ `{{ $value | humanizePercentage }}` }} full'
+          expr: |
+            max by (nas, mountpoint) (
+              node_filesystem_avail_bytes{job="nas-node",mountpoint=~"/share/.+",fstype!~"fuse|squashfs"}
+              /
+              node_filesystem_size_bytes{job="nas-node",mountpoint=~"/share/.+",fstype!~"fuse|squashfs"}
+            ) < 0.05
+          for: 15m
+          labels:
+            severity: critical
+        # QTS remounts a volume read-only when its filesystem hits an error, and
+        # reports it nowhere else. A read-only /share/CACHEDEV*_DATA means every
+        # app on that volume is failing writes.
+        - alert: NASVolumeReadOnly
+          annotations:
+            description: |-
+              Volume {{ `{{ $labels.mountpoint }}` }} on {{ `{{ $labels.nas }}` }} is mounted read-only.
+              QTS does this after a filesystem error. Check `dmesg` and the volume status in Storage & Snapshots before remounting.
+            summary: '[NAS] Volume {{ `{{ $labels.mountpoint }}` }} is read-only'
+          expr: |
+            node_filesystem_readonly{job="nas-node",mountpoint=~"/share/CACHEDEV.+"} == 1
+          for: 10m
+          labels:
+            severity: critical
+        # Only the arrays that back data and the QTS system partition are
+        # watched. md9 and md13 are the firmware DOM mirrors: each is a raid1
+        # over 32 slots of which 4 are populated, so `active < required` is
+        # permanent and meaningless there. md321 is the SSD's second system
+        # partition and is a one-disk mirror, i.e. never redundant.
+        - alert: NASRAIDNotRedundant
+          annotations:
+            description: |-
+              RAID array {{ `{{ $labels.device }}` }} on {{ `{{ $labels.nas }}` }} has {{ `{{ $value }}` }} active disk(s), fewer than it needs.
+              Until it is rebuilt the array has no redundancy and a second failure loses the pool.
+            summary: '[NAS] RAID {{ `{{ $labels.device }}` }} is not redundant ({{ `{{ $value }}` }} active disks)'
+          expr: |
+            node_md_disks{job="nas-node",state="active",device=~"md1|md2|md256|md322"} < on (device) node_md_disks_required{job="nas-node"}
+          for: 15m
+          labels:
+            severity: critical
+        - alert: NASDiskSMARTCritical
+          annotations:
+            description: |-
+              Disk {{ `{{ $labels.disk }}` }} ({{ `{{ $labels.device }}` }}, {{ `{{ $labels.model_name }}` }} serial {{ `{{ $labels.serial_number }}` }}) on {{ `{{ $labels.nas }}` }} fails its SMART health self-assessment.
+              Replace the disk; do not wait for the array to degrade first.
+            summary: '[NAS] Disk {{ `{{ $labels.disk }}` }} fails SMART health check'
+          expr: |
+            smartctl_device_smart_status{job="nas-smartctl"} == 0
+          for: 15m
+          labels:
+            severity: critical
+        - alert: NASDiskTemperatureHigh
+          annotations:
+            description: |-
+              Disk {{ `{{ $labels.disk }}` }} ({{ `{{ $labels.device }}` }}, {{ `{{ $labels.model_name }}` }}) on {{ `{{ $labels.nas }}` }} is at {{ `{{ $value }}` }}°C.
+              Sustained temperatures above 50°C shorten drive life; check airflow and the fan mode in Hardware.
+            summary: '[NAS] Disk {{ `{{ $labels.disk }}` }} is at {{ `{{ $value }}` }}°C'
+          expr: |
+            smartctl_device_temperature{job="nas-smartctl",temperature_type="current"} > 50
+          for: 15m
+          labels:
+            severity: warning

@@ -1,0 +1,65 @@
+# Metrics collectors for the QNAP NAS (NAS33657A, TS-453Bmini, QTS 5.2.10).
+#
+# Container Station cannot reach any of this over the network, so the file is
+# imported by hand there (Container Station -> Applications -> Create -> paste
+# this file). Git stays the source of truth; see specs/007-nas-monitoring/.
+#
+# Both services listen on the host network, which is what makes the NAS
+# reachable from the cluster at 192.168.3.216:9100 / :9633.
+#
+# QNAP specifics that are not obvious:
+#   - The QNAP kernel rejects `--pid=host` (the host PID namespace is not
+#     visible), so node-exporter reads the host through /host instead.
+#   - `chroot`/`mount` procfs do not resolve on QTS, so the host paths are
+#     passed explicitly.
+#   - Container Station does not expose /dev/sd* unless the container is
+#     privileged. smartctl-exporter therefore needs both `privileged` and
+#     `user: 0:0` (the image defaults to nobody, which cannot open the raw
+#     devices: /dev/sda is brw------- root:root).
+services:
+  node-exporter:
+    image: quay.io/prometheus/node-exporter:v1.8.2
+    container_name: nas-node-exporter
+    restart: unless-stopped
+    network_mode: host
+    command:
+      - --path.rootfs=/host
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --web.listen-address=:9100
+      # /mnt/snapshot/<pool>/<snap> is a fuse view of the same cachedev that is
+      # already exported at /share/CACHEDEV*_DATA; without this exclude every
+      # volume is counted ~6 times and the disk-space rules fire on snapshots.
+      # The rest leaks in because the container mounts the host root: the host
+      # /sys//proc, QPKG app sandboxes, the container runtime's own netns, and
+      # NFS plumbing are not storage and would otherwise be graphed as volumes.
+      - --collector.filesystem.mount-points-exclude=^/(mnt/snapshot|share/NFSv=4|share/CACHEDEV._DATA/\.qpkg|samba_third_party|mnt/ext/opt|mnt/hm|sys|proc|var/lib/nfs)/
+      - --collector.filesystem.fs-types-exclude=^(fuse|squashfs|overlay|tmpfs|devtmpfs|ramfs|autofs|rpc_pipefs|nsfs|proc|sysfs|securityfs|configfs|bpf|debugfs|tracefs|mqueue|hugetlbfs|pstore|binfmt_misc|cgroup|cgroup2|devpts)$
+    volumes:
+      - /:/host:ro,rslave
+
+  smartctl-exporter:
+    image: prometheuscommunity/smartctl-exporter:v0.14.0
+    container_name: nas-smartctl-exporter
+    restart: unless-stopped
+    network_mode: host
+    privileged: true
+    user: 0:0
+    command:
+      # `smartctl --scan-open` misdetects the four SATA disks behind this
+      # QNAP's controller as plain SCSI. Under -d scsi smartctl only answers
+      # the basic INQUIRY subset: temperature comes back 0 and every ATA
+      # attribute is missing. The device type must be forced to `sat`, and
+      # only v0.14.0+ understands the `<device>;<type>` syntax.
+      #
+      # These must also be listed explicitly: with --smartctl.device set the
+      # exporter disables rescanning, so a disk added to a bay needs this file
+      # updated and the application re-created.
+      - --smartctl.device=/dev/sda;sat
+      - --smartctl.device=/dev/sdb;sat
+      - --smartctl.device=/dev/sdc;sat
+      - --smartctl.device=/dev/sdd;sat
+      - --smartctl.device=/dev/sde;sat
+      - --web.listen-address=:9633
+    volumes:
+      - /dev:/dev

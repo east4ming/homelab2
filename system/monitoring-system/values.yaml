@@ -33,6 +33,47 @@ kube-prometheus-stack:
             - targets: ["192.168.3.246:5252"]
               labels:
                 node: casey-desktop
+        # QNAP NAS (NAS33657A). The two exporters run as Container Station
+        # applications there; metal/nas/compose.yml is the source of truth for
+        # them, and this job assumes it has been imported.
+        #
+        # The four SATA bays sit behind a controller that `smartctl --scan-open`
+        # misdetects as plain SCSI, so the exporter is pinned to `-d sat` and
+        # would answer with temperature 0 and no ATA attributes otherwise. Both
+        # exporters label disks by kernel name; the relabeling below adds the
+        # physical bay so panels and alerts can name the disk the way the QNAP
+        # UI does.
+        - job_name: nas-node
+          scrape_interval: 60s
+          scrape_timeout: 30s
+          static_configs:
+            - targets: ["192.168.3.216:9100"]
+              labels:
+                nas: NAS33657A
+        - job_name: nas-smartctl
+          scrape_interval: 60s
+          scrape_timeout: 30s
+          static_configs:
+            - targets: ["192.168.3.216:9633"]
+              labels:
+                nas: NAS33657A
+          metric_relabel_configs:
+            - source_labels: [device]
+              regex: sda
+              target_label: disk
+              replacement: bay3
+            - source_labels: [device]
+              regex: sdb
+              target_label: disk
+              replacement: bay4
+            - source_labels: [device]
+              regex: sdc
+              target_label: disk
+              replacement: bay1
+            - source_labels: [device]
+              regex: sdd
+              target_label: disk
+              replacement: bay2
       storageSpec:
         volumeClaimTemplate:
           spec:
