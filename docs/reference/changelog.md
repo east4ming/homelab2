@@ -2,6 +2,57 @@
 
 版本号格式与发布流程见 [版本管理](versioning.md)。新条目置顶，标题即 git 标签名。
 
+## v2026.10.03.3
+
+kor 从「装上」变成「能用」：分级脚本与清理 runbook、exporter 的假阳性过滤、4 条告警
+规则；并据此清理了 449 个确认无用的对象。未使用资源指标 **925 → 183**，全程只读。
+
+### 新增
+
+- **清理流程**（spec-kit `008-kor-monitoring`）：`scripts/kor-audit` 把 kor 的发现结果
+  与集群实况（GitOps 归属、ownerReferences）交叉核对，输出 A/B/C 分级。判级的关键是
+  两条分界线：**派生对象（有 owner）只看 owner**，声明式对象才看 GitOps 标记——
+  486 个 ReplicaSet 里有 258 个继承了 Deployment 的 ArgoCD 注解，按标签判会全部误判
+- **清理 runbook**：`docs/how-to-guides/prune-unused-resources.md`，逐 kind 说明 kor 的
+  判定语义与假阳性来源、三级清单、备份/删除/误删恢复三阶段，以及 12–24 小时的 etcd
+  快照恢复窗口
+- **exporter 假阳性过滤**：`--exclude-labels app.kubernetes.io/managed-by=Helm` 与
+  `tailscale.com/managed=true`（实测 secret 发现数 62 → 25）。后者是因为 Tailscale
+  operator 会重写 Secret 元数据、把外部打的 `kor/used=true` 冲掉，只能从 exporter 侧过滤
+- **保护性标签**：给 48 个高危假阳性打 `kor/used=true`（k3s etcd 快照凭据、21 个 VolSync
+  备份仓库口令、6 个 rook CSI 密钥；Tailscale 的 21 张证书被 operator 冲掉）。该标签
+  同时保证 `kor --delete` 永不触碰这些对象
+- **告警规则**：kor 的 PrometheusRule 4 条（审计指标消失、总量 7 天增长、陈旧
+  VolumeAttachment、未挂载 PVC 增长）。刻意不做绝对数量告警——规模受过滤配置、集群历史
+  与假阳性三者影响
+
+### 修复
+
+- `fix(kor)`：补齐 RBAC 的 `nodes`/`csidrivers`。上游 chart 默认表里没有这两项，导致
+  kor 查节点必然失败、**把全部 25 条 VolumeAttachment 报成「Node does not exist」**，
+  而这些 VA 的 PV 与节点都存在、属活跃挂载——照那份报告删会触发卷 detach。修正后
+  VA 发现数归零
+- `fix(kor-audit)`：指标里有、集群里已不存在的对象不再让脚本崩溃（新增 `?` 级别）
+
+### 文档
+
+- `docs(kor)`：更正 #518 里「集群级 CRD 不受 --exclude-labels 影响」的错误结论。
+  `processCrds` 有两个调用者：`pkg/kor/all.go` 的 `getUnusedCrds` 传入真实 filterOpts
+  （exporter 走这条，CRD 会被过滤），`pkg/kor/crds.go` 的 `GetUnusedCrds` 丢弃参数
+  （独立子命令走这条）。同口径实测 871 → 622
+
+### 集群清理（本轮实际删除的 449 个对象）
+
+| 批次 | 对象 | 数量 | 依据与影响 |
+| --- | --- | --- | --- |
+| 1 | Woodpecker 孤儿流水线 Service + PVC | 7 + 7 | 无 owner、无 Pod 挂载；PV 57→50、Ceph 镜像 55→48，实测仅回收约 0.5 GiB |
+| 2 | `pod-impersonation-shell-*` 6 对 + `loft-cluster-*` 4 个 ClusterRole | 16 | 已卸载的 Rancher/Loft 遗留，集群内无任何相关组件 |
+| 3 | Loft 收尾（3 ClusterRole + 3 ClusterRoleBinding） | 6 | vcluster 的 SA 所在 namespace 已不存在，引用本已悬空 |
+| 4 | 旧 ReplicaSet + 已完成 Job | 381 + 32 | 独立校验：RS 副本为 0 且无 Pod 引用，Job 全部 Completed |
+
+删除前的 YAML 备份与核对记录在操作机 `tmp/kor-backup-2026-10-03-*/`（该目录不入库）。
+刻意未删的 25 条 VolumeAttachment 见上文「修复」。
+
 ## v2026.10.03.2
 
 kor 接入集群：以 Prometheus exporter 形式常驻，暴露「无人引用的资源」指标，
