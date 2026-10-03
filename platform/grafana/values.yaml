@@ -26,6 +26,12 @@ grafana:
         memory: 256Mi
       limits:
         memory: 512Mi
+  # Only ever existed in the live StatefulSet (added out-of-band), which ArgoCD's
+  # server-side apply does not prune because the list item is not in the manifest.
+  # Declared here so Git is the source of truth; the plugin is already installed on
+  # the persistent volume, so this only matters for a fresh volume.
+  env:
+    GF_INSTALL_PLUGINS: performancecopilot-pcp-app
   envFromSecret: grafana-secrets
   grafana.ini:
     server:
@@ -60,12 +66,17 @@ grafana:
   useStatefulSet: true
   serviceMonitor:
     enabled: true
+  # Grafana 13 (unified storage + kubernetesDashboards + git sync) idles at ~460Mi
+  # RSS, so the old 512Mi limit had no room for the memory spike every dashboard
+  # provisioning reload causes -> repeated OOMKilled when dashboards are added.
+  # 1Gi is about 2x the observed peak. GOMEMLIMIT is derived from the limit by the
+  # chart (0.9x).
   resources:
     requests:
       cpu: 10m
-      memory: 254Mi
-    limits:
       memory: 512Mi
+    limits:
+      memory: 1Gi
   imageRenderer:
     networkPolicy:
       limitIngress: false
