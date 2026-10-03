@@ -2,6 +2,64 @@
 
 版本号格式与发布流程见 [版本管理](versioning.md)。新条目置顶，标题即 git 标签名。
 
+## v2026.10.03.4
+
+Grafana 的内存上限一直贴着稳态用量：新增 dashboard 时 provisioner 的瞬时分配就会把
+512Mi 顶穿，26 小时内 OOMKilled 重启 7 次。本轮把上限放宽到 1Gi，顺带认领了一条只在
+线上存在的插件 env，并清掉 Grafana 存储里一对重复的 dashboard 记录。
+
+### 修复
+
+- `fix(grafana)`：`platform/grafana` 内存上限 `512Mi -> 1Gi`、request `254Mi -> 512Mi`，
+  chart 按 `0.9 × limit` 注入的 `GOMEMLIMIT` 随之 `460MiB -> 921MiB`。判据是线上实测：
+  稳态 RSS 已 ~460Mi（`go_memstats_heap_sys_bytes` 335Mi、`heap_released_bytes` 只有
+  2Mi），`container_memory_working_set_bytes` 常态 390–440Mi（limit 的 76%–86%）；
+  每次 dashboard 增删或 ArgoCD 同步，sidecar 重写 `/tmp/dashboards`、文件 provisioner
+  重放全部 dashboard 并重建 unified-storage 的 bleve 搜索索引，working set 一两分钟内
+  多出 ~100Mi、冲到 500Mi 以上——重启时刻 11:47 / 13:17 / 16:37 都与 dashboard 变更
+  吻合。告警自带的 `Node allocated memory 0.00% out of 31382MB allocatable` 说明这与
+  节点无关，打出的是容器 cgroup limit
+- `fix(grafana)`：`GF_INSTALL_PLUGINS=performancecopilot-pcp-app` 写进 values.yaml。
+  它此前只存在于线上 StatefulSet（out-of-band 添加），而 ArgoCD 用 server-side apply，
+  按 name 合并的列表项多出来的条目不会被 prune，所以应用一直显示 Synced、这条 env 无人
+  认领。刻意不用 chart 的 `plugins:` 键——chart 13.2.5 把它渲染成
+  `GF_PLUGINS_PREINSTALL_SYNC`（另一个变量），写 `env` 映射才能与线上逐字一致：
+  渲染后的 env 与线上 13 == 13 项相同，剩余差异只有本次调整带来的 `GOMEMLIMIT`
+
+### 线上数据修复（不在 Git 内）
+
+`prometheus.json`（kube-prometheus-stack 的 Prometheus / Overview）在 Grafana 存储里
+存在两份记录，同为 `sourcePath=/tmp/dashboards/prometheus.json`、同带 legacy id
+`777586274930688`。文件 provisioner 的保存路径是「按 legacy id 查、且必须恰好 1 条」，
+因此每 30s 失败一次：
+
+```
+unexpected number of dashboards for id 777586274930688. found: 2. desired: 1
+```
+
+该面板自 2025-07 起就无法更新（version 停在 1）。`/tmp/dashboards/` 目录本身只有一份
+文件，重复发生在 Grafana 的存储里。
+
+根因：kube-prometheus-stack **75.12.0 -> 75.13.0** 给这个 dashboard 的 JSON 补了写死的
+`"uid":"9fa0d141-…"`（75.12.0 的 `prometheus.yaml` 里没有 uid 字段）。provisioner 按
+uid 识别 dashboard，于是 2025-07-23 新建了一条记录，而 2025-07-18 生成随机 uid
+`644d6b21-…` 的那条留了下来。两条记录的创建时间正好落在两次 chart 发布之后：
+75.12.0 发布 2025-07-18T15:00Z -> 记录 2025-07-18T22:13Z；75.13.0 发布
+2025-07-22T17:55Z -> 记录 2025-07-23T01:09Z。
+
+处理：删除孤儿记录。Grafana 会拦 `provisioned dashboard cannot be deleted`，所以先经
+dashboard apiserver（`/apis/dashboard.grafana.app/v2beta1`）清掉它的
+`grafana.app/managedBy` 标记，再 DELETE。删除后下一个 provisioning 周期即保存成功
+（面板 version 1 -> 2、`updated=2026-10-03T08:50:19Z`），报错从 45 分钟 33 次归零，
+带该 legacy id 的记录只剩 1 条，dashboard 总数 109 -> 108。PVC 每天由 VolSync 备份
+（`replicationsource/storage-grafana-0`），可回滚。
+
+两点遗留：同名面板还有第三份来自 Git Sync 仓库
+（[east4ming/homelab-grafana-gitsync](https://github.com/east4ming/homelab-grafana-gitsync)
+的 `k8s/prometheus-overview.json`，文件夹 `k8s`），属另一条 provisioning 通道，本轮未动；
+另外上游 chart 今后若再次改这个 dashboard 的 uid，同样的重复会重演，识别信号就是上面
+那条 `unexpected number of dashboards` 报错。
+
 ## v2026.10.03.3
 
 kor 从「装上」变成「能用」：分级脚本与清理 runbook、exporter 的假阳性过滤、4 条告警
