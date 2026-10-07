@@ -951,14 +951,46 @@ objects: 22.20k objects, 81 GiB  volumes: 1/1 healthy
 - `helm template` 无法本地完成：这些 chart 的依赖未 vendor 到 `charts/`（只有 styleferry 有 tgz），
   **属既有环境状况、与本次改动无关**；故改用上面的解析断言 + 官方 schema 校验作为等价验证
 
-**仍未写入仓库的 16 个**（属上游/自研 chart，字段路径各不相同，需逐个确认其 values schema 是否暴露该字段）：
-`argocd-server`、`dex`、`gitea-http`、`grafana`、`helm-dashboard`、`homepage`、`hubble-ui`、
-`casdoor`、`lobe`、`monitoring-system` 的 prometheus/alertmanager、`rook-ceph-mgr-dashboard`、
-`rsshub`、`service-rss`、`rustfs-svc`、`woodpecker-server`。
-> 线索：仓库内 `system/monitoring-system/charts/prometheus-smartctl-exporter` 已有
-> `service.ipDualStack.ipFamilyPolicy` 的先例，且 kube-prometheus-stack 与 grafana 子 chart 的
-> values 里都存在 `ipFamilyPolicy` 字段 —— 这几个应可直接加。**集群侧它们已是双栈**，
-> 因此这一项是"可复现性"而非"功能"缺口。
+**后续处理结果（2026-10-07，随 v2026.10.07.2 发布）：16 个中 9 个已写入仓库，7 个无法声明。**
+
+| Service | 声明位置 | 验证 |
+| --- | --- | --- |
+| `lobe` / `casdoor` | `apps/lobe-chat/templates/svc-{lobe,casdoor}.yaml`（自研 chart，模板在仓库内） | 渲染 7 个 Service 命中 2 个 |
+| `rsshub` / `service-rss` | `apps/rsshub/templates/service-{rsshub,service-rss}.yaml`（自研 chart） | 渲染 9 个 Service 命中 2 个 |
+| `argocd-server` | `system/argocd` → `global.dualStack.ipFamilyPolicy`（chart 的 `_helpers.tpl` 用它统一注入） | 渲染 9 处 |
+| `gitea-http` | `platform/gitea` → `service.http.ipFamilyPolicy` | ✅ |
+| `grafana` | `platform/grafana` → `service.ipFamilyPolicy` | ✅ |
+| prometheus / alertmanager | `system/monitoring-system` → `prometheus/alertmanager.service.ipDualStack` | ✅ 2 处 |
+
+> ⚠️ **kube-prometheus-stack 的两个坑**（实测踩到）：
+> 1. 模板整块被 `if .Values.<c>.service.ipDualStack.enabled` 门住 —— **只写 `ipFamilyPolicy` 渲染出 0 处**，必须显式 `enabled: true`。
+> 2. chart 默认 `ipFamilies: ["IPv6","IPv4"]`，而 **`ipFamilies` 不可变**，本集群这两个 Service
+>    是从 IPv4-only 原地转换来的（主族仍是 IPv4）→ 照默认写会被 apiserver 拒绝。
+>    必须显式写成 `ipFamilies: ["IPv4","IPv6"]`。
+
+**无法声明的 7 个**（已逐个读取上游 chart 源码确认：其 Service 模板里**完全没有**
+`ipFamilyPolicy` 字段，不是路径没找对）：
+
+`dex`(dex@0.24.1)、`helm-dashboard`(helm-dashboard@2.0.7)、`homepage`(homepage@2.1.0)、
+`rook-ceph-mgr-dashboard`(rook-ceph-cluster@v1.20.7)、`rustfs-svc`(rustfs@1.0.0)、
+`woodpecker-server`(woodpecker@3.7.3)、`hubble-ui`(cilium@1.20.2，`templates/hubble-ui/service.yaml`)。
+
+> 要声明它们只能把这些应用从 Helm source 改成 **Kustomize + `helmCharts` 膨胀 + JSON patch**
+> （并给 ArgoCD 开 `--enable-helm`），而**本仓库内并没有 Application/ApplicationSet 清单**
+> （只存在于集群侧），需先从集群导入 —— **属架构改动，经决定不做，永久接受现状**。
+> 因此这 7 个若被重建（换集群、或删除后由 ArgoCD 重建）会退回单栈，届时的补救命令
+> （幂等、可重复执行）：
+>
+> ```sh
+> for s in dex/dex helm-dashboard/helm-dashboard homepage/homepage \
+>          rook-ceph/rook-ceph-mgr-dashboard rustfs/rustfs-svc \
+>          woodpecker/woodpecker-server kube-system/hubble-ui; do
+>   kubectl -n "${s%%/*}" patch svc "${s##*/}" \
+>     -p '{"spec":{"ipFamilyPolicy":"PreferDualStack"}}'
+> done
+> ```
+
+**集群侧这 7 个当前已是双栈**，所以这是"可复现性"缺口而非"功能"缺口。
 
 ### 15.3 最终状态
 

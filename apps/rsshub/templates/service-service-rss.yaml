@@ -10,6 +10,7 @@ metadata:
   name: service-rss
   namespace: rsshub
 spec:
+  ipFamilyPolicy: PreferDualStack
   ports:
     - name: "80"
       port: 80

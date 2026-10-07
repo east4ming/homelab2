@@ -5,6 +5,7 @@ gitea:
   service:
     http:
       clusterIP: ""
+      ipFamilyPolicy: PreferDualStack
     ssh:
       clusterIP: ""
   ingress:

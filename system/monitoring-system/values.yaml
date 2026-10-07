@@ -4,6 +4,16 @@ kube-prometheus-stack:
     forceDeployDatasources: true
     forceDeployDashboards: true
   prometheus:
+    # IPv4/IPv6 双栈。templates/prometheus/service.yaml 的整块被
+    # `if .Values.prometheus.service.ipDualStack.enabled` 门住，所以 enabled
+    # 必须显式打开；ipFamilies 也必须显式写成 IPv4 在前——chart 默认是
+    # ["IPv6","IPv4"]，而 ipFamilies 不可变，线上是 IPv4-only 原地转换来的
+    # （主族仍是 IPv4），写成 IPv6 在前会被 apiserver 拒绝。
+    service:
+      ipDualStack:
+        enabled: true
+        ipFamilies: ["IPv4", "IPv6"]
+        ipFamilyPolicy: PreferDualStack
     prometheusSpec:
       ruleSelectorNilUsesHelmValues: false
       serviceMonitorSelectorNilUsesHelmValues: false
@@ -108,6 +118,12 @@ kube-prometheus-stack:
         limits:
           memory: 50Mi
   alertmanager:
+    # IPv4/IPv6 双栈（同上：enabled 是门，ipFamilies 必须 IPv4 在前）
+    service:
+      ipDualStack:
+        enabled: true
+        ipFamilies: ["IPv4", "IPv6"]
+        ipFamilyPolicy: PreferDualStack
     alertmanagerSpec:
       containers:
         - name: ntfy-relay
