@@ -23,6 +23,7 @@ app-template:
     main:
       primary: true
       controller: main
+      ipFamilyPolicy: PreferDualStack
       ports:
         http:
           port: 11434

@@ -63,6 +63,13 @@ cilium_values:
   routingMode: native
   autoDirectNodeRoutes: true
   ipv4NativeRoutingCIDR: "{{ ipv4_net_mask | ansible.utils.ipaddr('network/prefix') }}"
+  # ── IPv6 双栈（2026-10-07）──────────────────────────────────────────────────
+  # 排除 CIDR = Pod 段本身：段内（含跨节点 pod↔pod）不做 masquerade，
+  # 出集群的流量由节点做 NAT66（enable-ipv6-masquerade 默认为 true）。
+  # 路由器【没有】NAT66，所以 pod 出网必须靠节点侧 NAT66 —— 已实测可用。
+  ipv6NativeRoutingCIDR: "{{ dualstack_ipv6_pod_cidr }}"
+  ipv6:
+    enabled: true
   # bpf masquerade
   bpf:
     masquerade: true
@@ -70,8 +77,30 @@ cilium_values:
     # Kubevirt VMs not running with Cilium netkit enabled #37265
     # https://github.com/cilium/cilium/issues/37265
     datapathMode: netkit-l2
+  # ── IPAM：kubernetes → cluster-pool（2026-10-07）────────────────────────────
+  # 为什么必须改：`kubernetes`(host-scope) 模式下，agent 要求【每个启用的地址族】
+  # 都有一个 Node.spec.podCIDRs 条目；而 k8s 禁止给既有 Node 增加 podCIDR
+  # （`node updates may not change podCIDR except from "" to valid`），
+  # 删节点重注册又被 k3s finalizer 挡住 → IPv6 PodCIDR 永远拿不到 →
+  # agent 报 `required IPv6 PodCIDR not available` → panic + CrashLoop（全集群 Pod 网络中断）。
+  # cluster-pool 由 operator 自行分配，不依赖 Node.spec.podCIDRs。
+  # ⚠️ 从 kubernetes 切到 cluster-pool 时，节点上残留的 CiliumNode.spec.ipam.podCIDRs
+  #    会让 operator 静默跳过分配 → 必须先把该字段补上 IPv6（见 runbook §7 P2.1.5）。
   ipam:
-    mode: kubernetes
+    mode: cluster-pool
+    operator:
+      # ⚠️ 必须逐条列出【现有的】每节点 /24，顺序会对齐到各节点的请求顺序。
+      #    若与现有映射不一致，路由器上那 4 条静态路由就会失配
+      #    → 必须按实际映射改路由器并重建工作负载（兜底流程）。
+      clusterPoolIPv4PodCIDRList:
+        - 10.42.0.0/24
+        - 10.42.1.0/24
+        - 10.42.2.0/24
+        - 10.42.3.0/24
+      clusterPoolIPv4MaskSize: 24
+      clusterPoolIPv6PodCIDRList:
+        - "{{ dualstack_ipv6_pod_cidr }}"
+      clusterPoolIPv6MaskSize: 64
   # enable DSR
   loadBalancer:
     mode: dsr

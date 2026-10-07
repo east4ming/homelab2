@@ -31,5 +31,26 @@ k3s_server_config:
   advertise-address: "{{ control_plane_endpoint }}"
   etcd-s3: "{{ etcd_s3 | default(false) }}"
   etcd-s3-config-secret: k3s-etcd-snapshot-s3-config
+  # ── IPv4/IPv6 双栈（2026-10-07）────────────────────────────────────────────
+  # ⚠️ 三条硬约束（实测，见 specs/009-dual-stack-network/runbook.md §7 P1.2）：
+  #   1) 逗号后【不能有空格】：k3s 用 util.SplitStringSlice 按 "," 切分且不 trim
+  #   2) cluster-cidr / service-cidr / node-ip 三者地址族形状必须【一致】，必须同时改；
+  #      只改其一会直接 fatal：`... must share the same IP version`
+  #   3) 顺序即主族，IPv4 必须在前（etcd 与 apiserver 只用主族，不双栈）
+  # 仅 server 需要这两项；agent 从 server 获取 cluster-cidr
+  cluster-cidr: "10.42.0.0/16,{{ dualstack_ipv6_pod_cidr }}"
+  service-cidr: "10.43.0.0/16,{{ dualstack_ipv6_service_cidr }}"
+# 注意：不要设置 cluster-dns。k3s 在未显式设置时会按每个 service-cidr 各派生一个
+# DNS IP 并把 CoreDNS 置为 RequireDualStack —— 这正是本集群采用的行为（决策 1=A）；
+# 显式写 cluster-dns 反而会把它压回单栈。
 k3s_agent_config:
-  node-external-ip: "{{ tailscale_ipv4 }}"
+  # node-external-ip 同时给 Tailscale 的 IPv4 与 IPv6（供外部访问使用）
+  node-external-ip: "{{ tailscale_ipv4 }},{{ tailscale_ipv6 }}"
+  # 双栈：node-ip 必须与 cluster-cidr 同族形状，否则 server 侧启动即 fatal
+  node-ip: "{{ ansible_default_ipv4.address }},{{ node_ipv6 }}"
+  # ⚠️ 本集群 disable-cloud-controller: true 时，k3s 【不会】把 node-ip 传给 kubelet
+  #    （源码注释 "don't assume that dual-stack node IPs are safe"），
+  #    因此必须额外用 kubelet-arg 显式传入，否则 Node 的 InternalIP 里没有 IPv6、
+  #    Cilium 的 IPv6 原生路由就没有节点地址可用（实测 E8）。
+  kubelet-arg:
+    - "node-ip={{ ansible_default_ipv4.address }},{{ node_ipv6 }}"
