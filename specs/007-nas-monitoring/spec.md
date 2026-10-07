@@ -38,7 +38,7 @@
 
 1. **Given** 采集容器已运行，**When** 查询 `smartctl_device_temperature`，**Then** 每块盘返回真实温度（不是 0），且指标带 `disk` 标签标明物理盘位。
 2. **Given** 某块盘 SMART 自检失败，**When** 规则评估，**Then** 触发 `NASDiskSMARTCritical`。
-3. **Given** 某块盘温度持续高于 50°C，**When** 规则评估，**Then** 触发 `NASDiskTemperatureHigh`。
+3. **Given** 某块盘温度持续高于 55°C，**When** 规则评估，**Then** 触发 `NASDiskTemperatureHigh`。
 
 ---
 

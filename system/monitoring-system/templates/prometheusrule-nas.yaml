@@ -92,10 +92,10 @@ spec:
           annotations:
             description: |-
               Disk {{ `{{ $labels.disk }}` }} ({{ `{{ $labels.device }}` }}, {{ `{{ $labels.model_name }}` }}) on {{ `{{ $labels.nas }}` }} is at {{ `{{ $value }}` }}°C.
-              Sustained temperatures above 50°C shorten drive life; check airflow and the fan mode in Hardware.
+              Sustained temperatures above 55°C shorten drive life; check airflow and the fan mode in Hardware.
             summary: '[NAS] Disk {{ `{{ $labels.disk }}` }} is at {{ `{{ $value }}` }}°C'
           expr: |
-            smartctl_device_temperature{job="nas-smartctl",temperature_type="current"} > 50
+            smartctl_device_temperature{job="nas-smartctl",temperature_type="current"} > 55
           for: 15m
           labels:
             severity: warning
