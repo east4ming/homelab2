@@ -2,6 +2,81 @@
 
 版本号格式与发布流程见 [版本管理](versioning.md)。新条目置顶，标题即 git 标签名。
 
+## v2026.10.07.2
+
+接上一版：把双栈的 Service 声明尽可能写进 Git。上一版写入的 12 个是 app-template
+系 chart，本次处理原先剩下的 16 个 Tailscale Ingress 后端 Service——**其中 9 个成功
+声明，7 个经查证在其上游 chart 里根本无法声明**，后者的现状被本文档永久记录。
+
+### 新增
+
+- `feat(lobe-chat)`：`templates/svc-lobe.yaml`、`templates/svc-casdoor.yaml` 加
+  `ipFamilyPolicy: PreferDualStack`。这两个是自研 chart（kompose 生成、无依赖），
+  模板在仓库内，直接改。
+- `feat(rsshub)`：`templates/service-rsshub.yaml`、`templates/service-service-rss.yaml`
+  同上（自研 chart）。
+- `feat(argocd)`：`global.dualStack.ipFamilyPolicy: PreferDualStack`。argo-cd 的
+  `_helpers.tpl` 用这个全局键统一注入到它管理的各 Service，实测本次渲染出 9 个
+  Service 带上该字段（含 `argocd-server`）。这也顺带把 `argocd-server-metrics` 等
+  一并覆盖。
+- `feat(gitea)`：`service.http.ipFamilyPolicy`（模板 `gitea/httpService.yaml` 读它）。
+  注意 `gitea.service.ssh` 也能设，但 `gitea-ssh` 不在本次的 Ingress 后端清单内，
+  未改动。
+- `feat(grafana)`：`service.ipFamilyPolicy`（模板 `templates/service.yaml` 读它）。
+- `feat(monitoring-system)`：`prometheus.service.ipDualStack` 与
+  `alertmanager.service.ipDualStack`。**这两个键有个门**：模板整块被
+  `{{- if .Values.<c>.service.ipDualStack.enabled }}` 拦住，只写 `ipFamilyPolicy`
+  不会有任何效果（实测渲染 0 处）。另外 chart 的默认值是
+  `ipFamilies: ["IPv6","IPv4"]`，而 `ipFamilies` **不可变**、本集群这两个 Service 是
+  从 IPv4-only 原地转换来的（主族仍是 IPv4），照默认写会被 apiserver 拒绝——所以
+  显式写成 `enabled: true` + `ipFamilies: ["IPv4","IPv6"]`，渲染结果与线上逐字一致。
+
+### 文档
+
+- `docs(009)`：`specs/009-dual-stack-network/runbook.md` 增补 Service 声明矩阵，
+  记录这 9 个的声明位置与验证方式，以及下面 7 个的结论与人工补丁命令。
+
+### 线上数据修复（不在 Git 内）
+
+> 承接上一版同名小节：以下 7 个 Service 在其上游 chart 的 Service 模板里
+> **完全没有 `ipFamilyPolicy` 字段**（已逐个读取上游 chart 源码确认，不是路径没找对），
+> 因此**无法通过 values 声明**。集群侧它们已是双栈，此处永久记录该现状。
+
+| Service | chart | 结论 |
+| --- | --- | --- |
+| `dex/dex` | `dex@0.24.1` | 模板未接线 |
+| `helm-dashboard/helm-dashboard` | `helm-dashboard@2.0.7` | 模板未接线 |
+| `homepage/homepage` | `homepage@2.1.0` | 模板未接线 |
+| `rook-ceph/rook-ceph-mgr-dashboard` | `rook-ceph-cluster@v1.20.7` | 模板未接线 |
+| `rustfs/rustfs-svc` | `rustfs@1.0.0` | 模板未接线 |
+| `woodpecker/woodpecker-server` | `woodpecker@3.7.3` | 模板未接线 |
+| `kube-system/hubble-ui` | `cilium@1.20.2`（`templates/hubble-ui/service.yaml`） | 模板未接线 |
+
+要声明它们只能把这些应用从 Helm source 改成 Kustomize + `helmCharts` 膨胀 + JSON
+patch（并给 ArgoCD 开 `--enable-helm`），而本仓库内并没有 Application/ApplicationSet
+清单（只存在于集群侧）——**属架构改动，经决定不做**。
+
+因此这 7 个若被重建（例如换集群、或有人删掉再让 ArgoCD 重建），会退回单栈。届时的
+补救命令是逐个人工打补丁，可重复执行、幂等：
+
+```sh
+for s in dex/dex helm-dashboard/helm-dashboard homepage/homepage \
+         rook-ceph/rook-ceph-mgr-dashboard rustfs/rustfs-svc \
+         woodpecker/woodpecker-server kube-system/hubble-ui; do
+  kubectl -n "${s%%/*}" patch svc "${s##*/}" \
+    -p '{"spec":{"ipFamilyPolicy":"PreferDualStack"}}'
+done
+```
+
+### 验证
+
+8 个改动文件，全部用**上游真实 chart + 仓库 values 实际渲染**验证（把 wrapper 的
+嵌套 values 抽出后喂给 chart，逐 Service 核对渲染出的 `ipFamilyPolicy` /
+`ipFamilies`）：argo-cd 9 处、gitea 1 处、grafana 1 处、
+kube-prometheus-stack 2 处（prometheus 与 alertmanager，且 `ipFamilies` 为
+`["IPv4","IPv6"]`）；lobe-chat 渲染 7 个 Service 命中 2 个、rsshub 渲染 9 个命中 2 个。
+`yamllint` 全部通过。
+
 ## v2026.10.07
 
 集群从 IPv4-only 转为 IPv4/IPv6 双栈。这是本仓库历史上第一个**需要停机**的变更：

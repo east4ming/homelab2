@@ -2,6 +2,9 @@ grafana:
   # Hardcoded password because of ArgoCD's behavior
   # TODO:
   adminPassword: crse4zLTjCrds8PxdOlTRgcs2jh4QP1AgNM350IG
+  # IPv4/IPv6 双栈（chart 的 templates/service.yaml 读 service.ipFamilyPolicy）
+  service:
+    ipFamilyPolicy: PreferDualStack
   ingress:
     enabled: true
     ingressClassName: tailscale

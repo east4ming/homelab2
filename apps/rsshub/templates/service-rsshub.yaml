@@ -11,6 +11,7 @@ metadata:
   name: rsshub
   namespace: rsshub
 spec:
+  ipFamilyPolicy: PreferDualStack
   ports:
     - name: "1200"
       port: 1200

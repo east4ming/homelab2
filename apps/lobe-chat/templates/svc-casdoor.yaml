@@ -9,6 +9,7 @@ metadata:
     io.kompose.service: casdoor
   name: casdoor
 spec:
+  ipFamilyPolicy: PreferDualStack
   ports:
     - name: http
       port: 8000

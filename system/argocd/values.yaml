@@ -6,6 +6,10 @@ argo-cd:
     logging:
       # -- Set the global logging level. One of: `debug`, `info`, `warn` or `error`
       level: warn
+    # IPv4/IPv6 双栈：chart 的 _helpers.tpl 用 global.dualStack.ipFamilyPolicy
+    # 统一注入到它管理的各个 Service（含 argocd-server）
+    dualStack:
+      ipFamilyPolicy: PreferDualStack
   configs:
     params:
       server.insecure: true
