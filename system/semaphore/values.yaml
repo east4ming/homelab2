@@ -84,6 +84,7 @@ app-template:
     semaphore:
       forceRename: semaphore
       controller: semaphore
+      ipFamilyPolicy: PreferDualStack
       ports:
         http:
           port: 3000

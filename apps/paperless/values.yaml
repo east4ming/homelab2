@@ -32,6 +32,7 @@ app-template:
   service:
     main:
       controller: main
+      ipFamilyPolicy: PreferDualStack
       ports:
         http:
           port: 8000

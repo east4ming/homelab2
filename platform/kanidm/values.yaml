@@ -45,6 +45,7 @@ app-template:
   service:
     main:
       controller: main
+      ipFamilyPolicy: PreferDualStack
       ports:
         https:
           port: 443

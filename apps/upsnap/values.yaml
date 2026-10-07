@@ -43,6 +43,7 @@ app-template:
   service:
     upsnap:
       controller: upsnap
+      ipFamilyPolicy: PreferDualStack
       ports:
         http:
           port: 8090

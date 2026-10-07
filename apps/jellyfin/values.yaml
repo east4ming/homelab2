@@ -43,6 +43,7 @@ app-template:
     main:
       controller: main
       type: NodePort
+      ipFamilyPolicy: PreferDualStack
       ports:
         http:
           port: 8096

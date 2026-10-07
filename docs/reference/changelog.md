@@ -2,6 +2,86 @@
 
 版本号格式与发布流程见 [版本管理](versioning.md)。新条目置顶，标题即 git 标签名。
 
+## v2026.10.07
+
+集群从 IPv4-only 转为 IPv4/IPv6 双栈。这是本仓库历史上第一个**需要停机**的变更：
+k3s 官方明确双栈必须在集群创建时配置，无法在已运行的 IPv4-only 集群上直接启用，
+且 k8s 禁止给既有 Node 增加 `podCIDR`（`node updates may not change podCIDR except
+from "" to valid`），删节点重注册又被 k3s 的 `wrangler.cattle.io/managed-etcd-controller`
+finalizer 挡住——因此走的是「停 etcd → 改三处 k3s 配置 → 原地更新 ServiceCIDR →
+换 Cilium IPAM 模式」这条路，全流程先在本地用同版本容器复现验证后才上生产。
+
+地址规划用站点 ULA `fdb5:92d0:b067::/48`：Pod `10.42.0.0/16` +
+`fdb5:92d0:b067:4200::/56`（每节点 /64），Service `10.43.0.0/16` +
+`fdb5:92d0:b067:4300::/112`。
+
+### 新增
+
+- `feat(k3s)`：`cluster-cidr` / `service-cidr` 增加 IPv6 段，`node-ip` 与
+  `kubelet-arg: node-ip=` 传双族地址。三条硬约束都写进了注释：逗号后**不能有空格**
+  （k3s 用 `SplitStringSlice` 切分且不 trim）、三个 flag 必须**同时改且地址族形状一致**
+  （只改其一会 fatal）、IPv4 必须在前（etcd 与 apiserver 只用主族）。
+  `node-ip` 之外还要 `kubelet-arg`，是因为本集群 `disable-cloud-controller: true` 时
+  k3s 不会把 node-ip 传给 kubelet（上游注释 "don't assume that dual-stack node IPs are
+  safe"），不显式传则 Node 的 `InternalIP` 里没有 IPv6。
+  刻意**不设 `cluster-dns`**，保持 k3s 按每个 service-cidr 各派生一个 DNS IP 并把
+  CoreDNS 置为 `RequireDualStack` 的默认行为。
+- `feat(k3s)`：新增导出 `tailscale_ipv6` 与 `node_ipv6` 的 task；`node-external-ip`
+  补上 Tailscale IPv6。`node_ipv6` 的取法要排除 `fe80:` 与 `fd7a:115c:a1e0:`
+  ——Tailscale 自己的 ULA 也会以 global scope 出现在 `tailscale0` 上。
+- `feat(cilium)`：`ipam.mode` 由 `kubernetes` 改为 `cluster-pool`，并声明双族池
+  （IPv4 逐条列出那 4 个 /24、mask 24；IPv6 一个 /56、mask 64）；新增
+  `ipv6.enabled` 与 `ipv6NativeRoutingCIDR`。**必须改 IPAM 模式而不是只开
+  `ipv6.enabled`**：`kubernetes`(host-scope) 模式下 agent 要求每个启用的地址族都有
+  `Node.spec.podCIDRs` 条目，而如上一段所述既有节点拿不到 IPv6 PodCIDR，结果是
+  agent 报 `required IPv6 PodCIDR not available` → panic + CrashLoopBackOff →
+  全集群 Pod 网络中断。`cluster-pool` 由 operator 自行分配，不依赖该字段。
+- 12 个 app-template 系 chart 声明 `app-template.service.<name>.ipFamilyPolicy:
+  PreferDualStack`（`excalidraw`、`jellyfin`、`ollama`、`pairdrop`、`paperless`、
+  `searxng`、`speedtest`、`styleferry`、`upsnap`、`kanidm`、`kube-explorer`、
+  `semaphore`）。这些 Service 在集群侧已是双栈，本次是把它写进 Git 以获得可复现性
+  ——否则如「线上数据修复」一节所述，Declarative 与线上会静默分叉。
+
+### 文档
+
+- `docs(009)`：新增 `specs/009-dual-stack-network/`，含方案（`plan.md`）、调研
+  （`research.md`）与实施手册（`runbook.md`）。手册覆盖备份、分阶段步骤与决策点、
+  逐项验收门、回退方案 R1–R6 与应急预案，并完整记录了 P1/P2 与收尾阶段的实测结果。
+
+### 线上数据修复（不在 Git 内）
+
+> 本节记录集群侧**无法由 Git 表达**的状态，它们不随 tag 回滚，重建集群时需重放。
+
+- **`CiliumNode.spec.ipam.podCIDRs` 需手工补 IPv6**：从 `kubernetes` 切到
+  `cluster-pool` 时，节点上残留的该字段（仅 IPv4）会让 operator **静默跳过**分配
+  ——没有日志、没有报错，新 agent 永远等不到 IPv6 PodCIDR，DaemonSet 卡在 2/4。
+  给 4 个 `CiliumNode` 各补上 IPv6 /64 后 30 秒内恢复 4/4。**副作用是好的**：手工补
+  而不是删 `CiliumNode` 让 operator 重分配，使既有 IPv4 映射逐字节保留，路由器上那
+  4 条静态路由一条都不用改。
+- **Service 双栈是 opt-in**：改 `ipFamilyPolicy` 不会给既有 Service 追溯补发第二个
+  ClusterIP。本次转换了 28 个 Tailscale Ingress 后端 + `kube-dns`（它由 k3s 自动置为
+  `RequireDualStack`），共 29 个 Service 具备 IPv6 ClusterIP；剩余 16 个属上游 chart，
+  字段路径各异，集群侧已是双栈但尚未写入 Git。
+- **ArgoCD 对 Service 的 `ipFamilyPolicy`/`clusterIPs` 做了归一化**，视为可忽略差异。
+  两面影响：恢复 selfHeal 不会回退它们；但改动对 GitOps 是"隐形"的，故必须如上写进
+  chart values 才不会被重建时丢失。
+
+### 验证
+
+4 节点均有 IPv6 `InternalIP`；`ServiceCIDR kubernetes` 原地更新为
+`10.43.0.0/16,fdb5:92d0:b067:4300::/112`；**Pod 双栈覆盖 168/168**；
+29 个 Service 有 IPv6 ClusterIP；PVC 50/50 Bound；Ceph `HEALTH_OK`（81 GiB 数据、
+4 OSD up/in、81 pgs active+clean，与改造前基线逐项一致）；36/36 ArgoCD Application
+`Synced`；无 Pending/异常 Pod。
+
+过程中三个值得记的坑：**① 不要用 `ping -6` 测 ClusterIP**——Cilium LB 不转发 ICMP
+到 ClusterIP，100% 丢包是正常的，必须用 TCP/UDP；**② 不要用 `kubectl get nodes -o wide`
+判断节点双栈**——它只渲染一个 `InternalIP`，要用
+`-o custom-columns` 展开 `status.addresses`；**③ 被 operator 托管的 workload 用
+`rollout restart` 可能被静默撤销**（operator 抹掉 `restartedAt` 注解，StatefulSet
+只重建了序号最大的那个就停了），判定方法是看
+`.spec.template.metadata.annotations`，可靠替代是直接 `delete pod`。
+
 ## v2026.10.03.4
 
 Grafana 的内存上限一直贴着稳态用量：新增 dashboard 时 provisioner 的瞬时分配就会把

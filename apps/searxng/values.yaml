@@ -47,6 +47,7 @@ app-template:
           protocol: TCP
     caddy:
       controller: caddy
+      ipFamilyPolicy: PreferDualStack
       ports:
         http:
           port: 80

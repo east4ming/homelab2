@@ -60,6 +60,34 @@
   set_fact:
     tailscale_ipv4: "{{ tailscale_ip.stdout }}"
 
+# ── 双栈：导出本节点的 Tailscale IPv6 与全局 IPv6（2026-10-07）────────────────
+- name: Get tailscale ipv6 address
+  shell: tailscale ip --6
+  register: tailscale_ip6
+  changed_when: false
+
+- name: Set fact tailscale_ipv6
+  set_fact:
+    tailscale_ipv6: "{{ tailscale_ip6.stdout }}"
+
+# 取本节点的全局 IPv6（SLAAC 派生）。必须排除：
+#   - fe80::/10 链路本地
+#   - fd7a:115c:a1e0::/48  （Tailscale 自己的 ULA，会出现在 tailscale0 上且 scope 为 global）
+# 本集群节点主接口上只有一个公网 GUA，取第一个即可。
+- name: Get node global ipv6 address
+  shell: >-
+    ip -6 addr show scope global
+    | awk '/inet6/ {print $2}' | cut -d/ -f1
+    | grep -vE '^(fe80:|fd7a:115c:a1e0:)'
+    | head -1
+  register: node_ipv6_raw
+  changed_when: false
+  failed_when: node_ipv6_raw.stdout == ""
+
+- name: Set fact node_ipv6
+  set_fact:
+    node_ipv6: "{{ node_ipv6_raw.stdout }}"
+
 - name: Copy k3s config files
   ansible.builtin.template:
     src: "{{ item.src }}"
