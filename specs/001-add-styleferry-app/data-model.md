@@ -34,7 +34,7 @@ app-template values 结构，定义 StyleFerry 部署的完整配置。
 |--------|-----|------|
 | `BLOG_LLM_PROVIDER` | `deepseek` | LLM 提供商 |
 | `BLOG_LLM_BASE_URL` | `https://api.deepseek.com` | LLM API 端点 |
-| `BLOG_LLM_MODEL` | `deepseek-v4-flash` | LLM 模型 |
+| `BLOG_LLM_MODEL` | `deepseek-flash` | LLM 模型 |
 | `BLOG_SEARCH_PROVIDER` | `searxng` | 搜索引擎 |
 | `BLOG_SEARXNG_URL` | `http://searxng-caddy.searxng` | SearXNG 服务地址 |
 | `BLOG_MONTHLY_COST_LIMIT` | `100.0` | 月度费用上限（美元） |

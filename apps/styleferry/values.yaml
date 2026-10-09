@@ -12,7 +12,7 @@ app-template:
           env:
             BLOG_LLM_PROVIDER: deepseek
             BLOG_LLM_BASE_URL: https://api.deepseek.com
-            BLOG_LLM_MODEL: deepseek-v4-flash
+            BLOG_LLM_MODEL: deepseek-flash
             BLOG_SEARCH_PROVIDER: searxng
             BLOG_SEARXNG_URL: http://searxng-caddy.searxng
             BLOG_MONTHLY_COST_LIMIT: "100.0"
