@@ -39,7 +39,7 @@ services:
       - /:/host:ro,rslave
 
   smartctl-exporter:
-    image: prometheuscommunity/smartctl-exporter:v0.14.0
+    image: prometheuscommunity/smartctl-exporter:v0.15.0
     container_name: nas-smartctl-exporter
     restart: unless-stopped
     network_mode: host
