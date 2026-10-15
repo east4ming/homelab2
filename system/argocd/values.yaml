@@ -108,14 +108,14 @@ argo-cd:
   repoServer:
     env:
       - name: GOMEMLIMIT
-        value: "450MiB"
+        value: "900MiB"
     resources:
       requests:
         cpu: 50m
-        memory: 128Mi
+        memory: 256Mi
       limits:
         cpu: 500m
-        memory: 512Mi
+        memory: 1024Mi
     metrics: *metrics
   redis:
     metrics: *metrics
