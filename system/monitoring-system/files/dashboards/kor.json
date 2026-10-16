@@ -461,7 +461,7 @@
   "templating": {
     "list": [
       {
-        "allValue": "",
+        "allValue": ".*",
         "current": {},
         "datasource": {
           "type": "prometheus",
