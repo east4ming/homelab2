@@ -2,7 +2,7 @@
   description = "Homelab";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
@@ -30,8 +30,8 @@
             iproute2
             jq
             k9s
-            kanidm
-            kube3d
+            kanidm_1_11 # deployed server is 1.3.3 (platform/kanidm); nixpkgs 26.05 dropped <= 1.6
+            k3d
             kubectl
             kubernetes-helm
             kustomize
