@@ -18,7 +18,7 @@ grafana:
   # $(VAR) 展开（能读该命名空间 Pod/Secret 的人本来就能看到这个值）。
   extraInitContainers:
     - name: align-admin-password
-      image: docker.io/grafana/grafana:13.2.3-distroless # = chart appVersion-distroless
+      image: docker.io/grafana/grafana:13.2.3-distroless  # = chart appVersion-distroless
       command: ["/usr/share/grafana/bin/grafana"]
       args:
         - cli
