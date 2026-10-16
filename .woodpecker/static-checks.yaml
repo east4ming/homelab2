@@ -19,12 +19,16 @@ steps:
             - 'test/**'
     depends_on: []
   pre-commit:
-    # shellcheck and opentofu are hook dependencies, not part of the pre-commit image
-    image: nixery.dev/shell/git/pre-commit/shellcheck/opentofu  # TODO replace with nix develop
+    # nixery.dev builds images on demand and times out when the image is cold
+    # (the old pre-commit step failed on exactly that: "trying and failing to
+    # pull image"). Use the flake's slim `ci` devShell instead: docker.io for
+    # the image, cache.nixos.org for the binaries.
+    image: nixos/nix
     commands:
+      - echo 'experimental-features = flakes nix-command' >> /etc/nix/nix.conf
       # --all-files: without it pre-commit only checks staged files and passes
       # vacuously on a fresh CI clone
-      - pre-commit run --all-files --color=always
+      - nix develop .#ci --command pre-commit run --all-files --color=always
     when:
       - event: pull_request
     depends_on: []

@@ -56,6 +56,21 @@
             ]))
           ];
         };
+
+        # Minimal shell for CI static checks (.woodpecker/static-checks.yaml):
+        # only the binaries the pre-commit hooks shell out to. Deliberately not
+        # the default devShell, which pulls in docker/k9s/neovim and costs
+        # several GB to download on every pipeline run.
+        devShells.ci = mkShell {
+          packages = [
+            git
+            kubernetes-helm # helmlint
+            opentofu # tofu_fmt
+            pre-commit
+            shellcheck # shellcheck hook
+            yamllint # yamllint hook
+          ];
+        };
       }
     );
 }
