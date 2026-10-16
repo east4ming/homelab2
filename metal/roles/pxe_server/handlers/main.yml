@@ -1,0 +1,6 @@
+# PXE 服务只在本地配置文件（dnsmasq / boot.cfg / ubuntu.ipxe）真的变化时重启，
+# 不再每次 make boot 无条件重启 —— 旧行为会打断正在进行的 PXE 安装（#546 项 9）。
+- name: Restart PXE server
+  community.docker.docker_compose_v2:
+    project_src: "{{ role_path }}/files"
+    state: restarted

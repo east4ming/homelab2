@@ -4,18 +4,21 @@
       - apt-utils
       - unattended-upgrades
       - update-notifier-common
+  tags: automatic-upgrade
 
 - name: Copy unattended-upgrades config file
   ansible.builtin.copy:
     src: "{{ item }}"
     dest: /etc/apt/apt.conf.d/{{ item }}
-    mode: 0644
+    mode: "0644"
   loop:
     - 20auto-upgrades
     - 50unattended-upgrades
+  tags: automatic-upgrade
 
 - name: Enable unattended-upgrades service
   ansible.builtin.systemd:
     name: unattended-upgrades.service
     state: started
     enabled: true
+  tags: automatic-upgrade

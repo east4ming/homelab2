@@ -1,3 +1,22 @@
+# 这道 assert 是 #530 的第二道闸：tailscale_client_id/secret 会经 helm upgrade 推到
+# 线上 tailscale-operator release。占位凭据会让 operator 失去 tailnet API 权限，
+# 所有 tailscale ingress / proxy 失效 —— 而且升完 Helm 才发现。
+- name: Refuse to upgrade tailscale-operator with placeholder credentials
+  ansible.builtin.assert:
+    that:
+      - tailscale_auth_key != metal_var_placeholder
+      - tailscale_client_id != metal_var_placeholder
+      - tailscale_client_secret != metal_var_placeholder
+      - tailscale_client_id | length > 0
+      - tailscale_client_secret | length > 0
+    fail_msg: >-
+      tailscale_auth_key / tailscale_client_id / tailscale_client_secret 缺失或仍是
+      占位值。这些值会推到线上 tailscale-operator release，用假 OAuth 凭据升级会让
+      operator 失去 tailnet API 权限、所有 tailscale ingress/proxy 失效。请在
+      Tailscale 管理台重新签发 OAuth client（Devices: write）与 auth key，填进
+      metal/inventories/group_vars/all/zz-secrets.yml。详见 metal/README.md。
+    quiet: true
+
 - name: Create the tailscale namespace
   kubernetes.core.k8s:
     state: present
@@ -7,6 +26,8 @@
       metadata:
         name: "{{ tailscale_namespace }}"
 
+# no_log：helm release 的 values 含 oauth.clientSecret，失败或 --diff 时会被完整
+# dump 出来（CWE-532）。
 - name: Install tailscale-operator
   kubernetes.core.helm:
     name: tailscale-operator
@@ -15,7 +36,10 @@
     chart_version: "{{ tailscale_version }}"
     release_namespace: "{{ tailscale_namespace }}"
     values: "{{ tailscale_values }}"
+  no_log: true
+  tags: tailscale-operator
 
+# no_log：k8s_info 会把整份 CRD spec 打进结果，输出量巨大且会淹没上面的 install 输出。
 - name: Wait for Tailscale CRDs
   kubernetes.core.k8s_info:
     kind: CustomResourceDefinition
@@ -27,6 +51,7 @@
   until: crd.resources | length > 0
   retries: 5
   delay: 10
+  no_log: true
   tags: tailscale-cr
 
 - name: Apply Tailscale resources

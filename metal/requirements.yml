@@ -1,0 +1,22 @@
+---
+# metal/ 的外部依赖。新 clone 必须先装，否则 kubernetes.core / ansible.posix /
+# community.docker 的任务会以 unknown-module 失败（ansible-lint 也会失去解析能力）。
+#
+#   ansible-galaxy collection install -r metal/requirements.yml
+#
+# 版本为精确钉死（==）而非范围：只有锁定版本，node 侧行为才可复现。
+# 升级流程：改这里的版本 → 在隔离环境跑一次 ansible-galaxy install → 确认 ansible-lint
+# 干净 → 再提交。
+collections:
+  - name: ansible.posix       # sysctl / firewalld
+    version: "==2.2.0"
+  - name: ansible.utils       # ipaddr 过滤器（Cilium native routing CIDR / PXE 前缀）
+    version: "==6.1.1"
+  - name: ansible.netcommon   # ipaddr 过滤器的实现依赖
+    version: "==8.7.1"
+  - name: community.general   # random_string（k3s token）/ ufw / wakeonlan
+    version: "==13.0.0"
+  - name: community.docker    # docker_host_info / docker_compose_v2（PXE server）
+    version: "==5.2.0"
+  - name: kubernetes.core     # k8s / k8s_info / helm（cilium、tailscale-operator）
+    version: "==6.6.0"

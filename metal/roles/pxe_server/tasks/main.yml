@@ -1,110 +1,158 @@
+# ⚠️ 这道 assert 必须排在所有写操作之前：MAC 现在来自操作者提供的
+# metal/inventories/group_vars/all/zz-secrets.yml（见 metal/README.md）。
+# 用占位/缺失的 MAC 继续跑会在 init-config/ 下建出错误目录名，PXE 装机的机器
+# 拿不到 user-data（而且是静默的）。
+- name: Assert every metal host has an operator-supplied MAC
+  ansible.builtin.assert:
+    that:
+      - hostvars[item]['mac'] is defined
+      - hostvars[item]['mac'] | length > 0
+      - hostvars[item]['mac'] != metal_var_placeholder
+    fail_msg: >-
+      节点 {{ item }} 没有可用的 mac。PXE / Wake-on-LAN 需要每个节点的真实网卡 MAC，
+      请把它填进 metal/inventories/group_vars/all/zz-secrets.yml 的 metal_macs
+      （键为 inventory 里的 hostname，值为小写冒号分隔的 MAC）。
+    quiet: true
+  loop: "{{ groups['metal'] }}"
+  tags: pxe
+
 - name: Get Docker info
-  docker_host_info: {}
+  community.docker.docker_host_info: {}
   register: docker_info_result
+  tags: pxe
 
 - name: Ensure Docker is running on a supported operating system
-  fail:
-    msg: Docker host networking driver only works on Linux hosts, and is not supported on Docker Desktop for Mac or Windows (you can use a Linux VM with bridged networking instead)
+  ansible.builtin.fail:
+    msg: >-
+      Docker host networking driver only works on Linux hosts, and is not supported
+      on Docker Desktop for Mac or Windows (you can use a Linux VM with bridged
+      networking instead)
   when:
     - docker_info_result.host_info.OperatingSystem == "Docker Desktop"
+  tags: pxe
 
 - name: Download boot image
   ansible.builtin.get_url:
     url: "{{ iso_url }}"
     dest: "{{ role_path }}/files/data/iso/{{ iso_url | basename }}"
     checksum: "{{ iso_checksum }}"
-    mode: 0644
+    mode: "0644"
   register: iso
+  tags: pxe
 
+# netboot.xyz 用 URL 里的 <os>/<release>/<build> 三段拼本地资源目录，这里从
+# 下载地址里把它抠出来，避免再维护一份硬编码路径。
 - name: Extract netboot.xyz asssets directory path from URL
-  set_fact:
-    download_dir: "{{ role_path }}/files/data/netbootxyz-config/assets/{{ ubuntu_26041_initrd_url | regex_replace('https://.*/([^/]+/[^/]+/[^/]+/[^/]+)/.*', '\\1') }}"
+  ansible.builtin.set_fact:
+    pxe_assets_subdir: >-
+      {{ ubuntu_26041_initrd_url
+         | regex_replace('^https://.*/([^/]+/[^/]+/[^/]+)/[^/]+$', '\1') }}
+  tags: pxe
 
 - name: Ensure netboot.xyz asssets download directory exists
-  file:
-    path: "{{ download_dir }}"
+  ansible.builtin.file:
+    path: "{{ role_path }}/files/data/netbootxyz-config/assets/{{ pxe_assets_subdir }}"
     state: directory
     mode: "0755"
+  tags: pxe
 
 # Hardcoded for now
 # TODO:
 - name: Download netboot.xyz ubuntu 26.04.1 initrd file
   ansible.builtin.get_url:
     url: "{{ ubuntu_26041_initrd_url }}"
-    dest: "{{ download_dir }}/{{ ubuntu_26041_initrd_url | basename }}"
+    dest: >-
+      {{ role_path }}/files/data/netbootxyz-config/assets/{{ pxe_assets_subdir }}/{{
+      ubuntu_26041_initrd_url | basename }}
     checksum: "{{ ubuntu_26041_initrd_checksum }}"
-    mode: 0644
+    mode: "0644"
+  tags: pxe
 
 - name: Download netboot.xyz ubuntu 26.04.1 vmlinuz file
   ansible.builtin.get_url:
     url: "{{ ubuntu_26041_vmlinuz_url }}"
-    dest: "{{ download_dir }}/{{ ubuntu_26041_vmlinuz_url | basename }}"
+    dest: >-
+      {{ role_path }}/files/data/netbootxyz-config/assets/{{ pxe_assets_subdir }}/{{
+      ubuntu_26041_vmlinuz_url | basename }}
     checksum: "{{ ubuntu_26041_vmlinuz_checksum }}"
-    mode: 0644
+    mode: "0644"
+  tags: pxe
 
 - name: Generate dnsmasq config
   ansible.builtin.template:
     src: dnsmasq.conf.j2
     dest: "{{ role_path }}/files/data/netbootxyz-config/root/etc/dnsmasq.conf"
-    mode: 0644
+    mode: "0644"
+  tags: pxe
 
 - name: Ensure cloud-init directory exists
-  file:
+  ansible.builtin.file:
     path: "{{ role_path }}/files/data/init-config/{{ hostvars[item]['mac'] }}"
     state: directory
     mode: "0755"
   loop: "{{ groups['metal'] }}"
+  tags: pxe
 
 - name: Copy cloud-init meta-data for each machine
   ansible.builtin.copy:
     src: "{{ role_path }}/files/data/init-config/meta-data"
     dest: "{{ role_path }}/files/data/init-config/{{ hostvars[item]['mac'] }}/meta-data"
-    mode: 0644
+    mode: "0644"
   loop: "{{ groups['metal'] }}"
+  tags: pxe
 
 - name: Set ipv4 net_mask variable
-  set_fact:
+  ansible.builtin.set_fact:
     ipv4_net_mask: "{{ ansible_default_ipv4.network }}/{{ ansible_default_ipv4.netmask }}"
+  tags: pxe
 
 - name: Display the ipv4 net_mask variable
-  debug:
+  ansible.builtin.debug:
     msg: "ipv4 net_mask: {{ ipv4_net_mask }}"
+  tags: pxe
 
+# user-data.j2 的静态路由要用前缀长度（如 192.168.3.0/24 → 24）。
 - name: Set ipv4 prefix variable
-  set_fact:
+  ansible.builtin.set_fact:
     ipv4_prefix: "{{ ipv4_net_mask | ansible.utils.ipaddr('prefix') }}"
-
-- name: Display the ipv4 prefix variable
-  debug:
-    msg: "ipv4 prefix: {{ ipv4_prefix }}"
+  tags: pxe
 
 - name: Generate cloud-init user-data for each machine
   become: true
   ansible.builtin.template:
     src: user-data.j2
     dest: "{{ role_path }}/files/data/init-config/{{ hostvars[item]['mac'] }}/user-data"
-    mode: 0644
+    mode: "0644"
   loop: "{{ groups['metal'] }}"
+  tags: pxe
 
+# 幂等性（#546 项 9）：两个问题都在这一处修掉 ——
+#   1) 原实现后面还有一个无条件的 state: restarted + build: always，每次 make boot
+#      都强杀正在进行的 PXE 安装。compose 文件本身【没有 build 段】（纯 image），
+#      build: always 纯属浪费；且 docker_compose_v2 会自行处理「文件变了就重建」。
+#   2) 去掉 restarted 后，本地配置文件的改动靠 notify 触发一次重启即可。
 - name: Start the ephemeral PXE server
   community.docker.docker_compose_v2:
     project_src: "{{ role_path }}/files"
     state: present
-    build: always
+  notify: Restart PXE server
+  tags: pxe
 
 # TODO: Generate netboot.xyz custom config
 
 - name: Wait for boot.cfg file to exist
-  wait_for:
+  ansible.builtin.wait_for:
     path: "{{ role_path }}/files/data/netbootxyz-config/config/menus/boot.cfg"
     state: present
     timeout: 300
-  register: file_check_result
+  register: pxe_boot_cfg
+  tags: pxe
 
 - name: Continue with other tasks after file is found
-  debug:
+  ansible.builtin.debug:
     msg: "boot.cfg file found, continuing with other tasks"
-  when: file_check_result.state == 'present'
+  when: pxe_boot_cfg.state == 'present'
+  tags: pxe
 
 - name: Change netboot.xyz boot.cfg live_endpoint config
   become: true
@@ -115,16 +163,14 @@
   loop:
     - "{{ role_path }}/files/data/netbootxyz-config/config/menus/boot.cfg"
     - "{{ role_path }}/files/data/netbootxyz-config/config/menus/remote/boot.cfg"
+  notify: Restart PXE server
+  tags: pxe
 
 - name: Generate netboot.xyz ubuntu.ipxe config
   become: true
   ansible.builtin.template:
     src: ubuntu.ipxe.j2
     dest: "{{ role_path }}/files/data/netbootxyz-config/config/menus/ubuntu.ipxe"
-    mode: 0644
-
-- name: Restart the ephemeral PXE server
-  community.docker.docker_compose_v2:
-    project_src: "{{ role_path }}/files"
-    state: restarted
-    build: always
+    mode: "0644"
+  notify: Restart PXE server
+  tags: pxe
