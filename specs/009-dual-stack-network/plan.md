@@ -558,4 +558,3 @@ ssh root@192.168.3.1 -i ~/.ssh/id_ed25519 'ip -6 route show | grep -E "^240e" '
 5. **ISP 前缀稳定性**：是否有历史记录/DDNS 日志可判断 `240e:3a3:20ba:ae43::/64` 的漂移频率？
    这决定 R4 是按"监控 + runbook"处理，还是直接上"节点 ULA + `ipv6-address-label`"方案。
    （路线 C 下影响面较小：路由器的 4 条 pod 路由走节点 IPv4，不受 IPv6 前缀影响。）
-

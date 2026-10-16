@@ -6,6 +6,8 @@ repos:
       - id: check-executables-have-shebangs
       - id: check-merge-conflict
       - id: check-shebang-scripts-are-executable
+        # .specify/ 是 spec-kit 生成并管理的工具目录（含 Windows .ps1），不属本项目代码
+        exclude: ^\.specify/
       - id: detect-private-key
         exclude: ^apps/lobe-chat/casdoor-cm0-configmap.yaml.example$
       - id: end-of-file-fixer
@@ -20,6 +22,8 @@ repos:
     hooks:
       - id: helmlint
       - id: shellcheck
+        # .specify/ 是 spec-kit 生成并管理的工具目录，不属本项目代码
+        exclude: ^\.specify/
   - repo: https://github.com/tofuutils/pre-commit-opentofu
     rev: v2.1.0
     hooks:
