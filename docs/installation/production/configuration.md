@@ -56,11 +56,17 @@ It will prompt you to edit the inventory:
 
 !!! example
 
-    ```yaml title="metal/inventories/prod.yml"
+    ```yaml title="metal/inventories/prod.yml.example"
     --8<--
-    metal/inventories/prod.yml
+    prod.yml.example
     --8<--
     ```
+
+    This is a **sanitized example**. The documentation site only ever inlines
+    `metal/inventories/prod.yml.example`, never your own
+    `metal/inventories/prod.yml`: `mkdocs.yml` restricts `pymdownx.snippets` to
+    an allowlist of snippet files, so pointing a page at a real inventory fails
+    the build instead of publishing it.
 
 At the end it will show what has changed. After examining the diff, commit and ~~push~~ the changes.
 
