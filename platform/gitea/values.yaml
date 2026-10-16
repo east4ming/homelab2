@@ -39,6 +39,10 @@ gitea:
       # oauth2_client:
       #   ENABLE_AUTO_REGISTRATION: true
       #   USERNAME: userid
+      service:
+        # Only an admin can create accounts now. Registration via Dex is
+        # deliberately not re-enabled with ALLOW_ONLY_EXTERNAL_REGISTRATION.
+        DISABLE_REGISTRATION: true
       service.explore:
         DISABLE_USERS_PAGE: true
       actions:
