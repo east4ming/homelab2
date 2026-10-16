@@ -2,10 +2,12 @@ package test
 
 import (
 	"path/filepath"
+	"regexp"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/shell"
 	"github.com/gruntwork-io/terratest/modules/version-checker"
+	"github.com/hashicorp/go-version"
 )
 
 func TestToolsVersions(t *testing.T) {
@@ -21,9 +23,6 @@ func TestToolsVersions(t *testing.T) {
 		{"git", "--version", ">= 2.54.0, < 3.0.0"},
 		{"go", "version", ">= 1.26.0, < 1.27.0"},
 		{"helm", "version", ">= 3.20.0, < 4.0.0"},
-		// Cluster runs v1.36.5+k3s1; keep kubectl inside the +/-1 minor skew window
-		// https://kubernetes.io/releases/version-skew-policy/#kubectl
-		{"kubectl", "version", ">= 1.36.0, < 1.37.0"},
 		{"kustomize", "version", ">= 5.8.0, < 6.0.0"},
 		{"pre-commit", "--version", ">= 4.5.0, < 5.0.0"},
 		{"tofu", "--version", ">= 1.11.0, < 2.0.0"},
@@ -43,6 +42,40 @@ func TestToolsVersions(t *testing.T) {
 			version_checker.CheckVersion(t, params)
 		})
 	}
+
+	// `kubectl version` also queries the API server and exits non-zero when no
+	// cluster is reachable (CI has no kubeconfig), so only the client version is
+	// checked here.
+	t.Run("kubectl", func(t *testing.T) {
+		t.Parallel()
+
+		output := shell.RunCommandAndGetOutput(t, shell.Command{
+			Command:    "kubectl",
+			Args:       []string{"version", "--client"},
+			WorkingDir: ".",
+		})
+
+		match := regexp.MustCompile(`Client Version:\s*v(\d+(\.\d+)+)`).FindStringSubmatch(output)
+		if match == nil {
+			t.Fatalf("cannot parse kubectl client version from output: %q", output)
+		}
+
+		clientVersion, err := version.NewVersion(match[1])
+		if err != nil {
+			t.Fatalf("invalid kubectl client version %q: %v", match[1], err)
+		}
+
+		// Cluster runs v1.36.5+k3s1; keep kubectl inside the +/-1 minor skew window
+		// https://kubernetes.io/releases/version-skew-policy/#kubectl
+		constraint, err := version.NewConstraint(">= 1.36.0, < 1.37.0")
+		if err != nil {
+			t.Fatalf("invalid kubectl version constraint: %v", err)
+		}
+
+		if !constraint.Check(clientVersion) {
+			t.Fatalf("kubectl client version %s does not satisfy %s", clientVersion, constraint)
+		}
+	})
 }
 
 func TestToolsNixShell(t *testing.T) {

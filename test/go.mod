@@ -4,7 +4,10 @@ go 1.21
 
 toolchain go1.21.4
 
-require github.com/gruntwork-io/terratest v0.46.1
+require (
+	github.com/gruntwork-io/terratest v0.46.1
+	github.com/hashicorp/go-version v1.6.0
+)
 
 require (
 	cloud.google.com/go v0.105.0 // indirect
@@ -41,7 +44,6 @@ require (
 	github.com/hashicorp/go-getter v1.7.1 // indirect
 	github.com/hashicorp/go-multierror v1.1.0 // indirect
 	github.com/hashicorp/go-safetemp v1.0.0 // indirect
-	github.com/hashicorp/go-version v1.6.0 // indirect
 	github.com/hashicorp/hcl/v2 v2.9.1 // indirect
 	github.com/hashicorp/terraform-json v0.13.0 // indirect
 	github.com/imdario/mergo v0.3.11 // indirect
