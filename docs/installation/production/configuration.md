@@ -18,7 +18,7 @@ sudo usermod -aG nix-users $USER
 
 # Re-login to apply the changes
 # You can also run the following command to activate the changes to groups:
-newgrp nixbld      
+newgrp nixbld
 newgrp nix-user
 
 # nix develop
