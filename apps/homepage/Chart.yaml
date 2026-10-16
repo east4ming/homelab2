@@ -4,4 +4,4 @@ version: 0.0.0
 dependencies:
   - name: homepage
     version: 2.1.0
-    repository: http://jameswynn.github.io/helm-charts
+    repository: https://jameswynn.github.io/helm-charts
