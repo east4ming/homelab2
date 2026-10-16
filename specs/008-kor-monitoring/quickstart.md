@@ -28,7 +28,7 @@ kubectl get application kor -n argocd \
 
 kubectl -n kor get deploy kor-exporter \
   -o jsonpath='{.spec.template.spec.containers[0].image}{"\n"}'
-# yonahdissen/kor:v0.6.9
+# yonahdissen/kor:v0.6.9@sha256:1a85158c82bbca16c942426b7ef3faba3f5cb23634b5b66e462716bc8520fc8f
 
 kubectl -n kor get servicemonitor kor-exporter
 ```
@@ -52,7 +52,7 @@ kubectl -n kor logs deploy/kor-exporter --tail=20
 ### 2.3 指标
 
 ```promql
-# 总量（首次扫描完成后才有，实测 925）
+# 总量（首次扫描完成后才有；2026-10-03 实测 925，会随集群漂移）
 count(kubernetes_orphaned_resources)
 
 # 按命名空间汇总：必须用 exported_namespace
@@ -67,7 +67,7 @@ kubernetes_orphaned_resources{exported_namespace="paperless"}
     kor 源码里的标签叫 `namespace`，但 prometheus-operator 会打上目标标签 `namespace="kor"`，
     Prometheus 把冲突的指标标签重命名为 `exported_namespace`。
     用 `namespace` 过滤**不会报错**，但结果恒为空或恒为 `kor`——属于静默失效。
-    实测：`namespace` 只有 1 个取值，`exported_namespace` 有 41 个。
+    实测：`namespace` 只有 1 个取值（恒为 `kor`），`exported_namespace` 有 30+ 个。
 
 ### 2.4 Dashboard
 
@@ -87,7 +87,7 @@ kubectl get clusterrole kor-read-resources-clusterrole \
 
 | 场景 | 操作 |
 | --- | --- |
-| 升级 kor | 改 `system/kor/Chart.yaml` 的 `version`（Renovate 也会提 PR），同时把 `values.yaml` 的 `image.tag` 对齐新的 appVersion |
+| 升级 kor | 改 `system/kor/Chart.yaml` 的 `version`（Renovate 也会提 PR），然后**必须**做 §3.1 的 `rbac.rules` 对照与 digest 更新 |
 | 调整扫描频率 | 改 `system/kor/values.yaml` 的 `prometheusExporter.exporterInterval`（单位**分钟**） |
 | 调整资源 | 改同一文件的 `resources`；实测常驻约 10MiB |
 | 让某个资源不再被报 | 给它打 `kor/used=true` |
@@ -102,6 +102,48 @@ curl -s --get --data-urlencode \
   'query=kubernetes_orphaned_resources{exported_namespace="paperless"}' \
   https://prometheus.west-beta.ts.net/api/v1/query | jq -r '.data.result[].metric.resourceName'
 ```
+
+### 3.1 升级 kor（每次 bump chart 必做，少一步就静默丢权限）
+
+`system/kor/values.yaml` 用**整体覆盖**的方式重写上游 chart 的 `rbac.rules`——Helm 对
+`rbac.rules` 是覆盖而非追加，上游增删权限项时本地覆盖表不会跟着变。2026-10 那轮
+25 条 VolumeAttachment 假阳性就是这么产生的：上游默认没有 `nodes`/`csidrivers`，
+kor 逐个查 VA 引用的节点时 Get 失败，于是把每条活跃挂载都报成
+`Node ... does not exist`，而 runbook 当时把它当成「CSI 残留」。
+
+升级时按顺序做完这四步：
+
+1. 拉上游默认 values，与本地覆盖表逐项对照：
+
+   ```sh
+   helm repo add kor https://yonahd.github.io/kor && helm repo update
+   helm show values kor/kor --version <新 chart 版本> > /tmp/kor-upstream-values.yaml
+   diff <(yq -o=json '.rbac.rules' /tmp/kor-upstream-values.yaml | jq -S .) \
+        <(yq -o=json '.kor.rbac.rules' system/kor/values.yaml | jq -S .)
+   ```
+
+   处置规则：上游**新增**的权限要确认 kor 是否用到、用到就补进本地表；上游**删除**的权限
+   要确认新版本确实不再使用后从本地表删掉（本地表是覆盖，留着旧权限等于扩大 SA 权限面）；
+   本地**多出**的项（当前是 `nodes`、`csidrivers`）要确认仍然必要。
+
+2. 对齐版本与 digest。`image.tag` 是 `vX.Y.Z@sha256:...` 形式，只改 tag 不改 digest 会
+   拉取失败，两者必须来自同一次查询：
+
+   ```sh
+   docker buildx imagetools inspect yonahdissen/kor:<新 appVersion> | head -5
+   ```
+
+3. 复核线上实际权限（只读）：
+
+   ```sh
+   kubectl auth can-i --list --as=system:serviceaccount:kor:kor | head
+   ```
+
+4. 确认覆盖表与 digest 都进了 Deployment（本机首次渲染需先 `helm dependency build system/kor`）：
+
+   ```sh
+   helm template kor system/kor | grep -E 'image:|csidrivers|nodes'
+   ```
 
 ## 4. 排障
 
