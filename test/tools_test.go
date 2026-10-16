@@ -16,15 +16,17 @@ func TestToolsVersions(t *testing.T) {
 		versionArg        string
 		versionConstraint string
 	}{
-		{"ansible", "--version", ">= 2.12.6, < 3.0.0"},
-		{"docker", "--version", ">= 25.0.0, < 26.0.0"},
-		{"git", "--version", ">= 2.37.1, < 3.0.0"},
-		{"go", "version", ">= 1.22.0, < 1.23.0"},
-		{"helm", "version", ">= 3.9.4, < 4.0.0"},
-		{"kubectl", "version", ">= 1.30.0, < 1.32.0"}, // https://kubernetes.io/releases/version-skew-policy/#kubectl
-		{"kustomize", "version", ">= 5.0.3, < 6.0.0"},
-		{"pre-commit", "--version", ">= 3.3.2, < 4.0.0"},
-		{"tofu", "--version", ">= 1.7.0, < 1.9.0"},
+		{"ansible", "--version", ">= 2.21.0, < 2.22.0"},
+		{"docker", "--version", ">= 29.0.0, < 30.0.0"},
+		{"git", "--version", ">= 2.54.0, < 3.0.0"},
+		{"go", "version", ">= 1.26.0, < 1.27.0"},
+		{"helm", "version", ">= 3.20.0, < 4.0.0"},
+		// Cluster runs v1.36.5+k3s1; keep kubectl inside the +/-1 minor skew window
+		// https://kubernetes.io/releases/version-skew-policy/#kubectl
+		{"kubectl", "version", ">= 1.36.0, < 1.37.0"},
+		{"kustomize", "version", ">= 5.8.0, < 6.0.0"},
+		{"pre-commit", "--version", ">= 4.5.0, < 5.0.0"},
+		{"tofu", "--version", ">= 1.11.0, < 2.0.0"},
 	}
 
 	for _, tool := range tools {
