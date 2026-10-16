@@ -1,6 +1,10 @@
 ignore: |
   templates/
   mkdocs.yml
+  # spec-kit 生成并管理的工具目录，不属本项目代码
+  .specify/
+  # 含 Helm 占位符的示例清单（{{ .Values.… }}），不是可解析的纯 YAML
+  system/kubevirt/examples/
 
 extends: default
 
