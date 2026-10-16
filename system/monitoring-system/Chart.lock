@@ -1,0 +1,9 @@
+dependencies:
+- name: kube-prometheus-stack
+  repository: https://prometheus-community.github.io/helm-charts
+  version: 92.2.0
+- name: prometheus-smartctl-exporter
+  repository: file://charts/prometheus-smartctl-exporter
+  version: 0.17.1
+digest: sha256:f63144542fbdbbfd088725464d94e8a9a2db8297a944e37604ba49ce03870fc5
+generated: "2026-10-16T20:54:43.52627272+08:00"

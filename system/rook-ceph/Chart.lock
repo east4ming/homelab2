@@ -1,0 +1,15 @@
+dependencies:
+- name: rook-ceph
+  repository: https://charts.rook.io/release
+  version: 1.21.0
+- name: ceph-csi-drivers
+  repository: https://ceph.github.io/ceph-csi-operator
+  version: 1.1.0
+- name: rook-ceph-cluster
+  repository: https://charts.rook.io/release
+  version: 1.21.0
+- name: snapshot-controller
+  repository: https://piraeus.io/helm-charts
+  version: 5.3.0
+digest: sha256:39094f26d653dfa6f627a8fc03b67a7ad76f23d84f0c4fa3c93aa609a021cf21
+generated: "2026-10-16T20:55:08.611859629+08:00"
