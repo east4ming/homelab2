@@ -5,6 +5,45 @@ grafana:
     existingSecret: grafana-secrets
     userKey: admin-user
     passwordKey: admin-password
+  # ⚠️ 一次性脚手架（轮换完成后立刻删除，见 PR 说明）：
+  # Grafana 只在数据库首次初始化时读取 GF_SECURITY_ADMIN_PASSWORD，库已存在时换
+  # env 不会改掉库里的口令 —— #533 的口令因此还是公开过的那个。这里在 Pod 启动
+  # （主容器之前）把库里的 admin 口令对齐到 grafana-secrets 的值。
+  #
+  # 用 initContainer 而不是 Job：SQLite 库在 RWO PVC 上，只有同一个 Pod 才能和主
+  # 容器同时挂载它。chart 的 init-chown-data 先执行（把卷 chown 给 472），本容器
+  # 随后以 472 运行。
+  #
+  # distroless 镜像没有 shell，只能直接调 grafana 二进制；口令用 kubelet 的
+  # $(VAR) 展开（能读该命名空间 Pod/Secret 的人本来就能看到这个值）。
+  extraInitContainers:
+    - name: align-admin-password
+      image: docker.io/grafana/grafana:13.2.3-distroless  # = chart appVersion-distroless
+      command: ["/usr/share/grafana/bin/grafana"]
+      args:
+        - cli
+        - --homepath=/usr/share/grafana
+        - admin
+        - reset-admin-password
+        - $(GF_SECURITY_ADMIN_PASSWORD)
+      env:
+        - name: GF_PATHS_DATA
+          value: /var/lib/grafana
+        - name: GF_SECURITY_ADMIN_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: grafana-secrets
+              key: admin-password
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: ["ALL"]
+        runAsNonRoot: true
+        runAsUser: 472
+        runAsGroup: 472
+      volumeMounts:
+        - name: storage
+          mountPath: /var/lib/grafana
   # IPv4/IPv6 双栈（chart 的 templates/service.yaml 读 service.ipFamilyPolicy）
   service:
     ipFamilyPolicy: PreferDualStack
