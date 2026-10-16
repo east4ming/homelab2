@@ -1,0 +1,6 @@
+dependencies:
+- name: eraser
+  repository: https://eraser-dev.github.io/eraser/charts
+  version: 1.5.0-beta.1
+digest: sha256:de880bdf4664713c98d5a2c3185560975a6f424fd69bc7b51df354d5201cc6ee
+generated: "2026-10-16T20:53:38.669449961+08:00"

@@ -35,7 +35,7 @@ This is useful when you want to generate random secrets like admin password and 
 
 ```yaml title="./platform/global-secrets/files/secret-generator/config.yaml" hl_lines="2-6"
 --8<--
-./platform/global-secrets/files/secret-generator/config.yaml
+config.yaml
 --8<--
 ```
 

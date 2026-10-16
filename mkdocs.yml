@@ -26,6 +26,17 @@ markdown_extensions:
   - pymdownx.details
   - pymdownx.snippets:
       check_paths: true
+      # Allowlist of files that may be inlined with --8<--. pymdownx has no
+      # "exclude" option, so entries are individual files (not directories) to
+      # keep everything else - notably the real metal/inventories/prod.yml -
+      # uninlinable: a page pointing at a file that is not listed here fails the
+      # build. Snippet paths are resolved relative to the directory of the file,
+      # so a page inlines an entry as --8<-- "<basename>".
+      base_path:
+        - README.md
+        - LICENSE.md
+        - platform/global-secrets/files/secret-generator/config.yaml
+        - metal/inventories/prod.yml.example
   - def_list
   - pymdownx.tasklist:
   - pymdownx.superfences:
