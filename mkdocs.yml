@@ -88,3 +88,11 @@ nav:
       - reference/roadmap.md
       - reference/contributing.md
       - reference/faq.md
+
+validation:
+  nav:
+    absolute_links: warn
+  links:
+    absolute_links: warn
+    unrecognized_links: warn
+    anchors: warn
