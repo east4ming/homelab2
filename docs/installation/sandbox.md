@@ -104,12 +104,19 @@ make
 
 Then boot `homelab-dev-master` and `homelab-dev-node`, to start the netboot.xyz installation.
 
-Finally, since Cilium enables the native routing feature, you need to configure static routes on your router (in a Hyper-V VM scenario, that is, the Windows host).
+Finally, since Cilium enables the native routing feature, you need to configure static routes on your router (in a Hyper-V VM scenario, that is, the Windows host). The pod CIDR of a node is assigned dynamically by `kube-controller-manager`, so read the mapping from the cluster instead of hardcoding it (see [Add Router Static Routes](production/deployment.md#add-router-static-routes)):
+
+```sh
+kubectl get nodes -o custom-columns=NAME:.metadata.name,PODCIDR:.spec.podCIDR
+```
+
+Every line of that output is one route, sending the pod CIDR to the internal IP address of that same node:
 
 ```cmd
-route ADD 10.42.0.0 MASK 255.255.255.0  <pod cidr is the k8s node internal ip address for 10.42.0.0>
-route ADD 10.42.1.0 MASK 255.255.255.0  <pod cidr is the k8s node internal ip address for 10.42.1.0>
+route ADD <pod cidr> MASK 255.255.255.0  <node internal ip address>
 ```
+
+Re-run the command and fix the routes whenever you add or rebuild a node, otherwise cross-node pod traffic breaks silently.
 
 !!! note
 
@@ -119,7 +126,7 @@ route ADD 10.42.1.0 MASK 255.255.255.0  <pod cidr is the k8s node internal ip ad
 
 The homepage should be available at `https://homelab-dev-home.<your-fun-tailnet-name>.ts.net`.
 
-See [admin credentials](../post-installation/#admin-credentials) for default passwords.
+See [admin credentials](post-installation.md#admin-credentials) for default passwords.
 
 If you want to make some changes, simply commit to the local `dev` branch and push it to Gitea in the sandbox:
 

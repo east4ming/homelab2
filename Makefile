@@ -27,12 +27,17 @@ post-install:
 	@./scripts/hacks
 
 # TODO maybe there's a better way to manage backup with GitOps?
+# This list is the source of truth for what must be backed up: every volume that
+# holds unrecoverable data goes here, in both targets. Check it against the
+# cluster with ./scripts/backup-coverage (see docs/how-to-guides/backup-and-restore.md).
 backup:
-	./scripts/backup --action setup --namespace=actualbudget --pvc=actualbudget-data
+	./scripts/backup --action setup --namespace=paperless --pvc=paperless-data
+	./scripts/backup --action setup --namespace=kanidm --pvc=data-kanidm-0
 	./scripts/backup --action setup --namespace=jellyfin --pvc=jellyfin-data
 
 restore:
-	./scripts/backup --action restore --namespace=actualbudget --pvc=actualbudget-data
+	./scripts/backup --action restore --namespace=paperless --pvc=paperless-data
+	./scripts/backup --action restore --namespace=kanidm --pvc=data-kanidm-0
 	./scripts/backup --action restore --namespace=jellyfin --pvc=jellyfin-data
 
 test:

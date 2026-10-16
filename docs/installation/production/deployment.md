@@ -40,14 +40,30 @@ ipv4NativeRoutingCIDR: "{{ ipv4_net_mask | ansible.utils.ipaddr('network/prefix'
 
 This requires you to manually configure static routes on your router, otherwise pods will not ping other k8s nodes and pods on other k8s nodes.
 
-So, add the following static routes to your router:
+The pod CIDR of a node is **assigned dynamically by `kube-controller-manager`**: it
+is not derived from the node name or from their order, and it can change when a
+node is added, removed or reinstalled. So do not copy a CIDR-to-node table from
+any document (including this one) into your router. Read the mapping from the
+cluster instead:
 
 ```sh
-route add -net 10.42.0.0 netmask 255.255.255.0 gw <pod cidr is the k8s node internal ip address for 10.42.0.0> dev <router-lan-interface>
-route add -net 10.42.1.0 netmask 255.255.255.0 gw <pod cidr is the k8s node internal ip address for 10.42.1.0> dev <router-lan-interface>
-route add -net 10.42.2.0 netmask 255.255.255.0 gw <pod cidr is the k8s node internal ip address for 10.42.1.0> dev <router-lan-interface>
-route add -net 10.42.3.0 netmask 255.255.255.0 gw <pod cidr is the k8s node internal ip address for 10.42.1.0> dev <router-lan-interface>
+kubectl get nodes -o custom-columns=NAME:.metadata.name,PODCIDR:.spec.podCIDR
 ```
+
+Every line of that output is one static route: send the pod CIDR to the internal
+IP address of that same node (the address your router reaches the node on). For
+example:
+
+```sh
+route add -net <pod cidr> netmask 255.255.255.0 gw <node internal ip> dev <router-lan-interface>
+```
+
+!!! warning "Re-check the routes after every node change"
+
+    Adding, removing or reinstalling a node reassigns pod CIDRs. Re-run the
+    `kubectl get nodes ...` command above and fix the routes on your router,
+    otherwise cross-node pod traffic breaks silently while everything else keeps
+    working.
 
 Alternatively, it can be configured through the router UI, as shown in the following example.
 

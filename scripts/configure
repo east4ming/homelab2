@@ -30,13 +30,15 @@ def check_python_version(required_version: str) -> None:
 
 
 def find_and_replace(pattern: str, replacement: str, paths: list[str]) -> None:
+    # -z: without it git quotes paths that contain non-ASCII characters, and the
+    # quoted name cannot be opened (this repository has Chinese file names)
     files_with_matches = subprocess.run(
-        ["git", "grep", "--files-with-matches", pattern, "--"] + paths,
+        ["git", "grep", "-z", "--files-with-matches", pattern, "--"] + paths,
         capture_output=True,
         text=True,
-    ).stdout.splitlines()
+    ).stdout.split("\0")
 
-    for file_with_maches in files_with_matches:
+    for file_with_maches in filter(None, files_with_matches):
         with fileinput.FileInput(file_with_maches, inplace=True) as file:
             for line in file:
                 print(line.replace(pattern, replacement), end="")
@@ -58,7 +60,17 @@ def main() -> None:
     find_and_replace(
         pattern=upstream_config["domain"],
         replacement=domain,
-        paths=[".ci", "apps", "platform", "system", "external"],
+        paths=[
+            ".specify",
+            "apps",
+            "docs",
+            "external",
+            "metal",
+            "platform",
+            "scripts",
+            "specs",
+            "system",
+        ],
     )
 
     find_and_replace(

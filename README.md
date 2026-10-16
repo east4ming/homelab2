@@ -31,7 +31,7 @@ It can be used as a highly customizable framework to build your own homelab.
 > For more information, please see the [r/homelab introduction](https://www.reddit.com/r/homelab/wiki/introduction) and the
 > [Home Operations Discord community](https://discord.gg/home-operations) (formerly known as [k8s-at-home](https://k8s-at-home.com)).
 
-If you encounter an issue, please create [a bug report](https://github.com/khuedoan/homelab/issues/new?template=bug_report.md)
+If you encounter an issue, please create [a bug report](https://github.com/east4ming/homelab2/issues/new)
 (avoid asking for support about issues specific to this project in other communication channels).
 
 ## Overview

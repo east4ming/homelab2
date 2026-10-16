@@ -10,7 +10,7 @@ You can use AWS S3, RustFS, or any other S3-compatible provider.
 - For RustFS, your bucket URL might look something like this:
   `https://my-s3-host.example.com/homelab-backup`.
 
-Please refer to the documentation [Backup and restore](#backup-and-restore) more details.
+Please refer to the documentation [Backup and restore](backup-and-restore.md) for more details.
 
 ## Enable k3s etcd s3 backup
 
@@ -59,4 +59,4 @@ You may want to back up the `external/terraform.tfvars` file to a secure locatio
 !!! warning
 
     TODO:
-    This feature has not yet been fully realized. Currently, you need to refer to [How secrets are pulled from global secrets to other namespaces](#secrets-management) to create it manually.
+    This feature has not yet been fully realized. Currently, you need to refer to [How secrets are pulled from global secrets to other namespaces](../concepts/secrets-management.md#how-secrets-are-pulled-from-global-secrets-to-other-namespaces) to create it manually.

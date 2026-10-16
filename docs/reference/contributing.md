@@ -18,7 +18,7 @@ Version tags, branches and releases are described in [versioning](versioning.md)
 
 ### Bug report
 
-You can [create a new GitHub issue](https://github.com/east4ming/homelab2/issues/new/choose) with the bug report template.
+You can [create a new GitHub issue](https://github.com/east4ming/homelab2/issues/new).
 
 ### Submitting patches
 
