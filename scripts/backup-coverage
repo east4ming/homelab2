@@ -1,0 +1,81 @@
+#!/bin/sh
+
+# List PersistentVolumeClaims that have no backup path: no VolSync
+# ReplicationSource in the same namespace with the same name, and no entry in
+# the backup/restore targets of ./Makefile.
+#
+# VolSync's own cache PVCs (volsync-src-<pvc>-cache) are created and owned by a
+# ReplicationSource and hold no original data, so they are skipped. Every other
+# PVC must be a deliberate decision: back it up, or list it in is_exempt() below
+# with a reason. See docs/how-to-guides/backup-and-restore.md.
+#
+# Usage: ./scripts/backup-coverage
+# Exit: 0 = all PVCs have a ReplicationSource or are explicitly exempt
+#       1 = uncovered PVCs (decisions) were listed
+#       2 = kubectl failed
+
+set -eu
+
+command -v kubectl >/dev/null 2>&1 || { echo "kubectl not found" >&2; exit 2; }
+
+# PVCs that are deliberately not backed up, matched against "namespace/name".
+# Keep one pattern per line with the reason next to it: this is the audit trail
+# for "we know about it and we accept the loss".
+is_exempt() {
+  case "$1" in
+    jellyfin/pvc-nfs-anothervideos | jellyfin/pvc-nfs-thirdvideos) return 0 ;; # bulk NFS media, not restic material
+    kubevirt-test/*) return 0 ;;                                               # test cluster
+    monitoring-system/*) return 0 ;;                                           # metrics TSDB and silences, regenerable
+    ollama/ollama-data) return 0 ;;                                            # model cache, re-downloadable
+    rsshub/feed-icons | rsshub/redis-data) return 0 ;;                         # caches, re-fetchable
+    rustfs/rustfs-logs) return 0 ;;                                            # logs of the backup target itself
+    woodpecker/agent-config-*) return 0 ;;                                     # agent workspace, recreated by the agent
+    *) return 1 ;;
+  esac
+}
+
+tmp_dir=$(mktemp -d)
+trap 'rm -rf "$tmp_dir"' EXIT
+
+kubectl get pvc -A \
+  -o jsonpath='{range .items[*]}{.metadata.namespace}{"/"}{.metadata.name}{" "}{range .metadata.ownerReferences[*]}{.kind}{" "}{end}{"\n"}{end}' \
+  >"$tmp_dir/pvcs" || exit 2
+
+if ! kubectl get replicationsource -A \
+  -o jsonpath='{range .items[*]}{.metadata.namespace}{"/"}{.metadata.name}{"\n"}{end}' \
+  >"$tmp_dir/sources" 2>"$tmp_dir/error"; then
+  echo "warning: cannot list ReplicationSources, treating every PVC as uncovered:" >&2
+  sed 's/^/warning:   /' "$tmp_dir/error" >&2
+  : >"$tmp_dir/sources"
+fi
+sort -o "$tmp_dir/sources" "$tmp_dir/sources"
+
+total=0
+uncovered=0
+while read -r pvc owners; do
+  case " $owners " in
+    *" ReplicationSource "*)
+      continue # VolSync cache PVC
+      ;;
+  esac
+  if is_exempt "$pvc"; then
+    continue
+  fi
+  total=$((total + 1))
+  if grep -qxF "$pvc" "$tmp_dir/sources"; then
+    continue
+  fi
+  echo "$pvc"
+  uncovered=$((uncovered + 1))
+done <"$tmp_dir/pvcs"
+
+echo
+if [ "$uncovered" -eq 0 ]; then
+  echo "OK: all $total PVCs that should be backed up have a ReplicationSource."
+  exit 0
+fi
+
+echo "$uncovered of $total PVCs that should be backed up have no ReplicationSource."
+echo "Add the ones that hold unrecoverable data to the backup and restore targets in"
+echo "./Makefile and run 'make backup', or accept the loss in is_exempt() above."
+exit 1
