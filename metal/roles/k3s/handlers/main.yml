@@ -1,0 +1,14 @@
+# k3s 的配置/二进制/unit 落盘后必须让 systemd 重新加载并重启进程，否则改了配置
+# 也不生效（见 #531）。daemon_reload 只在 unit 文件变化时 notify。
+- name: Reload systemd units
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Restart k3s
+  ansible.builtin.systemd:
+    name: k3s
+    state: restarted
+  register: k3s_restart
+  until: k3s_restart is succeeded
+  retries: 5
+  delay: 5

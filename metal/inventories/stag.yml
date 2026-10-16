@@ -3,27 +3,22 @@ all:
     control_plane_endpoint: 172.21.112.3
     load_balancer_ip_pool:
       - 172.21.112.64/27
-    tailscale_auth_key: "tskey-auth-..."
-    # TODO:
-    registries_config_yaml: |
-      mirrors:
-        "*":
-        docker.io:
-          endpoint:
-            - "https://registry.cn-hangzhou.aliyuncs.com"
+# ⚠️ 真实值不在本文件，也不在仓库里：tailscale_auth_key、registries_config_yaml、
+# 各节点 mac 由 metal/inventories/group_vars/all/zz-secrets.yml 提供（已 gitignore，
+# 示例见 zz-secrets.yml.example）。说明见 metal/README.md「操作者必须提供的值」。
 metal:
   children:
     masters:
       hosts:
         homelab-dev-master:
           ansible_host: 172.21.112.4
-          mac: "00:15:5d:02:20:2f"
+          mac: "{{ metal_macs['homelab-dev-master'] }}"
           disk: sda
           network_interface: eth0
     workers:
       hosts:
         homelab-dev-node:
           ansible_host: 172.21.112.5
-          mac: "00:15:5d:02:20:2e"
+          mac: "{{ metal_macs['homelab-dev-node'] }}"
           disk: sda
           network_interface: eth0

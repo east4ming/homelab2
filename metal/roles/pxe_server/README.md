@@ -35,7 +35,10 @@
 >
 > Currently netboot.xyz needs to be manually selected on each machine after booting to install the corresponding OS.
 > You need to manually enter the ubuntu 26.04.1 netboot install menu, and input the cloud-init config url,
-> like this: <http://yourip/init-config/00:15:5d:02:20:2f/>
+> like this: <http://yourip/init-config/aa:bb:cc:00:00:01/>
+
+（路径里的 MAC 就是该节点在 `metal_macs` 里的值，见
+[metal/README.md](../../README.md)。）
 
 ## Ubuntu Cloud-init
 

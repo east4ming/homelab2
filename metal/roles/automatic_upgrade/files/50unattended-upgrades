@@ -1,4 +1,6 @@
-Unattended-Upgrade::Automatic-Reboot "True";
+// 自动重启必须保持 "False"：4 台节点没有 cordon/drain 编排，自动重启可能让控制面
+// 同时重启、etcd 失去多数派（#533 项 2）。节点维护走 system-upgrade / 手动排空。
+Unattended-Upgrade::Automatic-Reboot "False";
 Unattended-Upgrade::Automatic-Reboot-Time "03:00";
 
 // Hardcode
@@ -16,7 +18,8 @@ Unattended-Upgrade::Allowed-Origins {
         "${distro_id}ESMApps:${distro_codename}-apps-security";
         "${distro_id}ESM:${distro_codename}-infra-security";
         "${distro_id}:${distro_codename}-updates";
-        "${distro_id}:${distro_codename}-proposed";
+        // ${distro_codename}-proposed 已移除：那是 Ubuntu 预发布通道，无人值守安装
+        // unstable 包会引入包回归（#533 项 2）。保留 -updates / -security。
         "${distro_id}:${distro_codename}-backports";
 };
 

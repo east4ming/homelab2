@@ -3,3 +3,24 @@ ansible_ssh_private_key_file: ~/.ssh/id_ed25519
 ssh_public_key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
 dns_server: "223.5.5.5"
 etcd_s3: true
+
+# ── 集群拓扑（供 prerequisites / k3s 引用）────────────────────────────────────
+# api_port：k3s apiserver 端口，同时也是 kube-vip VIP 对外暴露的端口。
+api_port: 6443
+# 组名做成变量，避免在任务里写死 groups['masters']（换 inventory 即失效）。
+server_group: masters
+agent_group: workers
+
+# ── 集群 / Service 地址段（集群级单一事实来源）────────────────────────────────
+# 双栈且 IPv4 在前；逗号后【不能有空格】——k3s 用 SplitStringSlice 按 "," 切分且不
+# trim。prerequisites 的防火墙放行规则直接复用这两个变量，与 k3s 实配保持一致。
+cluster_cidr: "10.42.0.0/16,{{ dualstack_ipv6_pod_cidr }}"
+service_cidr: "10.43.0.0/16,{{ dualstack_ipv6_service_cidr }}"
+
+# ── 操作者提供的真实值 ────────────────────────────────────────────────────────
+# 真实值一律不写进仓库（见 metal/README.md「操作者必须提供的值」）：
+#   registries_config_yaml / tailscale_auth_key / tailscale_client_id /
+#   tailscale_client_secret / metal_macs
+# 未提供时 roles/guard 会载入 vars/placeholders.yml 填入下面的占位串，任何写操作
+# 之前即 fail —— 绝不会用占位值覆盖生产配置。
+metal_var_placeholder: "REPLACE_ME"

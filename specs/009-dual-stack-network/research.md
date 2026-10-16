@@ -91,7 +91,9 @@ Node podCIDR:      jumper-0 10.42.0.0/24   cheshi-0 10.42.1.0/24
 ### 1.3 控制面入口
 
 - **kube-vip v0.6.4** 以 static pod 形式跑在 3 台 master 上（`kube-vip-n100-jumper-{0,1,2}`），
-  `vip_arp=true`，持有 `192.168.3.100`（当前在 jumper-0，MAC `00:e0:4c:72:37:9f`）。
+  `vip_arp=true`，持有 `192.168.3.100`（当前在 jumper-0，其网卡 MAC 见本地
+  `metal/inventories/group_vars/all/zz-secrets.yml` 的 `metal_macs` —— 真实 MAC
+  不再写进公开仓库，#550）。
   **纯 ARP/IPv4**，不含 NDP。`curl https://192.168.3.100:6443/livez` 正常。
 - `advertise-address` / `tls-san` 都是该 VIP → **API 入口保持 IPv4 即可，本次不需要动 kube-vip**。
 

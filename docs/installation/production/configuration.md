@@ -67,8 +67,13 @@ At the end it will show what has changed. After examining the diff, commit and ~
 > 🐾**Warning**:
 > 不要将您的任何密钥 PUSH 到 GitHub 公共仓库. 包括不限于:
 >
-> - `metal/inventories/prod.yml`
->   - `tailscale_auth_key`
->   - `tailscale_client_id`
->   - `tailscale_client_secret`
->   - `registries_config_yaml`
+> - `tailscale_auth_key`
+> - `tailscale_client_id`
+> - `tailscale_client_secret`
+> - `registries_config_yaml`
+> - 各节点的 `mac`
+>
+> 以上值**不再写进 `prod.yml`**，而是放在被 gitignore 的
+> `metal/inventories/group_vars/all/zz-secrets.yml`（模板见同目录
+> `.example`）；缺少真实值时 play 会在写任何配置之前 fail。要填哪些值、
+> 为什么、轮换注意事项见 [metal/README.md](../../../../metal/README.md)。

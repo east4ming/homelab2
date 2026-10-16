@@ -1,12 +1,14 @@
 # Duplicate tasks, same as ./metal/roles/pxe_server/tasks/main.yml
 # TODO:
 - name: Set ipv4 net_mask variable
-  set_fact:
+  ansible.builtin.set_fact:
     ipv4_net_mask: "{{ ansible_default_ipv4.network }}/{{ ansible_default_ipv4.netmask }}"
+  tags: cilium
 
 - name: Display the ipv4 net_mask variable
-  debug:
+  ansible.builtin.debug:
     msg: "ipv4 net_mask: {{ ipv4_net_mask }}"
+  tags: cilium
 
 # Make sure the hubble grafana dashboards can install
 - name: Create the monitoring-system namespace
@@ -17,6 +19,7 @@
       kind: Namespace
       metadata:
         name: monitoring-system
+  tags: cilium
 
 - name: Install Cilium
   kubernetes.core.helm:
@@ -26,6 +29,7 @@
     chart_version: "{{ cilium_version }}"
     release_namespace: "{{ cilium_namespace }}"
     values: "{{ cilium_values }}"
+  tags: cilium
 
 - name: Wait for Cilium CRDs
   kubernetes.core.k8s_info:
@@ -38,6 +42,7 @@
   until: crd.resources | length > 0
   retries: 5
   delay: 10
+  tags: cilium-cr
 
 - name: Apply Cilium resources
   kubernetes.core.k8s:
@@ -45,3 +50,4 @@
   loop:
     - ciliuml2announcementpolicy.yaml
     - ciliumloadbalancerippool.yaml
+  tags: cilium-cr
