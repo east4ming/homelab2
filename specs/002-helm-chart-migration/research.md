@@ -7,7 +7,7 @@
 
 **Decision**: 确认失败原因是 `apps/rsshub/` 和 `apps/lobe-chat/` 缺少 `Chart.yaml`，导致 `helm dependency update` 和 `helm template` 报错。
 
-**Rationale**: 
+**Rationale**:
 - `scripts/helm-diff` 对 `apps/` 下每个子目录执行 `helm dependency update` → `helm template`
 - 当目录不包含 `Chart.yaml` 时，Helm CLI 返回错误并退出
 - 代码注释声称"should not raise error"但与实际实现不符（使用 `check=True`）

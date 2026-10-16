@@ -84,7 +84,7 @@ smartctl_device_temperature{job="nas-smartctl",temperature_type="current"}
 ### 3.3 盘位标签可用
 
 ```promql
-smartctl_device_temperature{job="nas-smartctl"} 
+smartctl_device_temperature{job="nas-smartctl"}
 # 应带 disk="bay1".."bay4"，与 QTS「存储与快照」里的盘位一致
 ```
 

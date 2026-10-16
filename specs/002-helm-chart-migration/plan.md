@@ -24,7 +24,7 @@
 
 **Performance Goals**: `helm template` 渲染时间 < 1s（最小化模板，无复杂逻辑）
 
-**Constraints**: 
+**Constraints**:
 - 渲染输出必须与原始 manifests 在 spec 层面完全一致（仅允许新增 label/annotation）
 - 不引入任何 chart 依赖以避免 CI `helm dependency update` 下载失败
 - 保持现有 kompose 标签和注解不变
