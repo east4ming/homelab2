@@ -30,3 +30,10 @@
     - key: PAPERLESS_ADMIN_PASSWORD
       length: 32
       special: true
+
+# Grafana
+- name: grafana.admin
+  data:
+    - key: password
+      length: 32
+      special: true
