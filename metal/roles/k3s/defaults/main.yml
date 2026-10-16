@@ -37,9 +37,11 @@ k3s_server_config:
   #   2) cluster-cidr / service-cidr / node-ip 三者地址族形状必须【一致】，必须同时改；
   #      只改其一会直接 fatal：`... must share the same IP version`
   #   3) 顺序即主族，IPv4 必须在前（etcd 与 apiserver 只用主族，不双栈）
-  # 仅 server 需要这两项；agent 从 server 获取 cluster-cidr
-  cluster-cidr: "10.42.0.0/16,{{ dualstack_ipv6_pod_cidr }}"
-  service-cidr: "10.43.0.0/16,{{ dualstack_ipv6_service_cidr }}"
+  # 仅 server 需要这两项；agent 从 server 获取 cluster-cidr。
+  # 取值定义在 group_vars/all.yml —— prerequisites 的防火墙放行规则复用同一份，
+  # 避免「k3s 实配」与「放行网段」两处漂移。
+  cluster-cidr: "{{ cluster_cidr }}"
+  service-cidr: "{{ service_cidr }}"
 # 注意：不要设置 cluster-dns。k3s 在未显式设置时会按每个 service-cidr 各派生一个
 # DNS IP 并把 CoreDNS 置为 RequireDualStack —— 这正是本集群采用的行为（决策 1=A）；
 # 显式写 cluster-dns 反而会把它压回单栈。

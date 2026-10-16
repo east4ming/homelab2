@@ -1,0 +1,29 @@
+# k3s 的配置/二进制/unit 落盘后必须让 systemd 重新加载并重启进程，否则改了配置
+# 也不生效（见 #531）。daemon_reload 只在 unit 文件变化时 notify。
+#
+# 先探测 unit 文件：在裸机上第一次执行时 k3s.service 还不存在（由 k3s role 创建），
+# handler 在 play 末尾执行时通常已存在；加了这个判断，prerequisites 单独跑或顺序
+# 被改动时也不会因为 restart 一个不存在的 unit 而失败。
+- name: Check whether the k3s service unit exists
+  ansible.builtin.stat:
+    path: "{{ k3s_service_file | default('/etc/systemd/system/k3s.service') }}"
+  register: k3s_unit_stat
+
+- name: Reload systemd units
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: Restart k3s
+  ansible.builtin.systemd:
+    name: k3s
+    state: restarted
+  register: k3s_restart
+  until: k3s_restart is succeeded
+  retries: 5
+  delay: 5
+  when: k3s_unit_stat.stat.exists
+
+- name: Restart tailscale-metrics
+  ansible.builtin.systemd:
+    name: tailscale-metrics
+    state: restarted

@@ -25,23 +25,26 @@
     - {name: "fs.inotify.max_queued_events", value: 16384}
     - {name: "fs.inotify.max_user_instances", value: 8192}
     - {name: "fs.inotify.max_user_watches", value: 524288}
+  tags: sysctl
 
 - name: Enable IPv4 forwarding
-  sysctl:
+  ansible.posix.sysctl:
     name: net.ipv4.ip_forward
     value: '1'
     state: present
     reload: true
     sysctl_file: /etc/sysctl.d/90-homelab-prerequisites.conf
+  tags: sysctl
 
 - name: Enable IPv6 forwarding
-  sysctl:
+  ansible.posix.sysctl:
     name: net.ipv6.conf.all.forwarding
     value: '1'
     state: present
     reload: true
     sysctl_file: /etc/sysctl.d/90-homelab-prerequisites.conf
   when: ansible_all_ipv6_addresses
+  tags: sysctl
 
 - name: Enable IPv6 router advertisements
   ansible.posix.sysctl:
@@ -52,13 +55,37 @@
     sysctl_file: /etc/sysctl.d/90-homelab-prerequisites.conf
   tags: sysctl
 
+# api_port / cluster_cidr / service_cidr / server_group / agent_group 定义在
+# group_vars/all.yml。这里显式 assert，而不是让它们在模板渲染时以 undefined variable
+# 的面目炸开：那既看不出是配置缺失，也会在放到一半防火墙规则之后才失败。
+- name: Assert cluster addressing variables are usable
+  ansible.builtin.assert:
+    that:
+      - api_port | int > 0
+      - cluster_cidr is string and cluster_cidr | length > 0
+      - service_cidr is string and service_cidr | length > 0
+      - server_group in groups
+      - agent_group in groups
+    fail_msg: >-
+      api_port / cluster_cidr / service_cidr / server_group / agent_group 必须在
+      group_vars/all.yml 里有定义且可用。检查 metal/group_vars/all.yml 与
+      metal/inventories/{{ inventory_file | basename }} 的组名是否一致。
+    quiet: true
+  run_once: true
+  tags: firewall
+
 - name: Populate service facts
   ansible.builtin.service_facts:
+  tags: firewall
 
+# ── UFW ───────────────────────────────────────────────────────────────────────
+# 注意两个曾经让整块永不执行的坑（#531）：
+#   1) systemd 下 service_facts 的键是 `ufw.service`，不是 `ufw`
+#   2) `ufw status` 的实际输出是 `Status: active`，不是 `Status':' active`
 - name: Allow UFW Exceptions
   when:
-    - ansible_facts.services['ufw'] is defined
-    - ansible_facts.services['ufw'].state == 'running'
+    - ansible_facts.services['ufw.service'] is defined
+    - ansible_facts.services['ufw.service'].state == 'running'
   block:
     - name: Get ufw status
       ansible.builtin.command:
@@ -68,7 +95,10 @@
 
     - name: If ufw enabled, open api port
       when:
-        - ufw_status['stdout'] == "Status':' active"
+        # ⚠️ 不能用 is search('active')：'inactive' 也含 'active'。
+        # 只比较 status 行冒号后的一个词，字面量里不带冒号（避免 YAML/Jinja 歧义）。
+        - ufw_status['stdout_lines'] | default([]) | first | default('')
+          | split('Status:') | last | trim == "active"
       community.general.ufw:
         rule: allow
         port: "{{ api_port }}"
@@ -76,7 +106,10 @@
 
     - name: If ufw enabled, open etcd ports
       when:
-        - ufw_status['stdout'] == "Status':' active"
+        # ⚠️ 不能用 is search('active')：'inactive' 也含 'active'。
+        # 只比较 status 行冒号后的一个词，字面量里不带冒号（避免 YAML/Jinja 歧义）。
+        - ufw_status['stdout_lines'] | default([]) | first | default('')
+          | split('Status:') | last | trim == "active"
         - groups[server_group] | length > 1
       community.general.ufw:
         rule: allow
@@ -85,11 +118,14 @@
 
     - name: If ufw enabled, allow default CIDRs
       when:
-        - ufw_status['stdout'] == "Status':' active"
+        # ⚠️ 不能用 is search('active')：'inactive' 也含 'active'。
+        # 只比较 status 行冒号后的一个词，字面量里不带冒号（避免 YAML/Jinja 歧义）。
+        - ufw_status['stdout_lines'] | default([]) | first | default('')
+          | split('Status:') | last | trim == "active"
       community.general.ufw:
         rule: allow
-        src: '{{ item }}'
-      loop: "{{ (cluster_cidr + ',' + service_cidr) | split(',') }}"
+        src: "{{ item }}"
+      loop: "{{ [cluster_cidr, service_cidr] | map('split', ',') | flatten }}"
 
 - name: Allow Firewalld Exceptions
   when:
@@ -105,7 +141,7 @@
         immediate: true
 
     - name: If firewalld enabled, open etcd ports
-      when: groups[masters] | length > 1
+      when: groups[server_group] | length > 1
       ansible.posix.firewalld:
         port: "2379-2381/tcp"
         zone: internal
@@ -120,7 +156,7 @@
         state: enabled
         permanent: true
         immediate: true
-      with_items:
+      loop:
         - 5001/tcp   # Spegel (Embedded distributed registry)
         - 8472/udp   # Flannel VXLAN
         - 10250/tcp  # Kubelet metrics
@@ -151,7 +187,7 @@
         state: enabled
         permanent: true
         immediate: true
-      loop: "{{ (cluster_cidr + ',' + service_cidr) | split(',') }}"
+      loop: "{{ [cluster_cidr, service_cidr] | map('split', ',') | flatten }}"
 
 - name: Check for Apparmor existence
   ansible.builtin.stat:
@@ -185,15 +221,16 @@
     src: tailscale-metrics.service.j2
     dest: /etc/systemd/system/tailscale-metrics.service
     mode: "0644"
-  register: tailscale_metrics_unit
+  notify:
+    - Reload systemd units
+    - Restart tailscale-metrics
   tags: tailscale
 
 - name: Enable and start Tailscale metrics service
   ansible.builtin.systemd:
     name: tailscale-metrics
     enabled: true
-    state: "{{ 'restarted' if tailscale_metrics_unit.changed else 'started' }}"
-    daemon_reload: true
+    state: started
   tags: tailscale
 
 - name: Setup optional private registry configuration
@@ -204,8 +241,33 @@
         path: "/etc/rancher/k3s"
         mode: "0755"
         state: directory
+      tags: registries
+
+    # 这道 assert 是 #530 最关键的一道闸：registries.yaml 是【整体覆盖】，
+    # 拿占位内容跑一次就会抹掉节点上所有非 docker.io 镜像源与私有仓库认证。
+    # 在写之前拒绝执行，并说明去哪里取真实内容。
+    - name: Refuse to overwrite registries.yaml with placeholder content
+      ansible.builtin.assert:
+        that:
+          - registries_config_yaml | length > 0
+          - registries_config_yaml != metal_var_placeholder
+          - (registries_config_yaml | from_yaml) is mapping
+          - "'mirrors' in (registries_config_yaml | from_yaml)"
+        fail_msg: >-
+          registries_config_yaml 缺失、仍是占位值、或不是合法的 registries 配置
+          （必须能解析成带 mirrors 键的 mapping）。它会被【整体覆盖】到节点
+          /etc/rancher/k3s/registries.yaml —— 用占位内容执行会丢失线上全部
+          registry mirror 与私有仓库认证。请把生产节点上的真实内容取回来填进
+          metal/inventories/group_vars/all/zz-secrets.yml：
+          ssh {{ ansible_user }}@{{ ansible_host }}
+          'sudo cat /etc/rancher/k3s/registries.yaml'
+        quiet: true
+      tags: registries
+
     - name: Copy config values
       ansible.builtin.copy:
         content: "{{ registries_config_yaml }}"
         dest: "/etc/rancher/k3s/registries.yaml"
         mode: "0644"
+      notify: Restart k3s
+      tags: registries
