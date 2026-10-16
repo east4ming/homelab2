@@ -25,15 +25,19 @@ spec:
         - alert: KorAuditNoData
           annotations:
             description: |-
-              kor exporter 已经连续 1 小时没有暴露任何 kubernetes_orphaned_resources 序列。
-              抓取本身没断（否则由 TargetDown 告警），所以问题在 exporter 内部：扫描循环卡住、
-              RBAC 被改动导致 LIST 全部失败，或 Deployment 被改坏。
+              kor exporter 已经连续 1 小时没有暴露任何 kubernetes_orphaned_resources 序列，
+              且 3 小时内进程 CPU 时间几乎没有增长（< 1 秒），说明它没有在做扫描。
+              抓取本身没断（否则由 TargetDown 告警），所以问题在 exporter 内部：
+              RBAC 被改动导致 LIST 全部失败、扫描循环卡住，或 Deployment 被改坏。
+              （集群被清理干净时不会有本告警：kor 仍会每 30 分钟做一轮全量 LIST，
+              实测 3 小时累计 26-34 秒 CPU；只有真的没在扫描才会低于 1 秒。）
               排查：`kubectl -n kor logs deploy/kor-exporter --tail=50`、
               `kubectl -n kor get deploy,servicemonitor kor-exporter`。
               注意每轮扫描要对整个集群做全量 LIST（实测约 3 分钟），刚重启后的几分钟内没有数据是正常的。
             summary: '[kor] 审计指标已消失 1 小时'
           expr: |
             absent(kubernetes_orphaned_resources)
+              and on() (max(increase(process_cpu_seconds_total{job="kor-exporter"}[3h])) < 1)
           for: 1h
           labels:
             severity: warning

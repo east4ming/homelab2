@@ -12,29 +12,33 @@ kor 以只读 exporter 形态常驻，把「没有任何工作负载引用」的
        数据当场消失；etcd 快照只含对象定义，**救不回数据**。
     3. **etcd 快照的恢复窗口只有约 12–24 小时**（见下文实测）。删完要立刻验证。
 
-## 1. 数据来源与本次快照
+## 1. 数据来源与历史快照
 
 | 来源 | 用途 |
 | --- | --- |
-| 指标 `kubernetes_orphaned_resources{kind,namespace,resourceName}` | 全量发现结果（在线、始终最新） |
+| 指标 `kubernetes_orphaned_resources`（标签 `kind` / `exported_namespace` / `resourceName`） | 全量发现结果（在线、始终最新） |
 | Grafana `Kor Dashboard`（uid `Zrue32P7Ik`） | 总量、按 namespace、按 kind 分布 |
-| `scripts/kor-audit` | 把指标结果与集群实况交叉核对，输出 A/B/C 分级报告 |
+| `scripts/kor-audit` | 把指标结果与集群实况交叉核对，输出 A/B/C/U/? 分级报告 |
 
 ```sh
 scripts/kor-audit --out /tmp/kor-audit.md
 ```
 
-快照（2026-10-03）：**925 条**，13 类。
+!!! note "本页出现的计数都是历史快照，会随集群漂移"
+
+    下面的数字保留下来只为解释「过滤配置与分级规则怎么影响结果」，**不要照抄**；
+    任何一次清理前都以 `scripts/kor-audit` 的当次输出为准。
+
+**历史快照（2026-10-03，清理前）：925 条，13 类。**
 
 | kind | 数量 | kind | 数量 |
 | --- | --- | --- | --- |
 | ReplicaSet | 486 | Secret | 90 |
 | Crd | 127 | ConfigMap | 68 |
 | Job | 40 | Pvc | 30 |
-| ClusterRole | 26 | VolumeAttachment | 25 |
-| Service | 11 | ClusterRoleBinding | 10 |
-| RoleBinding | 7 | ServiceAccount | 4 |
-| StorageClass | 1 | | |
+| ClusterRole | 26 | Service | 11 |
+| ClusterRoleBinding | 10 | RoleBinding | 7 |
+| ServiceAccount | 4 | StorageClass | 1 |
 
 !!! note "这个快照早于 exporter 的过滤配置，数字对不上是正常的"
 
@@ -42,10 +46,15 @@ scripts/kor-audit --out /tmp/kor-audit.md
     以下对象不再出现在报告里：
 
     - `app.kubernetes.io/managed-by=Helm`：声明式对象由 Git 管理，不该按 Pod 使用情况判定。
-      副作用是 **ReplicaSet 会从 Pod 模板继承该标签，105 个旧 RS 因此不再出现**。
+      副作用是 **ReplicaSet 会从 Pod 模板继承该标签，Helm 部署产生的旧 RS 因此整批不再出现**。
+      不带该标签的 RS（kubectl / operator 直接创建的工作负载）仍会被报出，所以这个 kind
+      的数量取决于工作负载怎么部署，**不是恒为 0**。
     - `tailscale.com/managed=true`：Tailscale operator 管理的 21 张 Ingress 证书与
       8 个 ProxyGroup/operator 状态 Secret。这批对象**无法**用 `kor/used=true` 排除——
       operator 会重写 Secret 元数据把外部标签冲掉（实测）。
+
+    快照里那 25 条 VolumeAttachment 已从上面的表里去掉：它们当时确实出现在指标里，
+    但 25/25 都是活跃挂载的假阳性（成因见 §2），不属于清理对象。
 
     同口径实测（`kor all -o json`，过滤前后各跑一次）：**871 → 622**，
     其中 Crd 126 → 91、ReplicaSet 487 → 381、Secret 62 → 25、ConfigMap 62 → 21。
@@ -59,7 +68,8 @@ scripts/kor-audit --out /tmp/kor-audit.md
         `kor customresourcedefinition` 走这条，过滤器无效）。
         用子命令去验证本配置会得到相反结论——排查时请用 `kor all` 或直接看指标。
 
-    `--ignore-owner-references` 则会把全部派生对象一起藏掉（486 个 RS → 0），不建议使用。
+    `--ignore-owner-references` 则会把全部派生对象一起藏掉（带 `ownerReferences` 的对象
+    整批消失），不建议使用。
 
 ## 2. kor 的判定语义（决定哪些是假阳性）
 
@@ -76,45 +86,57 @@ scripts/kor-audit --out /tmp/kor-audit.md
 | Pvc | 没有 Pod 挂载 | **停止中的 VM 的数据盘**（VM 定义里按名引用）、VolSync 的 restic 缓存卷 |
 | ReplicaSet | `spec.replicas=0` 且状态全 0 | 无（旧 revision 就是旧 revision） |
 | Job | 已完成 / 失败 / 挂起 | 无（但日志会随对象一起消失） |
-| VolumeAttachment | 引用的 PV、节点或 CSIDriver 不存在 | 无 |
+| VolumeAttachment | 它逐条 Get VA 引用的节点，看不到「有没有 Pod 在用」 | **几乎全是假阳性**：RBAC 缺 `nodes`/`csidrivers` 时 Get 失败，于是每条 VA 都被报成 `Node ... does not exist`（2026-10-03 实测 25/25 都是活跃挂载，见 §4.2）；补权限后该 kind 当前为 0 条 |
 | StorageClass | 没有 PV/PVC 使用它 | GitOps 管理，删了会被重建 |
 
 !!! warning "两个最容易看错的地方"
 
     - **`namespace` ≠ `exported_namespace`**。指标里的 `namespace` 是采集目标自己的
       namespace（恒为 `kor`），资源真正所属的 namespace 在 `exported_namespace`。
-    - **RS 上的 ArgoCD 注解是继承来的**。486 个 ReplicaSet 中 258 个带
-      `argocd.argoproj.io/tracking-id`，但那是从 Deployment 的 Pod 模板继承的；
-      ArgoCD 管的是 Deployment，**不会**重建 RS。所以判「是不是派生对象」要看
-      `ownerReferences`，不能看标签。
+    - **RS 上的 ArgoCD 注解是继承来的**。旧 ReplicaSet 上的
+      `argocd.argoproj.io/tracking-id` 是从 Deployment 的 Pod 模板继承的，不代表
+      ArgoCD 在管这个 RS（ArgoCD 管的是 Deployment，**不会**重建 RS）。
+      所以判「是不是派生对象」要看 `ownerReferences`，不能看标签。
 
 ## 3. 分级结果
 
+分级完全由**当次报告**决定，本页不写死数量——先跑 `scripts/kor-audit`（见 §1）。
+五个级别：
+
 ```
-A 类  可直接批量清理   557 个   （ReplicaSet 486 / Job 32 / VolumeAttachment 25 / PVC 7 / Service 7）
-B 类  需人工确认        36 个
-C 类  禁止删除         332 个
+A  可直接批量清理   控制器不会重建，且不含数据
+B  需人工确认       可能被停止中的工作负载引用，或属已卸载组件的遗留
+C  禁止删除         GitOps/operator 管理、删除即丢数据，或属 CSI 运行时状态
+U  脚本未覆盖       RESOURCES 表里没有这个 kind，核对不了集群实况，需人工核对
+?  指标里还在、集群里已查不到   时序问题，等下一轮扫描刷新即可
 ```
+
+三点容易误判的地方：
+
+- **A 类不是恒为空**。`--exclude-labels` 只挡掉带 `app.kubernetes.io/managed-by=Helm`
+  的旧 RS；不带该标签的旧 RS（kubectl / operator 直接创建的工作负载）仍会进 A 类。
+  2026-10-03 清理后 A 类一度为 0，之后随新部署又长回来——**A 类为空同样正常**。
+- **U 类要当回事**。kor 的扫描范围比脚本的 `RESOURCES` 表大（Deployment、StatefulSet、
+  DaemonSet、Ingress、PV、Role、Pod、HPA、PDB、NetworkPolicy、PriorityClass 等）。
+  这些 kind 一旦出现在指标里就会进 U 类，脚本给不出判据，必须按对象名人工核对。
+- **`?` 类通常不用管**，下一轮扫描后自愈；持续不消失才说明 kubectl 侧与指标侧不一致。
 
 ### A 类：可直接批量清理
 
-| 对象 | 数量 | 为什么安全 |
-| --- | --- | --- |
-| ReplicaSet（旧 revision） | 486 | 由 Deployment 生成，`replicas=0` 且状态全 0；删除后不会被重建，只少一条 `kubectl rollout undo` 历史 |
-| Job（已完成） | 32 | 27 个 renovate 运行历史 + `kube-bench` + 4 个 CronJob 历史；CronJob 不重建历史运行 |
-| VolumeAttachment | 25 | 引用的 PV 已不存在，是 CSI 残留的元数据 |
-| PVC（Woodpecker 流水线工作区） | 7 | 2026-05 的孤儿流水线工作区，无 Pod 挂载、无 owner |
-| Service（Woodpecker 临时 headless） | 7 | 与上面同批流水线的残留 |
+| 对象 | 为什么安全 |
+| --- | --- |
+| ReplicaSet（旧 revision） | 由 Deployment 生成，`spec.replicas=0` 且状态全 0；删除后不会被重建，只少一条 `kubectl rollout undo` 历史 |
+| Job（已完成） | CronJob 不重建历史运行；删了日志会跟对象一起消失，建议先留日志 |
+| PVC / Service（Woodpecker 流水线工作区与临时 headless Service） | 无 Pod 挂载、无 owner 的孤儿流水线残留；删前确认当前没有流水线在跑 |
 
-**收益要如实说**：
+**收益要如实说**（下面数字是 2026-10-03 清理前的实测）：
 
-- 这 557 个对象只占 etcd 元数据（当前 DB 约 **71 MiB**），清理不会显著改变集群规模；
+- 当时那 557 个对象只占 etcd 元数据（DB 约 **71 MiB**），清理不会显著改变集群规模；
   价值在于让 kor 的后续报告不再被历史噪声淹没。
 - **唯一有实际空间收益的是 7 个 Woodpecker PVC**：名义申请 70 GiB，`rbd du` 实测
   实际占用合计约 **0.5 GiB**（1 个 0 B，6 个约 80–84 MiB）。RBD 是精简置配，
   所以别期待释放 70 GiB。
-- 那 25 条陈旧 VolumeAttachment **没有任何空间收益**：已核实 Ceph 池里 55 个
-  `csi-vol-*` 镜像与 55 个 PV 一一对应，**没有孤儿镜像**，删的只是 k8s 侧记录。
+- VolumeAttachment 不在清理范围内，见 §4.2。
 
 ### B 类：需人工确认
 
@@ -127,11 +149,12 @@ C 类  禁止删除         332 个
 | `kubevirt-test/prod-vm-datadisk` | **不删**：`virtualmachine/prod-vm`（当前 Stopped）的 `datadisk` 就指向它 |
 | `kubevirt/virt-exportproxy` Service | **不删**：kubevirt-operator 管理 |
 
-### C 类：禁止删除（332）
+### C 类：禁止删除
 
-- **Crd 127**、**Secret 90**、**StorageClass 1**（`standard-rwx`，GitOps 管理且无 PVC 使用，
-  但删了会被重建）。
-- **GitOps 管理 85**、**operator/CR 拥有 24**、**DataVolume 生成的 VM 根盘 5**。
+C 类数量最大，报告里只给判据与计数（不逐个列对象）。2026-10-03 快照的构成是
+**Crd 127**、**Secret 90**、**StorageClass 1**（`standard-rwx`，GitOps 管理且无 PVC 使用，
+但删了会被重建）、**GitOps 管理 85**、**operator/CR 拥有 24**、**DataVolume 生成的 VM 根盘 5**；
+当次构成以报告的 C 类小节为准。
 
 其中最危险的三个具体对象，删掉直接出事：
 
@@ -214,6 +237,11 @@ kubectl patch pv <pv-name> -p '{"spec":{"persistentVolumeReclaimPolicy":"Retain"
 
 **分批执行，每批之后验证**
 
+!!! note "下面的对象名都是 2026-10-03 快照里的例子"
+
+    实际清单每次都要用当次 `scripts/kor-audit` 的输出替换，**不要照抄这里的名字**。
+    分批的意义是「每批只碰一类对象、删完立刻验证」，分批方式本身可以照用。
+
 ```sh
 # 第 1 批：Ceph 上的真实占用（唯一有空间收益的一批）
 # 这些对象没有任何 label，只能按名字删，所以必须显式列出来
@@ -234,12 +262,26 @@ kubectl -n woodpecker delete pvc --dry-run=server \
 kubectl -n renovate logs job/renovate-1763392138332 > ~/kor-backup/2026-10-03/renovate-...log
 kubectl -n renovate delete job renovate-1763392138332
 
-# 第 3 批：陈旧 CSI 记录（无空间收益，纯清理）
-kubectl delete volumeattachment csi-0e90cfe4... csi-10888edc...
-
-# 第 4 批：旧 ReplicaSet（数量大，务必先导出清单再批量删）
-kubectl -n rook-ceph delete rs <按 /tmp/kor-audit.md 的 A 类清单>
+# 第 3 批：旧 ReplicaSet（数量大，务必先导出清单再批量删）
+# 清单里的条目是「ns/name」，每条都要按自己的 namespace 删；
+# 固定一个 -n <ns> 会让别的 ns 静默 NotFound，而同名 RS 恰好存在时还会误删。
+kubectl -n <条目所在 ns> get rs <条目名> \
+  -o jsonpath='{.spec.replicas} {.status.readyReplicas}{"\n"}'
+# 输出必须是 `0 0`（或 `0 `）才继续；非 0 说明它不是旧 revision，跳过
+kubectl -n <条目所在 ns> delete rs <条目名>
 ```
+
+!!! danger "不要删 VolumeAttachment"
+
+    CSI 的 VolumeAttachment 是**运行时状态**，不是可清理的残留。删除活跃挂载的 VA 会让
+    external-attacher 对正在被 Pod 使用的卷执行 detach：I/O 中断，严重时数据损坏。
+    kor 报出 VA 也不代表引用已消失——RBAC 缺 `nodes`/`csidrivers` 时它会逐条误报
+    `Node ... does not exist`（2026-10-03 实测 25/25 都是活跃挂载）。
+
+    `scripts/kor-audit` 因此把该 kind 一律列为 C 类。确实要处理（例如带
+    `deletionTimestamp` 卡死的记录）请走
+    [rook-ceph v1.20.0 升级故障处理](troubleshooting/rook-ceph-v1.20.0-bug-workaround.md)
+    里的人工流程，并先核对 PV / 节点 / CSIDriver 是否仍然存在。
 
 **删除后立即验证**
 
@@ -248,8 +290,12 @@ kubectl -n rook-ceph delete rs <按 /tmp/kor-audit.md 的 A 类清单>
 kubectl get pods -A | grep -vE "Running|Completed"
 # 2) ArgoCD 全绿（A 类不在 Git 里，不应产生任何漂移）
 kubectl get applications -A -o custom-columns=NAME:.metadata.name,SYNC:.status.sync.status,HEALTH:.status.health.status | grep -v "Synced.*Healthy"
-# 3) kor 重新扫描后数字下降（下一次扫描周期内，或重启 exporter 触发）
-make smoke-test
+# 3) kor 重新扫描后总数下降（扫描间隔 30 分钟，也可以看 exporter 日志确认已重扫）
+#    注意：make smoke-test 只对 5 个 Ingress 发 HTTP 探测，与 kor 无关，不能用它验证这一步
+curl -s --get --data-urlencode 'query=count(kubernetes_orphaned_resources)' \
+  https://prometheus.west-beta.ts.net/api/v1/query | jq -r '.data.result[0].value[1]'
+# 或重跑分级报告，确认目标对象已从 A 类清单里消失
+scripts/kor-audit
 ```
 
 ### 4.3 误删除恢复
@@ -260,7 +306,7 @@ make smoke-test
 | --- | --- | --- |
 | ArgoCD / Helm 管理（C 类，原则上不该删） | 什么都不用做——`selfHeal` 会在下一个同步周期自动重建；也可在 ArgoCD UI 点 Sync，或 `git revert` 后合入 | 约 3 分钟内自动 |
 | operator/CR 生成（Secret、RBAC、DataVolume 的 PVC） | 删除/重建其父对象（如 `ExternalSecret`、`CephCluster`）触发重建；ESO 与 rook 会重新 reconcile | 分钟级 |
-| 声明式但不在 Git（A 类） | 用 4.1 ② 的 YAML 导出 `kubectl apply -f`；ReplicaSet/VolumeAttachment 无需恢复（无意义） | 即时 |
+| 声明式但不在 Git（A 类） | 用 4.1 ② 的 YAML 导出 `kubectl apply -f`；旧 ReplicaSet 无需恢复（无意义） | 即时 |
 | **PVC 数据**（回收策略 `Delete`） | 只有 VolSync 一条路：`./scripts/backup --action restore ...`。**etcd 快照救不回数据**——它只有对象定义，Ceph 镜像已经没了 | 取决于备份周期 |
 | PVC（已先把 PV 改成 `Retain`） | 手工重建同名 PVC 绑定回那个 PV（`spec.volumeName`），或直接用该 PV 重建工作负载 | 即时 |
 | 整集群级事故（如误删 CRD 导致 CR 级联删除） | 从 S3 取最近一份 etcd 快照，在**一台**控制面执行 `k3s server --cluster-reset --cluster-reset-restore-path=<快照>`，其余控制面清掉本地 etcd 数据后重新加入 | 见 k3s 官方文档；窗口 12–24 小时 |
@@ -276,20 +322,25 @@ make smoke-test
 ## 5. 复现与排障
 
 ```sh
-scripts/kor-audit                                   # 重新生成 A/B/C 分级
+scripts/kor-audit                                   # 重新生成 A/B/C/U/? 分级
 kubectl -n kor logs deploy/kor-exporter --tail=20   # exporter 在跑整集群 LIST
 ```
 
 | 症状 | 处理 |
 | --- | --- |
 | 报告里 C 类突然变多 | 多半是 GitOps 标记的判断变了；确认 `scripts/kor-audit` 的 `gitops` 判据与你删的东西一致 |
+| 报告里出现 U 类 | kor 报了脚本 `RESOURCES` 表没覆盖的 kind。按对象名人工核对；要纳入自动分级，就往脚本的 `RESOURCES` 与 `live_meta()` 里补映射 |
+| 报告里出现 `?` 类并持续不消失 | 说明指标与集群实况确实不一致（对象被删/改名，指标未刷新）。等一轮扫描仍不消失就看 exporter 日志 |
 | 删完 ArgoCD 出现 OutOfSync | 说明删到了 C 类对象（在 Git 里）。不要手工重建，用 Sync 让它自己修复 |
 | PVC 删了但 Ceph 里镜像还在 | 回收策略被改成 `Retain` 了；镜像需人工 `rbd rm`（谨慎） |
 | 想确认某 PVC 在 Ceph 里的真实占用 | `kubectl -n rook-ceph exec deploy/rook-ceph-tools -- rbd du -p standard-rwo <csi-vol-...>` |
 
 ## 6. 已知限制
 
-- `scripts/kor-audit` 的分级是**保守规则 + 启发式**，B 类必须人工看；规则见脚本内 `classify()`。
+- `scripts/kor-audit` 的分级是**保守规则 + 启发式**，B 类必须人工看，U 类必须人工核对；
+  规则见脚本内 `classify()` 与 `RESOURCES`。
+- **`VolumeAttachment` 不在清理范围**：它是 CSI 的运行时状态，删除活跃挂载的 VA 会触发
+  卷 detach。脚本一律判 C 类；确需处理时按 §4.2 的人工流程核对引用后再动手。
 - kor 的判定本身有上游已知假阳性（见 `specs/008-kor-monitoring/spec.md` 与上游 README），
   任何批量删除前都应保留 4.1 的 YAML 导出。
 - 本页不提供自动删除（kor 的 `--delete` 不启用：它需要写权限，且会照单全删）。

@@ -43,8 +43,30 @@ kor:
       image:
         # 图表默认 latest + imagePullPolicy=Always，无法追溯版本；
         # 钉住 chart 0.2.16 对应的 appVersion，缓存里有就不再回源拉取。
-        tag: v0.6.9
+        #
+        # tag 里同时带 digest：上游 tag 被重新 push（或 registry 侧被替换）时，
+        # digest 对不上会直接拉取失败，而不是静默换掉代码——这个镜像的 SA 能读全集群
+        # Secret/ConfigMap。该 digest 与线上容器 imageID 一致（containerd 报的
+        # sha256:1a85158c82bbca16c942426b7ef3faba3f5cb23634b5b66e462716bc8520fc8f）；
+        # 升级时 tag 与 digest 必须成对取自同一次 `docker buildx imagetools inspect`。
+        tag: v0.6.9@sha256:1a85158c82bbca16c942426b7ef3faba3f5cb23634b5b66e462716bc8520fc8f
       imagePullPolicy: IfNotPresent
+      # kor 官方镜像是 FROM scratch 的静态二进制（CGO_ENABLED=0），全部源码里没有任何
+      # 文件写入（无 os.Create/WriteFile/CreateTemp/TempDir），所以可以只读根文件系统。
+      # 它按 in-cluster token 访问 API：先 stat /var/run/secrets/.../token 再走
+      # rest.InClusterConfig()，所以 **不能** 关 automountServiceAccountToken
+      # （上游 chart 0.2.16 也没有这个 value，写了会被静默忽略）。
+      podSecurityContext:
+        runAsNonRoot: true
+        runAsUser: 65532
+        runAsGroup: 65532
+        seccompProfile:
+          type: RuntimeDefault
+      securityContext:
+        allowPrivilegeEscalation: false
+        readOnlyRootFilesystem: true
+        capabilities:
+          drop: ["ALL"]
       resources:
         requests:
           cpu: 10m

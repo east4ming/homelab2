@@ -2,11 +2,14 @@
 """对 kor 的未使用资源发现结果做安全分级。
 
 数据来源：kor exporter 暴露的 kubernetes_orphaned_resources 指标（经 Prometheus 查询），
-再与集群实况（kubectl）交叉核对，按「删除后会不会被重建 / 会不会造成故障」分三级：
+再与集群实况（kubectl）交叉核对，按「删除后会不会被重建 / 会不会造成故障」分级：
 
   A  可直接批量清理：控制器不会重建，且不含数据
   B  需人工确认：可能被停止中的工作负载引用，或属已卸载组件的遗留
-  C  禁止删除：GitOps/operator 管理（删了会被重建并产生漂移），或删除即丢数据
+  C  禁止删除：GitOps/operator 管理（删了会被重建并产生漂移）、删除即丢数据，
+     或属 CSI 运行时状态（删除会触发卷 detach）
+  U  脚本未覆盖：kor 报出了该 kind，但 RESOURCES 表里没有，无法核对集群实况，需人工核对
+  ?  指标里还在、集群里已查不到：等下一轮扫描刷新
 
 用法：
     scripts/kor-audit                      # 打到 stdout
@@ -43,6 +46,11 @@ FORBIDDEN_KINDS = {
     "Crd": "删除 CRD 会级联删除其全部自定义资源；且被标记的 CRD 都属于已安装的 operator/chart",
     "Secret": "kor 只看 Pod 是否引用；备份仓库凭据、TLS 证书、ESO/operator 生成的密钥都属假阳性",
     "StorageClass": "删除会移除存储类（GitOps 管理，且后续 PVC 仍需使用）",
+    "VolumeAttachment": "CSI 运行时状态，不是清理对象：删除活跃挂载的 VA 会让 external-attacher "
+                        "对正在使用的卷执行 detach（I/O 中断，严重时数据损坏）。kor 报出的 VA "
+                        "也不代表引用已消失——RBAC 缺 nodes/csidrivers 时它会逐条误报"
+                        "「Node does not exist」。确需处理时先人工核对 spec.persistentVolumeName / "
+                        "nodeName / attacher 是否仍然存在",
 }
 
 
@@ -106,11 +114,15 @@ def classify(kind, meta):
     2. **无 ownerReferences = 声明式对象**（或 operator 直接创建、未设 owner）。
        这类才用 GitOps 标记判断「删了会不会被 ArgoCD 重建」。
     """
+    if kind not in RESOURCES:
+        # 指标里有、但 RESOURCES 表没覆盖这个 kind：live_meta() 根本没查过它，
+        # 所以 meta 为空**不等于**对象已从集群消失，必须单列一级，不能混进 "?"。
+        return "U", "脚本未覆盖该 kind（不在 RESOURCES 表）：无法核对集群实况，需人工核对"
     if kind in FORBIDDEN_KINDS:
         return "C", FORBIDDEN_KINDS[kind]
     owners = meta.get("owner_kinds", [])
     if "gitops" not in meta:
-        # 指标里有、集群里已查不到（刚被删掉、或 kubectl 侧改名/换 ns）
+        # live_meta() 查过这个 kind，但集群里找不到同名对象（刚被删掉、或改名/换 ns）
         return "?", "集群里已不存在（指标尚未刷新）"
 
     # --- 派生对象：只看 owner ---
@@ -128,8 +140,6 @@ def classify(kind, meta):
     # --- 无 owner：声明式对象，GitOps 标记才有意义 ---
     if meta["gitops"]:
         return "C", "GitOps 管理：删除会被重建，并让 ArgoCD 产生漂移"
-    if kind == "VolumeAttachment":
-        return "A", "引用的 PV/节点已不存在，属 CSI 残留记录"
     if kind == "Job":
         return "A", "已完成的 Job（kor 判定为完成/失败/挂起）；确认日志不再需要后可删"
     if kind == "Service" and meta.get("name", "").startswith("wp-hsvc-"):
@@ -165,22 +175,24 @@ def main():
             level, why = classify(kind, m)
             rows.append({**f, "level": level, "why": why})
 
-    unknown = [r for r in rows if r["kind"] not in RESOURCES]
-    if unknown:
-        print(f"警告：{len(unknown)} 条未识别 kind：{sorted({r['kind'] for r in unknown})}", file=sys.stderr)
+    uncovered = [r for r in rows if r["level"] == "U"]
+    if uncovered:
+        print(f"警告：{len(uncovered)} 条发现属于未覆盖的 kind："
+              f"{sorted({r['kind'] for r in uncovered})}（报告里列为 U 类，需人工核对）", file=sys.stderr)
 
     out = []
     out.append("# kor 未使用资源分级报告\n")
     out.append(f"来源：`{args.prometheus}` 的 `kubernetes_orphaned_resources`，与集群实况交叉核对。\n")
     tally = Counter((r["level"], r["kind"]) for r in rows)
     out.append("| 级别 | kind | 数量 |\n| --- | --- | --- |")
-    for level in ("A", "B", "C", "?"):
+    for level in ("A", "B", "C", "U", "?"):
         kinds = sorted(k for (lv, k) in tally if lv == level)
         for k in kinds:
             out.append(f"| {level} | {k} | {tally[(level, k)]} |")
         out.append(f"| **{level} 小计** | | **{sum(v for (lv, _), v in tally.items() if lv == level)}** |")
 
     for level, title in (("A", "可直接批量清理"), ("B", "需人工确认"), ("C", "禁止删除"),
+                         ("U", "脚本未覆盖该 kind（需人工核对）"),
                          ("?", "指标里还在、集群里已不存在（等下一轮扫描刷新）")):
         out.append(f"\n## {level} 类 —— {title}\n")
         by_reason = defaultdict(list)
