@@ -1,1 +1,4 @@
 stag.yml.example
+# 操作者提供的真实值（registries 配置、tailscale 凭据、节点 MAC）。
+# 只提交同目录的 .example，见 metal/README.md。
+group_vars/all/zz-secrets.yml

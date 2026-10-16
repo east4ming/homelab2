@@ -10,41 +10,42 @@ all:
     dualstack_ipv6_pod_cidr: "fdb5:92d0:b067:4200::/56"       # Pod IPv6（每节点 /64）
     dualstack_ipv6_service_cidr: "fdb5:92d0:b067:4300::/112"  # Service IPv6
     ntp_server: "ntp.ubuntu.com"
-    # Used for tailscale k8s node
-    tailscale_auth_key: "tskey-auth-..."
-    # Used for tailscale-operator
-    tailscale_client_id: "xxxxx"
-    tailscale_client_secret: "tskey-client-..."
-    # TODO:
-    registries_config_yaml: |
-      mirrors:
-        "*":
-        docker.io:
-          endpoint:
-            - "https://registry.cn-hangzhou.aliyuncs.com"
+  # cluster.yml / boot.yml 里有 hosts: localhost 的 play（guard、cilium、tailscale、
+  # pxe_server）。显式声明它，避免依赖 implicit localhost —— 否则限流/审计类工具
+  # （如 --limit localhost）会因为 inventory 里查不到该 host 而拒绝执行。
+  hosts:
+    localhost:
+      ansible_connection: local
+# ⚠️ 真实值不在本文件，也不在仓库里：
+#   - registries_config_yaml（节点 /etc/rancher/k3s/registries.yaml 的整份内容）
+#   - tailscale_auth_key / tailscale_client_id / tailscale_client_secret
+#   - 各节点的 mac（PXE / Wake-on-LAN）
+# 它们由 metal/inventories/group_vars/all/zz-secrets.yml 提供（本地文件，已 gitignore，
+# 示例见同目录 zz-secrets.yml.example）。未提供时 play 会在写任何配置之前 fail。
+# 说明见 metal/README.md「操作者必须提供的值」。
 metal:
   children:
     masters:
       hosts:
         n100-jumper-0:
           ansible_host: 192.168.3.226
-          mac: "00:e0:4c:72:37:9f"
+          mac: "{{ metal_macs['n100-jumper-0'] }}"
           disk: nvme0n1
           network_interface: enp3s0
         n100-jumper-1:
           ansible_host: 192.168.3.174
-          mac: "00:e0:4c:72:37:6b"
+          mac: "{{ metal_macs['n100-jumper-1'] }}"
           disk: nvme0n1
           network_interface: enp3s0
         n100-jumper-2:
           ansible_host: 192.168.3.158
-          mac: "00:e0:4c:72:37:5b"
+          mac: "{{ metal_macs['n100-jumper-2'] }}"
           disk: nvme0n1
           network_interface: enp3s0
     workers:
       hosts:
         n100-cheshi-0:
           ansible_host: 192.168.3.154
-          mac: "00:f0:4d:00:0c:7d"
+          mac: "{{ metal_macs['n100-cheshi-0'] }}"
           disk: nvme0n1
           network_interface: enp2s0

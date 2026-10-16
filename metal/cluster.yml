@@ -1,3 +1,12 @@
+# prometheus-operator-crds 角色已删除：集群里的 monitoring.coreos.com CRD 由
+# system/monitoring-system（kube-prometheus-stack，ArgoCD 管理）持有，且没有 Helm
+# 归属元数据，metal 再 install 同一份 chart 必然报 already exists。见 metal/README.md。
+- name: Check operator-supplied values
+  hosts: localhost
+  gather_facts: false
+  roles:
+    - guard
+
 - name: Create Kubernetes cluster
   hosts: metal
   become: true
@@ -5,11 +14,6 @@
     - prerequisites
     - k3s
     - automatic_upgrade
-
-- name: Install prometheus-operator-crds
-  hosts: localhost
-  roles:
-    - prometheus_operator_crds
 
 - name: Install Kubernetes addons
   hosts: localhost

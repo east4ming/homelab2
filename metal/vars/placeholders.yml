@@ -1,0 +1,10 @@
+# 占位值兜底：仅当 metal/inventories/group_vars/all/zz-secrets.yml 不存在时由
+# roles/guard 载入。目的是让「没提供真实值」表现为一条可读的 assert 失败，而不是
+# 一个 undefined variable，更不是拿占位值去覆盖生产配置。
+#
+# 任何任务都不得在此文件存在时执行写操作 —— 各 role 在写之前 assert 这些变量。
+registries_config_yaml: "{{ metal_var_placeholder }}"
+tailscale_auth_key: "{{ metal_var_placeholder }}"
+tailscale_client_id: "{{ metal_var_placeholder }}"
+tailscale_client_secret: "{{ metal_var_placeholder }}"
+metal_macs: {}

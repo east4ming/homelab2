@@ -1,0 +1,36 @@
+# 操作者提供的真实值守门人。所有入口（cluster.yml / boot.yml）的第一个 role 都是
+# 它，作用只有一个：把「真实值没提供」变成一条可执行的错误信息，并让 play 在写任何
+# 节点/集群配置之前停下。
+#
+# 真正守住写操作的 assert 在各 role 内部（prerequisites / tailscale / pxe_server），
+# 这里只负责提前失败 + 给出操作指引。
+- name: Check whether operator-supplied values are present
+  ansible.builtin.stat:
+    path: "{{ playbook_dir }}/inventories/group_vars/all/zz-secrets.yml"
+  delegate_to: localhost
+  become: false
+  run_once: true
+  register: metal_secrets_file
+
+- name: Load placeholder defaults when operator-supplied values are missing
+  ansible.builtin.include_vars:
+    file: "{{ playbook_dir }}/vars/placeholders.yml"
+  delegate_to: localhost
+  become: false
+  run_once: true
+  when: not metal_secrets_file.stat.exists
+
+# quiet: 不把参与求值的变量打印出来 —— 这个 play 已经 include_vars 过真实 secrets。
+- name: Fail fast when operator-supplied values are missing
+  ansible.builtin.assert:
+    that:
+      - metal_secrets_file.stat.exists
+    quiet: true
+    fail_msg: >-
+      缺少操作者提供的真实值文件
+      {{ playbook_dir }}/inventories/group_vars/all/zz-secrets.yml。
+      请复制同目录的 zz-secrets.yml.example 并填入真实值（registries 配置、
+      tailscale 凭据、节点 MAC），需要填写哪些值见 metal/README.md
+      「操作者必须提供的值」。拒绝继续：用占位值执行会覆盖生产节点的
+      /etc/rancher/k3s/registries.yaml，并用假凭据升级 tailscale-operator。
+  run_once: true
