@@ -76,4 +76,4 @@ At the end it will show what has changed. After examining the diff, commit and ~
 > 以上值**不再写进 `prod.yml`**，而是放在被 gitignore 的
 > `metal/inventories/group_vars/all/zz-secrets.yml`（模板见同目录
 > `.example`）；缺少真实值时 play 会在写任何配置之前 fail。要填哪些值、
-> 为什么、轮换注意事项见 [metal/README.md](../../../../metal/README.md)。
+> 为什么、轮换注意事项见 [metal/README.md](https://github.com/east4ming/homelab2/blob/master/metal/README.md)。

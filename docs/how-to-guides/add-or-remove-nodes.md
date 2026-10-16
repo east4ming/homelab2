@@ -34,7 +34,7 @@ diff --git a/metal/inventories/group_vars/all/zz-secrets.yml b/metal/inventories
 ```
 
 这个文件被 gitignore，MAC 放哪里、真实值怎么取见
-[metal/README.md](../../metal/README.md)。
+[metal/README.md](https://github.com/east4ming/homelab2/blob/master/metal/README.md)。
 
 Install the OS and join the cluster:
 
