@@ -38,6 +38,6 @@
 - [x] T017 `mkdocs.yml` 导航加入该页；`.venv/bin/mkdocs build --strict` 通过
 - [x] T018 `docs/reference/changelog.md` 增加 `v2026.10.17.2` 条目
 - [x] T019 `AGENTS.md` 当前 Plan 指向 `specs/010-node-swap/plan.md`
-- [ ] T020 主题分支 `010-node-swap` + PR 合入 `master`
-- [ ] T021 打 annotated tag `v2026.10.17.2`，推送 Gitea + GitHub 并双侧复核
-- [ ] T022 在 Gitea（权威）与 GitHub（镜像）创建 Release，正文与 changelog 一致
+- [x] T020 主题分支 `010-node-swap` + PR 合入 `master`
+- [x] T021 打 annotated tag `v2026.10.17.2`，推送 Gitea + GitHub 并双侧复核
+- [x] T022 在 Gitea（权威）与 GitHub（镜像）创建 Release，正文与 changelog 一致
