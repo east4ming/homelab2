@@ -2,6 +2,116 @@
 
 版本号格式与发布流程见 [版本管理](versioning.md)。新条目置顶，标题即 git 标签名。
 
+## v2026.10.17
+
+一次性清空 issue 列表（20 个 issue；renovate 常驻看板不计）。主线是**安全边界**（Grafana
+明文口令、公开注册、公开 MAC）、**Ansible 可靠性**（改配置不生效、必然失败的 role、占位值会被
+推到生产）、**监控告警的真实性**（kor 分级误报、dashboard 过滤、ntfy 丢告警）与**CI 门禁**
+（`pre-commit` 恒过、测试锁在 EOL 的 nixpkgs）。全部改动经 PR 合并后由 ArgoCD 同步，线上实际
+状态变更单列一节。
+
+### 修复
+
+- `fix(kor-audit)`：`VolumeAttachment` 不再无条件判为「A 类可直接批量清理」（改为 C 类，附
+  CSI 运行时状态说明），`RESOURCES` 未覆盖的 kind 单列 `U` 类，不再把「脚本未覆盖」误报成
+  「集群里已不存在」（#525 #528）。
+- `fix(monitoring-system)`：kor dashboard 的 namespace 变量补上 Custom all value `.*`——原先
+  104 条集群级序列（CRD/ClusterRole/StorageClass）在任何过滤了 namespace 的面板里都不可见，
+  与同页 Sum 面板自相矛盾；`KorAuditNoData` 改用 exporter 扫描存活信号
+  （`absent(...) and on() (max(increase(process_cpu_seconds_total{job="kor-exporter"}[3h])) < 1)`），
+  集群被清理干净后不再持续误报；ntfy 转换器渲染整组告警而不是只发 `alerts[0]`，priority 取组内
+  最高严重度（#526 #527 #548）。
+- `fix(kor)`：镜像钉 digest（与线上容器 `imageID` 一致），补 `runAsNonRoot`/只读根文件系统/
+  `drop: ALL`/`seccompProfile`，并把「每次升 kor chart 必须逐项对照上游 `rbac.rules`」写进
+  `specs/008-kor-monitoring/quickstart.md`（#532）。
+- `fix(metal)`：真实值（registries 配置、tailscale 凭据、节点 MAC）移出仓库到 gitignore 的
+  `inventories/group_vars/all/zz-secrets.yml`，缺值时在写任何配置之前就 assert 失败；k3s
+  配置/二进制/unit 变更补 handlers 并重启；删除必然失败的 `prometheus_operator_crds` role
+  （CRD 真实归属是 `system/monitoring-system`）；修好 UFW 的两个恒假条件
+  （`services['ufw.service']`、`'inactive' is search('active')` 为真）与 5 个未定义变量；
+  补 `no_log`/`requirements.yml`/幂等性/FQCN/tag；关闭 `${distro_codename}-proposed` 与
+  无人值守自动重启（#530 #531 #546）。
+- `fix(grafana)` + `fix(global-secrets)`：删除 values 里的明文 `adminPassword`，改由
+  secret-generator 生成 `grafana.admin`、由 ExternalSecret 模板提供 `admin-user`/
+  `admin-password`；因为 Grafana 只在数据库首次初始化时读该 env，另用一次性 initContainer
+  把库里仍然有效的旧口令真正轮换掉，验证后即删除脚手架（#533）。
+- `fix(gitea)` / `fix(woodpecker)`：关闭自助注册与 Web 端开放注册（#550）。
+- `fix(backup)`：`Makefile` 的备份入口改为真实存在的卷（paperless / kanidm / jellyfin，删掉
+  集群里不存在的 actualbudget），并新增 `scripts/backup-coverage` 逐个 PVC 核对
+  ReplicationSource（#540）。
+- `fix(scripts)`：`configure` 的域名替换覆盖全仓库（167/167 处、66 个文件，去掉不存在的
+  `.ci`），并修掉 `git grep` 对非 ASCII 路径加引号导致的崩溃（#549）。
+- `fix(homepage)`：依赖仓库 `http://jameswynn.github.io/helm-charts` 改为 https——提交
+  Chart.lock 后 ArgoCD 改走 `helm dependency build`，只有这个 http 仓库报
+  `no repository definition`，app 卡在 `ComparisonError`（#542 的连带回归）。
+- 更早两处：`fix` argocd-repo-server OOMKilled（6b652ef4）、`fix(prometheus)` NAS 磁盘温度
+  告警阈值 50→55°C（4a081d78）。
+
+### 新增
+
+- `scripts/backup-coverage`：巡检「有 PVC 但没有 ReplicationSource」，豁免项必须逐条写明理由。
+- `metal/requirements.yml` + `roles/guard` + `vars/placeholders.yml` +
+  `inventories/group_vars/all/zz-secrets.yml.example`：把「操作者必须提供的值」集中成一处，
+  缺值即拒绝执行，而不是拿占位值覆盖生产。
+- 公共基线：`SECURITY.md`、`CONTRIBUTING.md`、`CHANGELOG.md`、`CODEOWNERS`（#551）。
+- flake 新增 `devShells.ci`：只含 CI 静态检查需要的 git/helm/opentofu/pre-commit/shellcheck/
+  yamllint，避免为跑 hook 拉整个 devShell。
+- `test/README.md`：写明哪些测试在 CI 跑、`TestSmoke`/`TestArgoCDCheck` 属人工验收。
+
+### CI 与测试
+
+- `.woodpecker/static-checks.yaml` 的 `pre-commit run` 补上 `--all-files`：不带它时只检查已
+  staged 文件，CI 是全新 clone → 所有 hook 跳过并 exit 0，静态检查恒过；镜像从
+  `nixery.dev/...` 换成 `nixos/nix` + `devShells.ci`（前者缺 shellcheck/opentofu/helm/grep，
+  且冷镜像会拉取超时——PR #566 的 static-checks 就是这样红的）（#534）。
+- `flake.nix`/`flake.lock` 从 EOL 的 nixos-24.05 升到 nixos-26.05（`kanidm` → `kanidm_1_11`、
+  `kube3d` → `k3d`）；`test/tools_test.go` 版本区间同步，kubectl 提到 1.36.x 回到线上
+  v1.36.5+k3s1 的 ±1 minor 窗口；kubectl 改用 `version --client`（原写法会查 API server，
+  无 kubeconfig 的 CI 必失败）；`external_test.go` 显式指定 `TerraformBinary: "tofu"`（#543）。
+- 仓库一次性通过全量门禁：30 个历史文件的行尾空白/缺失末尾换行、`system/kubevirt/tests/run.py`
+  补执行位；`.specify/`（spec-kit 生成管理）与 `system/kubevirt/examples/`（含 Helm 占位符）
+  在 hook 配置里排除。
+
+### 文档
+
+- `docs(installation)`：podCIDR 不再写死「网段→节点」映射（该映射由 controller-manager 动态
+  分配，实测量与节点名顺序不一致），改为让操作者用 `kubectl get nodes -o custom-columns` 读取；
+  文档站只内联脱敏的 `metal/inventories/prod.yml.example`，并用 snippets 白名单保证真实
+  inventory 无法被内联（#535 #547）。
+- `docs(prune-unused-resources)`：按当次输出重写分级说明，删除按文档执行会误删活跃挂载的那一批
+  （#525 #529）。
+- `docs(metal)`：记录操作者必须提供的值、为什么、轮换注意事项。
+- 修 `mkdocs --strict` 因 `metal/README.md` 相对链接失败（#569 与 #566 合并后的集成回归），并让
+  `mkdocs.yml` 打开链接校验——原先 `--strict` exit 0 也拦不住真实存在的 3 处链接问题（#551）。
+
+### 依赖与构建
+
+- 提交 31 个 `Chart.lock`（不再被 gitignore）与 `external/.terraform.lock.hcl`；本地渲染与集群
+  恢复一致（styleferry 从 5.0.1 变回与线上相同的 app-template 5.2.1）（#542）。
+- 文档工具链改用 `requirements.txt` 单一来源（Dockerfile `pip install -r` + `mkdocs build
+  --strict`），`.dockerignore` 排除 `.venv/site/tmp`（构建上下文 373MB → 5.6MB）。
+- Renovate 聚合：kube-prometheus-stack v92、renovate v46.341.0 及若干 non-major 依赖；styleferry
+  1.2.0 → 1.5.0（含风格路由 `deepseek-v4-flash` → `deepseek-flash`）。
+
+### 线上状态变更（ArgoCD 已同步，不在 Git 内）
+
+- Grafana 的 admin 口令**已真正轮换**：仓库历史里那个口令实测 401，新口令
+  （`kubectl -n global-secrets get secret grafana.admin -o jsonpath='{.data.password}' | base64 -d`）
+  实测 200；chart 自建的 `grafana` Secret 已被回收，4 个容器改读 `grafana-secrets`。切换分两阶段
+  （先生成口令、再切引用），避免了约 20 分钟的 CreateContainerConfigError。
+- Gitea 自助注册关闭（注册页显示 "Registration is disabled"）、Woodpecker
+  `WOODPECKER_OPEN=false`。
+- kor exporter 以非 root + 只读根文件系统滚动成功；homepage app 从 `ComparisonError` 恢复
+  `Synced/Healthy`。
+
+### 验证
+
+- 与 CI 相同的容器里 `nix develop .#ci --command pre-commit run --all-files` → 12/12 通过；
+  `nix develop --command make -C test filter=ToolsVersions` → 10/10 通过。
+- `mkdocs build --strict` exit 0、0 warning；31/31 `Chart.lock` 与同目录 `Chart.yaml` 一致。
+- 全部 ArgoCD app `Synced`+`Healthy`，无异常 Pod；Grafana/Gitea/Woodpecker/文档站均可访问。
+- 发版前复核：真实 MAC 与 Grafana 明文口令在 `git grep` 中命中 0。
+
 ## v2026.10.07.2
 
 接上一版：把双栈的 Service 声明尽可能写进 Git。上一版写入的 12 个是 app-template
