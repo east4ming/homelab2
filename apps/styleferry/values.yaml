@@ -8,7 +8,7 @@ app-template:
         main:
           image:
             repository: registry.cn-hangzhou.aliyuncs.com/caseycui/styleferry
-            tag: 1.5.3
+            tag: 2.2.0
           env:
             BLOG_LLM_PROVIDER: deepseek
             BLOG_LLM_BASE_URL: https://api.deepseek.com
