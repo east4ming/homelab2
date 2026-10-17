@@ -1,7 +1,7 @@
 # Homelab2
 
 <!-- SPECKIT START -->
-当前 Plan: [specs/008-kor-monitoring/plan.md](specs/008-kor-monitoring/plan.md)
+当前 Plan: [specs/010-node-swap/plan.md](specs/010-node-swap/plan.md)
 <!-- SPECKIT END -->
 
 ## 版本管理
