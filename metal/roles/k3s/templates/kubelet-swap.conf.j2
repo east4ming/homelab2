@@ -1,0 +1,19 @@
+# 节点交换内存（Kubernetes NodeSwap，v1.34 GA）。
+#
+# k3s 已把 kubelet 的 failSwapOn 默认为 false；这里显式重复一次，避免日后 k3s
+# 改默认值后变成「节点有 swap 但 kubelet 拒绝启动」。
+#
+# memorySwap 的默认值是 NoSwap：只设 failSwapOn=false 时，工作负载仍然拿不到
+# swap（容器 cgroup 的 memory.swap.max=0）。LimitedSwap 只对 Burstable QoS 且
+# memory request != limit 的非关键 Pod 生效；Guaranteed / BestEffort / 关键 Pod
+# 的 memory.swap.max 仍为 0。额度按
+# (containerMemoryRequest / nodeTotalMemory) × totalPodsSwapAvailable 计算。
+#
+# 该文件由 metal/roles/k3s 下发到 k3s 的 kubelet drop-in 目录，文件名排在
+# 00-k3s-defaults.conf 之后，覆盖其 memorySwap 默认值；k3s 不会删除它。
+# 说明与回退步骤见 docs/how-to-guides/node-swap.md。
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+failSwapOn: false
+memorySwap:
+  swapBehavior: LimitedSwap

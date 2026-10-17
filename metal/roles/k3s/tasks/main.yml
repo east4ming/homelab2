@@ -33,6 +33,29 @@
     - "{{ k3s_data_dir }}/agent/pod-manifests"
   tags: k3s-config
 
+# 节点交换内存：k3s 用 --config-dir 加载该目录，00-k3s-defaults.conf 每次启动由
+# k3s 重写（含 memorySwap: {}），90-swap.conf 不会被覆盖。只设 failSwapOn=false
+# 时工作负载仍是 NoSwap，必须显式设 swapBehavior。详见
+# docs/how-to-guides/node-swap.md。
+- name: Ensure kubelet config drop-in directory exists
+  ansible.builtin.file:
+    path: "{{ k3s_kubelet_config_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+  tags: k3s-config
+
+- name: Configure kubelet node swap
+  ansible.builtin.template:
+    src: kubelet-swap.conf.j2
+    dest: "{{ k3s_kubelet_config_dir }}/90-swap.conf"
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Restart k3s
+  tags: k3s-config
+
 - name: Check if k3s token file exists on the first node
   run_once: true
   ansible.builtin.stat:
