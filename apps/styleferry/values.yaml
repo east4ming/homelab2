@@ -8,7 +8,7 @@ app-template:
         main:
           image:
             repository: registry.cn-hangzhou.aliyuncs.com/caseycui/styleferry
-            tag: 1.5.0
+            tag: 1.5.1
           env:
             BLOG_LLM_PROVIDER: deepseek
             BLOG_LLM_BASE_URL: https://api.deepseek.com
@@ -20,6 +20,7 @@ app-template:
             BLOG_TRACING_PROVIDER: langsmith
             BLOG_RECALL_BASE_URL: https://backend.getrecall.ai/api/v1
             BLOG_SQLITE_PATH: /data/blog_system.db
+            BLOG_CHECKPOINT_DB_PATH: /data/checkpoints.db
             BLOG_CACHE_DIR: /data/cache
           envFrom:
             - secret: "{{ .Release.Name }}-secret"
