@@ -2,6 +2,36 @@
 
 版本号格式与发布流程见 [版本管理](versioning.md)。新条目置顶，标题即 git 标签名。
 
+## v2026.10.17.2
+
+为 4 台节点启用 Kubernetes 节点交换内存（NodeSwap）。Kubernetes 自 v1.34 起
+NodeSwap GA；本集群 k3s `v1.36.5+k3s1`、cgroup v2、4 台节点均已有 `/swap.img`，
+缺的只是 kubelet 的 `memorySwap.swapBehavior`（默认 `NoSwap`，Pod 的
+`memory.swap.max` 恒为 0）。
+
+### 新增
+
+- `feat(metal)`：k3s role 新增 kubelet drop-in
+  `90-swap.conf`（`failSwapOn: false` + `memorySwap.swapBehavior: LimitedSwap`），
+  写到 `/var/lib/rancher/k3s/agent/etc/kubelet.conf.d/`；该目录由 k3s 以
+  `--config-dir` 加载，k3s 每次启动只重写自己的 `00-k3s-defaults.conf`，不会覆盖
+  该文件。仅对 Burstable 且 memory request < limit 的非关键 Pod 生效。
+
+### 文档
+
+- `docs(010)`：新增「启用节点交换内存（Node Swap）」how-to，写明前提、LimitedSwap
+  的适用条件与额度公式、验证命令、回退步骤与风险；`AGENTS.md` 当前 Plan 指向
+  `specs/010-node-swap/plan.md`。
+
+### 线上状态
+
+- 4 台节点逐台重启 k3s 后，`/configz` 均为
+  `{'failSwapOn': false, 'memorySwap': {'swapBehavior': 'LimitedSwap'}}`，节点全部
+  `Ready`，`kubectl top nodes --show-swap` 正常。
+- 测试 Pod 实测：Burstable（request 64Mi / limit 256Mi）的
+  `memory.swap.max=18100224`（约 17 MiB）；Guaranteed 与 BestEffort 均为 `0`。
+  验证后已删除测试 Pod。
+
 ## v2026.10.17
 
 一次性清空 issue 列表（20 个 issue；renovate 常驻看板不计）。主线是**安全边界**（Grafana

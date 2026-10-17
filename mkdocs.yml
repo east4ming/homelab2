@@ -74,6 +74,7 @@ nav:
       - how-to-guides/prune-unused-resources.md
       - how-to-guides/use-both-github-and-gitea.md
       - how-to-guides/add-or-remove-nodes.md
+      - how-to-guides/node-swap.md
       - how-to-guides/run-commands-on-multiple-nodes.md
       - how-to-guides/single-node-cluster-adjustments.md
       - how-to-guides/trim-linux-firmware-packages.md
