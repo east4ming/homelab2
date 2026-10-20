@@ -1,6 +1,0 @@
-dependencies:
-- name: woodpecker
-  repository: https://woodpecker-ci.org
-  version: 3.7.5
-digest: sha256:55486589474142a8d5bb378c013151fbc1d586c572645c658460ba808821c1ca
-generated: "2026-10-16T20:52:48.68990164+08:00"

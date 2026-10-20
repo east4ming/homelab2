@@ -1,6 +1,0 @@
-dependencies:
-- name: homepage
-  repository: https://jameswynn.github.io/helm-charts
-  version: 2.1.0
-digest: sha256:10d1259fd9a1473e6b30acc0885b54627d6134defd783c8f6ba9dc4ebc5dcee0
-generated: "2026-10-17T07:50:36.234690111+08:00"

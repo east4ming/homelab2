@@ -1,6 +1,0 @@
-dependencies:
-- name: helm-dashboard
-  repository: https://helm-charts.komodor.io
-  version: 2.0.7
-digest: sha256:470ac07d34ed6dc97122a2b3c12dc8254a4d5e98e7a49d601bbc1d4713b47255
-generated: "2026-10-16T20:53:48.193038563+08:00"

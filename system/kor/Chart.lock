@@ -1,6 +1,0 @@
-dependencies:
-- name: kor
-  repository: https://yonahd.github.io/kor
-  version: 0.2.16
-digest: sha256:f0f3cbce7e102b82473c93d7c558d7c6c2df59262a9e29300a908af20b2628b7
-generated: "2026-10-16T20:53:56.327590798+08:00"
