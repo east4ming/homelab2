@@ -21,3 +21,5 @@ platform/global-secrets/templates/secret-renovate-github-token.yaml
 *.key
 secrets*.yaml
 *.tfvars
+
+Chart.lock
