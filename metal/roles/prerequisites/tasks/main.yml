@@ -25,6 +25,12 @@
     - {name: "fs.inotify.max_queued_events", value: 16384}
     - {name: "fs.inotify.max_user_instances", value: 8192}
     - {name: "fs.inotify.max_user_watches", value: 524288}
+    # kernel 7.0.0-42 起，apparmor_restrict_unprivileged_unconfined=1 会把容器的
+    # profile 转换改为 stacking（cri-containerd.apparmor.d//&unconfined），该标签不
+    # 匹配 containerd CRI profile 的 signal 规则，容器内信号投递全部被拒（EPERM）：
+    # gosu 的 AllThreadsSyscall 永久自旋（postgres/mysql 起不来）、postgres 也发不出
+    # 自身信号。关闭该限制才能恢复（详见 docs 或 7.0.0-42 升级事故记录）。
+    - {name: "kernel.apparmor_restrict_unprivileged_unconfined", value: 0}
   tags: sysctl
 
 - name: Enable IPv4 forwarding
