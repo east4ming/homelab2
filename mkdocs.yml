@@ -86,6 +86,7 @@ nav:
       - Troubleshooting:
           - how-to-guides/troubleshooting/pxe-boot.md
           - how-to-guides/troubleshooting/node-hang.md
+          - how-to-guides/troubleshooting/apparmor-signal-denied.md
           - Rook-Ceph:
               - how-to-guides/troubleshooting/rook-ceph-osd1-fsid-mismatch-recovery.md
               - how-to-guides/troubleshooting/rook-ceph-v1.20.0-bug-workaround.md
