@@ -1,7 +1,7 @@
 # Homelab2
 
 <!-- SPECKIT START -->
-当前 Plan: [specs/010-node-swap/plan.md](specs/010-node-swap/plan.md)
+当前 Plan: [specs/011-fix-apparmor-signal/plan.md](specs/011-fix-apparmor-signal/plan.md)
 <!-- SPECKIT END -->
 
 ## 版本管理

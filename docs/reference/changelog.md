@@ -2,6 +2,43 @@
 
 版本号格式与发布流程见 [版本管理](versioning.md)。新条目置顶，标题即 git 标签名。
 
+## v2026.10.29
+
+修复内核升级到 7.0.0-42 后 `rsshub`、`lobe-chat`、`semaphore` 三个命名空间的
+Pod CrashLoop。表象是应用连不上数据库，实际是**数据库容器起不来**：内核
+7.0.0-42 下 Ubuntu 的 `kernel.apparmor_restrict_unprivileged_unconfined=1` 会把容器
+profile 转换改成 stacking（标签 `cri-containerd.apparmor.d//&unconfined`），
+该标签不匹配 containerd CRI profile 的 `signal` 规则，导致**容器内所有信号投递
+返回 EPERM**。`gosu` 用全线程 `SIGSETXID` 广播做 `setgid/setuid`，信号被丢弃后
+永久自旋在 `sched_yield`（100% CPU），永远不会 exec 出 `mysqld`/`postgres`。
+`casdoor` 报的 `no route to host` 只是数据库未 Ready 时的下游症状。
+
+### 修复
+
+- `fix(metal/prerequisites)`：sysctl 任务新增
+  `kernel.apparmor_restrict_unprivileged_unconfined = 0`，落盘
+  `/etc/sysctl.d/90-homelab-prerequisites.conf`（排序晚于
+  `/usr/lib/sysctl.d/10-apparmor.conf`，重启后仍生效）。
+  `kernel.apparmor_restrict_unprivileged_userns` 保持 `1`，未关闭 AppArmor 或
+  k3s 安全特性，也未改动任何工作负载清单。
+
+### 文档
+
+- `docs(011)`：新增 [容器内信号被 AppArmor 拒绝](../how-to-guides/troubleshooting/apparmor-signal-denied.md)
+  排障指南（症状、判定命令、根因、修复、验证、回退、风险）；
+  `specs/011-fix-apparmor-signal/` 补齐 spec/plan/tasks 与质量清单；
+  `AGENTS.md` 当前 Plan 指向 `specs/011-fix-apparmor-signal/plan.md`。
+
+### 线上状态
+
+- 4 台节点 `kernel.apparmor_restrict_unprivileged_unconfined=0`、`..._userns=1`。
+- 重建 `lobe-chat/{postgresql,casdoor,lobe}`、`semaphore/{semaphore-mysql,semaphore}`、
+  `rsshub/database-postgres` 后，三个命名空间全部 Running；两个 PostgreSQL
+  `pg_isready` 通过、MySQL `mysqld is alive`；lobe/casdoor/semaphore HTTP 均 200。
+- 容器内 `kill -TERM` 兄弟进程恢复为 `kill_rc=0`（此前 `Permission denied`）。
+- 已知遗留：`node-ip` 中 IPv6 前缀随 ISP 轮换过期，kubelet 持续报
+  `failed to validate secondaryNodeIP`，与本次故障无因果关系，另行处理。
+
 ## v2026.10.17.2
 
 为 4 台节点启用 Kubernetes 节点交换内存（NodeSwap）。Kubernetes 自 v1.34 起
