@@ -2,6 +2,45 @@
 
 版本号格式与发布流程见 [版本管理](versioning.md)。新条目置顶，标题即 git 标签名。
 
+## v2026.10.30
+
+把 4 台节点的 IPv6 身份（`node-ip` 的 IPv6、Node 的 IPv6 InternalIP、`CiliumNode`
+地址、hostNetwork Pod 的 IPv6 endpoint）从 ISP 下发的 GUA 改为固定站点 ULA
+`fdb5:92d0:b067:1::/64`。前一轮的 `240e:` 前缀轮换
+（`240e:3a3:20ba:ae43::/64` → `240e:3a3:2002:6440::/64`）暴露了这个问题：kubelet
+每 10 秒报 `failed to validate secondaryNodeIP`，Cilium agent 把旧地址写进
+`CiliumNode`，`auto-direct-node-routes` **一条跨节点 IPv6 路由都装不出来** ——
+跨节点 IPv6 pod 通信实际是断的，只是没人踩到。
+
+### 变更
+
+- `feat(metal/inventories)`：新增 `dualstack_ipv6_node_cidr: fdb5:92d0:b067:1::/64`
+  与每台 host 的 `node_ipv6`（`::11`~`::14`）。
+- `feat(metal/prerequisites)`：渲染 `/etc/netplan/60-homelab-ula.yaml`（0600，只写
+  ULA）并 `netplan apply`。netplan 的 `addresses` 是**追加**语义，cloud-init 的 IPv4
+  与 `dhcp6: yes` 不受影响。
+- `refactor(metal/roles/k3s)`：删除「运行时探测主接口第一个 GUA」的两个 task，改为
+  断言 inventory 的 `node_ipv6` 已在接口上，缺地址直接失败（不静默降级）。
+- `feat(metal/roles/pxe_server)`：新装机器的 netplan `addresses` 直接带 ULA。
+- `test`：新增 `TestNodeAddressing`（集群验收：每节点只有一个 IPv6 InternalIP，
+  且等于地址规划的 ULA）。
+- `docs`：重写 [Networking](../reference/architecture/networking.md) 参考页（地址规划 /
+  为什么不用 GUA / 路由器无需改动）；新增
+  [节点 IPv6 前缀漂移](../how-to-guides/troubleshooting/node-ipv6-drift.md) 排障页。
+
+### 线上状态
+
+- 4 台 Node 的 IPv6 InternalIP 依次为 `::11` / `::12` / `::13` / `::14`，全部 Ready。
+- 4 台 k3s journal 的 `secondaryNodeIP` 计数为 0；`cilium-dbg node list` 的 IPv6 列为
+  各自 ULA。
+- `ip -6 route` 出现 3 条远端 Pod `/64` 直连路由，下一跳是对方节点 ULA；跨节点 IPv6
+  pod 连通实测通过（cheshi-0 → jumper-1）。
+- hostNetwork 的 semaphore IPv6 EndpointSlice 自动更新为 `fdb5:92d0:b067:1::12`。
+- 三个业务命名空间保持 Running，lobe / casdoor / semaphore HTTP 可用。
+- 路由器（192.168.3.1）**未做任何改动**：节点间 IPv6 走 `br-lan` 二层转发，路由器
+  既没有也不需要该 `/64` 的地址或路由（只读核查：无 ULA 配置、无该网段路由、
+  无邻居表项）。
+
 ## v2026.10.29
 
 修复内核升级到 7.0.0-42 后 `rsshub`、`lobe-chat`、`semaphore` 三个命名空间的
