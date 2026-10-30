@@ -19,6 +19,7 @@ matched against the test function name (`filter=Tools` matches
 | `TestTerraformExternal` | 否（需要网络下载 provider） | 本地 / 人工验收 |
 | `TestSmoke` | 是（需要 kubeconfig 与 ingress） | 人工验收 |
 | `TestArgoCDCheck` | 是（需要 kubeconfig 与 ingress） | 人工验收 |
+| `TestNodeAddressing` | 是（需要 kubeconfig） | 人工验收（节点 IPv6 必须是站点 ULA） |
 
 CI（`.woodpecker/static-checks.yaml`）只有一个 runner 内的静态检查环境，没有
 homelab2 集群的 kubeconfig，因此 **`TestSmoke` 与 `TestArgoCDCheck` 属于人工验收
