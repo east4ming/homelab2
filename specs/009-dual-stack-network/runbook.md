@@ -788,9 +788,11 @@ kubectl -n rook-ceph exec deploy/rook-ceph-tools -- crushtool -d /tmp/cm    # CR
       - `ansible-playbook --syntax-check` 因环境缺 `ansible.posix` collection 无法完成（**既有环境问题，与本次改动无关**）
 - [ ] 恢复 ArgoCD selfHeal；确认无 drift
 - [ ] 落地 §8.1 常态监控
-- [ ] ⚠️ 注意：`node_ipv6` 是运行时从节点探测的。若 ISP 前缀漂移（R4），该值会随之改变，
+- [ ] ⚠️ 注意（2026-10-30 已被 [specs/012](../../specs/012-stable-node-ula-ipv6/plan.md) 取代）：
+      当时 `node_ipv6` 是运行时从节点探测的 GUA。若 ISP 前缀漂移（R4），该值会随之改变，
       需重跑 k3s role 才能把新 GUA 写进 `node-ip` / `kubelet-arg`
-      （kubelet 的 nodeIP 在启动时确定，不会自动更新）
+      （kubelet 的 nodeIP 在启动时确定，不会自动更新）。
+      现在节点 IPv6 固定为站点 ULA `fdb5:92d0:b067:1::/64`，不再受前缀漂移影响。
 
 ---
 

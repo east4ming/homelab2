@@ -1,7 +1,7 @@
 # Homelab2
 
 <!-- SPECKIT START -->
-当前 Plan: [specs/011-fix-apparmor-signal/plan.md](specs/011-fix-apparmor-signal/plan.md)
+当前 Plan: [specs/012-stable-node-ula-ipv6/plan.md](specs/012-stable-node-ula-ipv6/plan.md)
 <!-- SPECKIT END -->
 
 ## 版本管理

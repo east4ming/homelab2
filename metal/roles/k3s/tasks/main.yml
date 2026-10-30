@@ -120,33 +120,29 @@
     tailscale_ipv6: "{{ tailscale_ip6.stdout }}"
   tags: k3s-config
 
-# 取本节点的全局 IPv6（SLAAC 派生）。必须排除：
-#   - fe80::/10 链路本地
-#   - fd7a:115c:a1e0::/48  （Tailscale 自己的 ULA，会出现在 tailscale0 上且 scope 为 global）
-# 本集群节点主接口上只有一个公网 GUA，取第一个即可。
+# node_ipv6 来自 inventory（站点 ULA，见 metal/inventories/prod.yml 的
+# dualstack_ipv6_node_cidr）。2026-10-29 之前这里取的是 SLAAC 派生的 GUA：
+# ISP 前缀一漂移，node-ip 就指向不存在的地址，kubelet 每 10s 报
+# "failed to validate secondaryNodeIP"，Cilium 也装不出跨节点 IPv6 直连路由。
 #
-# pipefail + failed_when 双保险：管道里任一段失败（rc != 0）或过滤后没有输出
-# （stdout 为空）都让任务就地失败。绝不能让空串继续往下走 —— 那会把
-# node-external-ip / node-ip 写成空值，而且要到 config.yaml 模板渲染时才报错，
-# 错误信息指向模板而不是根因。
-- name: Get node global ipv6 address
-  ansible.builtin.shell:
-    cmd: |
-      set -o pipefail
-      ip -6 addr show scope global \
-        | awk '/inet6/ {print $2}' | cut -d/ -f1 \
-        | grep -vE '^(fe80:|fd7a:115c:a1e0:)' \
-        | head -1
-  register: node_ipv6_raw
+# 这里只做早期校验 —— 地址由 prerequisites 的 netplan 任务配置，必须早于 k3s 启动。
+# 缺地址时不静默降级：降级会让 Node 的 IPv6 变成空或旧值，比直接失败更难排查。
+- name: Read IPv6 addresses of the primary interface
+  ansible.builtin.command:
+    cmd: ip -6 addr show dev {{ network_interface }}
+  register: k3s_node_ipv6_iface
   changed_when: false
-  failed_when:
-    - node_ipv6_raw.rc != 0
-    - node_ipv6_raw.stdout == ""
   tags: k3s-config
 
-- name: Set fact node_ipv6
-  ansible.builtin.set_fact:
-    node_ipv6: "{{ node_ipv6_raw.stdout }}"
+- name: Assert node_ipv6 (site ULA) is configured on {{ network_interface }}
+  ansible.builtin.assert:
+    that:
+      - node_ipv6 is defined
+      - (node_ipv6 ~ '/') in k3s_node_ipv6_iface.stdout
+    fail_msg: >-
+      node_ipv6={{ node_ipv6 | default('undefined') }} 不在 {{ network_interface }} 上。
+      先运行 prerequisites role（写 /etc/netplan/60-homelab-ula.yaml 并 netplan apply）。
+    quiet: true
   tags: k3s-config
 
 # unit 文件变化 → daemon-reload；config.yaml 变化 → 重启。两者都不变化则什么都不做。

@@ -27,3 +27,10 @@
   ansible.builtin.systemd:
     name: tailscale-metrics
     state: restarted
+
+# 只加地址（ULA），不删不改既有地址，netplan apply 不会中断 SSH；这里仍用
+# command 而不是 service/netplan 模块——Ansible 没有 netplan 专用模块。
+- name: Apply netplan
+  ansible.builtin.command:
+    cmd: netplan apply
+  changed_when: true

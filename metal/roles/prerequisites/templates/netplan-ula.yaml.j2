@@ -1,0 +1,12 @@
+# 由 Ansible 管理（metal/roles/prerequisites），手工改动会在下次运行时被覆盖。
+#
+# 稳定节点 IPv6：站点 ULA（RFC 4193），与 ISP 下发的 GUA 前缀解耦。
+# 只写 ULA 这一条：netplan 按文件名顺序合并多个文件，addresses 是追加语义，
+# 因此 cloud-init 的 50-cloud-init.yaml 里的 IPv4 地址与 dhcp6 不受影响。
+# 依据与实测见 specs/012-stable-node-ula-ipv6/plan.md。
+network:
+  version: 2
+  ethernets:
+    {{ network_interface }}:
+      addresses:
+        - {{ node_ipv6 }}/64

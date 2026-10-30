@@ -122,4 +122,6 @@ sudo sysctl --system
 - 同一批节点的另一个独立问题：`node-ip` 中的 IPv6 前缀随 ISP 前缀轮换而过期
   （`240e:3a3:20ba:ae43::/64` → `240e:3a3:2002:6440::/64`），kubelet 每 10s 报
   `failed to validate secondaryNodeIP`，hostNetwork Pod 的 IPv6 endpoint 指向不存在的
-  地址。修复需更新 `/etc/rancher/k3s/config.yaml` 的 `node-ip` 并滚动重启 k3s。
+  地址。**已于 2026-10-30 修复**：节点 IPv6 改用固定站点 ULA，见
+  [节点 IPv6 前缀漂移](node-ipv6-drift.md) 与
+  [specs/012](../../specs/012-stable-node-ula-ipv6/plan.md)。
