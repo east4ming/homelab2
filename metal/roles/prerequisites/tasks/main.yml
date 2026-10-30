@@ -61,6 +61,19 @@
     sysctl_file: /etc/sysctl.d/90-homelab-prerequisites.conf
   tags: sysctl
 
+# 稳定节点 IPv6（specs/012）：把 node_ipv6（站点 ULA）配到主接口上。
+# 必须在 k3s role 之前落地 —— kubelet 的 node-ip 会校验地址确实存在，
+# 地址缺席时只会每 10s 报 secondaryNodeIP 失效，Node 的 IPv6 静默变旧。
+- name: Configure stable node IPv6 (site ULA) via netplan
+  ansible.builtin.template:
+    src: netplan-ula.yaml.j2
+    dest: /etc/netplan/60-homelab-ula.yaml
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Apply netplan
+  tags: network
+
 # api_port / cluster_cidr / service_cidr / server_group / agent_group 定义在
 # group_vars/all.yml。这里显式 assert，而不是让它们在模板渲染时以 undefined variable
 # 的面目炸开：那既看不出是配置缺失，也会在放到一半防火墙规则之后才失败。

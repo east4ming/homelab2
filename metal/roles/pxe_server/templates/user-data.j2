@@ -66,6 +66,8 @@ autoinstall:
         dhcp4: no
         addresses:
           - "{{ hostvars[item]['ansible_host'] }}/{{ ipv4_prefix }}"
+          # 稳定节点 IPv6（站点 ULA），装好即存在，k3s 的 node-ip 直接用它
+          - "{{ hostvars[item]['node_ipv6'] }}/64"
         routes:
           - to: default
             via: {{ ansible_default_ipv4.gateway }}

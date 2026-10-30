@@ -9,6 +9,14 @@ all:
     #    故只在此处定义一份，两个 role 共同引用。
     dualstack_ipv6_pod_cidr: "fdb5:92d0:b067:4200::/56"       # Pod IPv6（每节点 /64）
     dualstack_ipv6_service_cidr: "fdb5:92d0:b067:4300::/112"  # Service IPv6
+    # ── 节点身份（2026-10-30，specs/012）───────────────────────────────────────
+    # 节点 node-ip 的 IPv6 用固定站点 ULA，不再用 ISP 下发的 GUA：240e 前缀随
+    # PPPoE 重拨/重启漂移，GUA 一旦进 node-ip，每次漂移都要改 4 台 config.yaml
+    # 并重启 k3s + cilium agent（2026-10-29 事故的直接触发面之一）。
+    # GUA 仍留在接口上，只承担出站/NAT；集群身份（Node InternalIP、hostNetwork
+    # pod 的 endpoint、CiliumNode 地址与直连路由）全部锚定在这个 /64 上。
+    # 每节点的主机位见各 host 的 node_ipv6。
+    dualstack_ipv6_node_cidr: "fdb5:92d0:b067:1::/64"
     ntp_server: "ntp.ubuntu.com"
   # cluster.yml / boot.yml 里有 hosts: localhost 的 play（guard、cilium、tailscale、
   # pxe_server）。显式声明它，避免依赖 implicit localhost —— 否则限流/审计类工具
@@ -32,16 +40,19 @@ metal:
           mac: "{{ metal_macs['n100-jumper-0'] }}"
           disk: nvme0n1
           network_interface: enp3s0
+          node_ipv6: "fdb5:92d0:b067:1::11"
         n100-jumper-1:
           ansible_host: 192.168.3.174
           mac: "{{ metal_macs['n100-jumper-1'] }}"
           disk: nvme0n1
           network_interface: enp3s0
+          node_ipv6: "fdb5:92d0:b067:1::12"
         n100-jumper-2:
           ansible_host: 192.168.3.158
           mac: "{{ metal_macs['n100-jumper-2'] }}"
           disk: nvme0n1
           network_interface: enp3s0
+          node_ipv6: "fdb5:92d0:b067:1::13"
     workers:
       hosts:
         n100-cheshi-0:
@@ -49,3 +60,4 @@ metal:
           mac: "{{ metal_macs['n100-cheshi-0'] }}"
           disk: nvme0n1
           network_interface: enp2s0
+          node_ipv6: "fdb5:92d0:b067:1::14"
