@@ -87,7 +87,8 @@ scripts/build-ci-image
 2026-10-31 构建记录：
 
 - 首版全量镜像（argocd/k9s/k3d/neovim + docs 组）3.57GB，k8s agent 拉取超时，pipeline #2701 失败
-- 精简镜像（CI 工具子集 + uv `dev`/`scripts` 组）：digest `sha256:a4ab2fa0b703230722470f9ec673f53e5270f7a4302a14b61db0e9d825c5e55b`，tags `latest`、`sha-776ad98e`
+- 精简镜像（CI 工具子集 + uv `ci`/`scripts` 组）：digest `sha256:a4ab2fa0b703230722470f9ec673f53e5270f7a4302a14b61db0e9d825c5e55b`，tags `latest`、`sha-776ad98e`
+- 优化镜像（ansible-core + `ci` 组、BuildKit cache mount，不把 mise/uv 缓存写入层）：digest `sha256:d5bbb18d642c95da9df8cfc0c9ca4967c836b06e68f044f215895da7b2358d9d`，tags `latest`、`sha-ae8f935a`；`docker image inspect` 解压大小 **1.68GB**（上一版 2.36GB）
 - 匿名 `docker pull` 通过（package 已 public）
 - 镜像内 `make -C test filter=Tools` + `pre-commit run --all-files` 通过
 - `scripts/build-ci-image` 要求工作区干净；后续仅文档提交不会改变镜像内容，但 `sha-<short>` 会落后于 `HEAD`
@@ -104,6 +105,7 @@ scripts/build-ci-image
 2026-10-31 结果（PR #600）：
 
 - pipeline #2702 **success**；总耗时 423s（基线 1174s，SC-005 通过）
+- 优化镜像后 pipeline #2704 **success**；总耗时 569s（仍 ≤ 基线 ×1.2）
 - `static-checks`：`tools-versions` + `pre-commit` 均成功；pipeline 中无镜像构建步骤
 - `helm-diff`：三个 matrix workflow 均只执行 clone；`diff` 步骤因改动不涉及 `system/`/`platform/`/`apps/` 被 path 过滤跳过（符合预期）
 

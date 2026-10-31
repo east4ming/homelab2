@@ -98,7 +98,7 @@
 - uv：从官方 `ghcr.io/astral-sh/uv:<0.13.6>` 镜像复制二进制；`UV_PROJECT_ENVIRONMENT=/opt/venv`、`uv sync --frozen --only-group ci --only-group scripts`。
 - docker CLI：从 `docker:29.9.2-cli`（digest 固定）复制 `/usr/local/bin/docker`，满足 `docker --version` 检查。
 - PATH：`/opt/venv/bin`、`$MISE_DATA_DIR/shims` 在前；`MISE_TRUSTED_CONFIG_PATHS` 覆盖构建目录与 Woodpecker workspace（`/woodpecker`）。
-- 内容：CI 所需的 mise 子集（helm、kubectl、kustomize、opentofu、go、gotestsum、dyff、shellcheck；版本仍由 `.mise.toml` 解析）+ uv `dev`/`scripts` 组。排除 argocd/k9s/k3d/neovim 与 `docs` 组：首版全量镜像 3.57GB，k8s agent 拉取超时（`trying and failing to pull image`）。
+- 内容：CI 所需的 mise 子集（helm、kubectl、kustomize、opentofu、go、gotestsum、dyff、shellcheck；版本仍由 `.mise.toml` 解析）+ uv `ci`/`scripts` 组（`ci` 只含 ansible-core 与 pre-commit，不含 ansible bundle/ansible-lint/yamllint）。排除 argocd/k9s/k3d/neovim 与 `docs` 组：首版全量镜像 3.57GB，k8s agent 拉取超时（`trying and failing to pull image`）。
 - 构建入口：`scripts/build-ci-image`（宿主机执行）：`docker buildx build --platform linux/amd64 --push`，同时推送 `latest` 与 `sha-<short>`；需要宿主机已 `docker login ghcr.io`。
 - 可见性：GHCR package 设为 public，CI 拉取无需凭据；推送凭据仅在维护者宿主机。
 

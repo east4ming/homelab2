@@ -16,7 +16,7 @@
 镜像内必须提供：
 
 - mise（2026.10.22）与 CI 所需的工具子集：helm、kubectl、kustomize、opentofu、go、gotestsum、dyff、shellcheck（版本来自 `.mise.toml`）；
-- uv（0.13.6）与 `/opt/venv`（`uv sync --frozen --only-group ci --only-group scripts` 结果）；不安装 `docs` 组；
+- uv（0.13.6）与 `/opt/venv`（`uv sync --frozen --only-group ci --only-group scripts` 结果；`ci` 组含 ansible-core + pre-commit，不含 ansible collections/ansible-lint/yamllint）；不安装 `docs` 组；
 - docker CLI 29.9.2（仅命令行，满足版本检查；无守护进程）；
 - `git`、`make`、`diffutils`、`ca-certificates`、`curl`；
 - `PATH` 包含 `/opt/venv/bin` 与 mise shims；`MISE_TRUSTED_CONFIG_PATHS` 包含 `/woodpecker` 与 `/src`；
