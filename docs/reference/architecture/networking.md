@@ -35,7 +35,7 @@ ISP 的 `240e:` 委派前缀会随 PPPoE 重拨/重启漂移（2026-10-29 就从
 - 每次漂移都要改 4 台 `config.yaml` 并滚动重启 k3s + cilium agent。
 
 所以节点身份锚定在站点 ULA 上；GUA 保留在接口上，只承担出站/NAT。
-细节与回退见 [specs/012-stable-node-ula-ipv6](../specs/012-stable-node-ula-ipv6/plan.md)。
+细节与回退见 [specs/012-stable-node-ula-ipv6](https://github.com/east4ming/homelab2/blob/master/specs/012-stable-node-ula-ipv6/plan.md)。
 
 ## 地址如何落地
 

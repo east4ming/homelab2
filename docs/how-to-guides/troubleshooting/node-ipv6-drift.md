@@ -27,7 +27,7 @@ E1029 kubelet_node_status.go:673] "Failed to set some node status fields"
 
 ## 处置
 
-2026-10-30 起（[specs/012](../specs/012-stable-node-ula-ipv6/plan.md)），节点 IPv6 使用
+2026-10-30 起（[specs/012](https://github.com/east4ming/homelab2/blob/master/specs/012-stable-node-ula-ipv6/plan.md)），节点 IPv6 使用
 **固定站点 ULA**（`fdb5:92d0:b067:1::/64`），不再取 ISP GUA。因此**正常情况下这个
 故障不会再出现**。如果仍然出现，按下面处理：
 
@@ -71,6 +71,6 @@ E1029 kubelet_node_status.go:673] "Failed to set some node status fields"
 
 ## 相关
 
-- 地址规划与「为什么不用 GUA」：[Networking](../reference/architecture/networking.md)
+- 地址规划与「为什么不用 GUA」：[Networking](../../reference/architecture/networking.md)
 - 2026-10-29 的 AppArmor 事故（同一次重启的另一个独立故障）：
   [AppArmor 拒绝容器内信号](apparmor-signal-denied.md)

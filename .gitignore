@@ -1,7 +1,8 @@
 .venv/
 __pycache__/
 *.pyc
-uv.lock
+# 根 uv.lock 入库；kubevirt 测试项目沿用原有不提交锁文件的做法
+system/kubevirt/tests/uv.lock
 book/
 site/
 

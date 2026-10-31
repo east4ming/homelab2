@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if ! command -v docker >/dev/null 2>&1; then
+    echo "kanidm: 未找到 docker；kanidm CLI 通过 kanidm/tools 容器提供" >&2
+    exit 1
+fi
+
+tty_args=(-i)
+if [ -t 0 ] && [ -t 1 ]; then
+    tty_args+=(-t)
+fi
+
+mount_args=()
+token_dir="${HOME}/.cache/kanidm_tokens"
+config_dir="${HOME}/.config/kanidm"
+if [ -d "${token_dir}" ]; then
+    mount_args+=(-v "${token_dir}:/root/.cache/kanidm_tokens")
+fi
+if [ -d "${config_dir}" ]; then
+    mount_args+=(-v "${config_dir}:/root/.config/kanidm")
+fi
+
+exec docker run --rm "${tty_args[@]}" --network host "${mount_args[@]}" \
+    kanidm/tools:1.11.2 /sbin/kanidm "$@"

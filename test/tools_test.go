@@ -20,7 +20,7 @@ func TestToolsVersions(t *testing.T) {
 	}{
 		{"ansible", "--version", ">= 2.21.0, < 2.22.0"},
 		{"docker", "--version", ">= 29.0.0, < 30.0.0"},
-		{"git", "--version", ">= 2.54.0, < 3.0.0"},
+		{"git", "--version", ">= 2.47.0, < 3.0.0"},
 		{"go", "version", ">= 1.26.0, < 1.27.0"},
 		{"helm", "version", ">= 3.20.0, < 4.0.0"},
 		{"kustomize", "version", ">= 5.8.0, < 6.0.0"},
@@ -78,7 +78,7 @@ func TestToolsVersions(t *testing.T) {
 	})
 }
 
-func TestToolsNixShell(t *testing.T) {
+func TestToolsDevEnv(t *testing.T) {
 	t.Parallel()
 
 	projectRoot, err := filepath.Abs("../")
@@ -86,15 +86,17 @@ func TestToolsNixShell(t *testing.T) {
 		t.FailNow()
 	}
 
-	command := shell.Command{
-		Command: "nix",
-		Args: []string{
-			"develop",
-			"--experimental-features", "nix-command flakes",
-			"--command", "true",
-		},
+	// mise 能解析并加载项目工具环境。
+	shell.RunCommand(t, shell.Command{
+		Command:    "mise",
+		Args:       []string{"exec", "--", "true"},
 		WorkingDir: projectRoot,
-	}
+	})
 
-	shell.RunCommand(t, command)
+	// uv 环境已包含脚本运行所需的 Python 依赖。
+	shell.RunCommand(t, shell.Command{
+		Command:    "uv",
+		Args:       []string{"run", "--frozen", "python", "-c", "import rich, kubernetes, pexpect, jinja2, netaddr"},
+		WorkingDir: projectRoot,
+	})
 }

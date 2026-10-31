@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+
+fail=0
+
+# 1) Nix 制品文件名
+if artifacts=$(git ls-files | grep -E '(^|/)(flake\.(nix|lock)|\.envrc|run_nix_develop\.sh)$'); then
+    echo "no-nix: 禁止提交 Nix 制品:" >&2
+    echo "${artifacts}" >&2
+    fail=1
+fi
+
+# 2) 活动文件中的 Nix 命令/镜像/包引用
+#    - 排除历史记录（changelog、既有 ADR）、specs 目录、门禁自身
+#    - no-nix 中的 "nix" 前面有连字符，不会命中
+pattern='(^|[^[:alnum:]_-])(nix|nixpkgs|nixery\.dev|nixos)([^[:alnum:]_]|$)'
+if matches=$(git grep -n -I -i -E "${pattern}" -- . \
+    ':!specs/**' \
+    ':!docs/reference/changelog.md' \
+    ':!docs/reference/architecture/decision-records.md' \
+    ':!scripts/check-no-nix' \
+    ':!.pre-commit-config.yaml'); then
+    echo "no-nix: 发现 Nix 引用（历史记录与 specs 除外）:" >&2
+    echo "${matches}" >&2
+    fail=1
+fi
+
+exit "${fail}"

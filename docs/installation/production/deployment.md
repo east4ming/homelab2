@@ -1,15 +1,9 @@
 # Deployment
 
-Open the development shell if you haven't already:
+Prepare the development environment if you haven't already (see [development environment](../../concepts/development-shell.md)):
 
 ```sh
-nix develop
-```
-
-Or, If your Initial controller Linux distribution is Ubuntu, you need to execute the following command:
-
-```sh
-nix develop --extra-experimental-features nix-command --extra-experimental-features flakes
+mise run setup
 ```
 
 Build the lab:

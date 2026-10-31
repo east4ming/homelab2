@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(git rev-parse --show-toplevel)"
+
+image="ghcr.io/east4ming/homelab2-ci"
+tag="sha-$(git rev-parse --short HEAD)"
+
+if [ -n "$(git status --porcelain)" ]; then
+    echo "build-ci-image: 工作区有未提交改动；sha tag 必须对应一个提交，请先提交" >&2
+    exit 1
+fi
+
+if ! docker info >/dev/null 2>&1; then
+    echo "build-ci-image: Docker 守护进程不可用" >&2
+    exit 1
+fi
+
+docker_config="${DOCKER_CONFIG:-${HOME}/.docker}/config.json"
+if ! grep -q '"ghcr.io"' "${docker_config}" 2>/dev/null; then
+    echo "build-ci-image: 未登录 ghcr.io，请先执行 docker login ghcr.io" >&2
+    exit 1
+fi
+
+docker buildx build --platform linux/amd64 --push \
+    -f .woodpecker/ci/Dockerfile \
+    -t "${image}:latest" \
+    -t "${image}:${tag}" \
+    .
+
+digest=$(docker buildx imagetools inspect "${image}:${tag}" | awk '/^Digest:/{print $2; exit}')
+echo "pushed ${image}:latest and ${image}:${tag}"
+echo "digest: ${digest}"

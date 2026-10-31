@@ -2,33 +2,29 @@ when:
   branch: ${CI_REPO_DEFAULT_BRANCH}
 
 steps:
-  # TODO DRY with nix develop and custom entrypoint https://github.com/woodpecker-ci/woodpecker/pull/2985,
-  # but first we need a Nix cache. See the nix-cache branch for the WIP.
   tools-versions:
-    image: nixos/nix
+    image: ghcr.io/east4ming/homelab2-ci:latest
+    pull: true
     commands:
-      - echo 'experimental-features = flakes nix-command' >> /etc/nix/nix.conf
-      # - echo 'trusted-substituters = http://nix-cache.nix-cache' >> /etc/nix/nix.conf
-      # - echo 'substituters = http://nix-cache.nix-cache' >> /etc/nix/nix.conf
-      - nix develop --command make -C test filter=ToolsVersions
+      # TestToolsVersions（9 个工具）+ TestToolsDevEnv（mise/uv 环境）
+      - make -C test filter=Tools
     when:
       - event: pull_request
         path:
           include:
-            - 'flake.*'
+            - '.mise.toml'
+            - 'pyproject.toml'
+            - 'uv.lock'
+            - '.woodpecker/ci/**'
             - 'test/**'
     depends_on: []
   pre-commit:
-    # nixery.dev builds images on demand and times out when the image is cold
-    # (the old pre-commit step failed on exactly that: "trying and failing to
-    # pull image"). Use the flake's slim `ci` devShell instead: docker.io for
-    # the image, cache.nixos.org for the binaries.
-    image: nixos/nix
+    image: ghcr.io/east4ming/homelab2-ci:latest
+    pull: true
     commands:
-      - echo 'experimental-features = flakes nix-command' >> /etc/nix/nix.conf
       # --all-files: without it pre-commit only checks staged files and passes
       # vacuously on a fresh CI clone
-      - nix develop .#ci --command pre-commit run --all-files --color=always
+      - pre-commit run --all-files --color=always
     when:
       - event: pull_request
     depends_on: []

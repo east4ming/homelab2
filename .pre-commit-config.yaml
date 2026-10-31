@@ -28,3 +28,11 @@ repos:
     rev: v2.1.0
     hooks:
       - id: tofu_fmt
+  - repo: local
+    hooks:
+      - id: no-nix
+        name: no Nix references
+        entry: scripts/check-no-nix
+        language: script
+        pass_filenames: false
+        always_run: true

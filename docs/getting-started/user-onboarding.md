@@ -20,7 +20,7 @@
     For technical users:
 
     - [ ] [Docker](https://docs.docker.com/engine/install)
-    - [ ] [Nix](https://nixos.org/download) and [direnv](https://direnv.net) (optional, but highly recommended)
+    - [ ] [mise](https://mise.jdx.dev) and [uv](https://docs.astral.sh/uv/) (required for local development)
     - [ ] [Lens](https://k8slens.dev) (optional, you can use the included `kubectl` or `k9s` command in the tools container)
 
 === "For admin"

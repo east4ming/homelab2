@@ -1,28 +1,9 @@
 # Configuration
 
-Open the [development shell](../../concepts/development-shell.md), which includes all the tools needed:
+Open the [development environment](../../concepts/development-shell.md), which includes all the tools needed:
 
 ```sh
-nix develop
-```
-
-If your Initial controller Linux distribution is Ubuntu, you need to execute the following command:
-
-```sh
-# Install nix
-sudo apt install -y nix
-
-# Add your normal user to the nix* group
-sudo usermod -aG nixbld $USER
-sudo usermod -aG nix-users $USER
-
-# Re-login to apply the changes
-# You can also run the following command to activate the changes to groups:
-newgrp nixbld
-newgrp nix-user
-
-# nix develop
-nix develop --extra-experimental-features nix-command --extra-experimental-features flakes
+mise run setup
 ```
 
 Run the following script to configure the homelab:

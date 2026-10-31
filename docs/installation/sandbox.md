@@ -78,7 +78,7 @@ Create 3 new VM with the following settings:
 For the homelab-dev-bastion, install the following packages:
 
 - `docker`
-- `nix` (see [development shell](../concepts/development-shell.md) for the installation guide)
+- `mise` and `uv` (see [development environment](../concepts/development-shell.md) for setup)
 
 Clone the repository and checkout the development branch:
 
@@ -90,10 +90,10 @@ git checkout dev
 
 ## Build
 
-Open the development shell, which includes all the tools needed:
+Prepare the development environment, which includes all the tools needed:
 
 ```sh
-nix develop
+mise run setup
 ```
 
 Build a development cluster and bootstrap it:
