@@ -1,12 +1,11 @@
 # syntax=docker/dockerfile:1
 
 FROM ghcr.io/astral-sh/uv:0.13.6@sha256:af22a52f5eafef3d78e551599d405c02df61919d18028f0cea8eda93bc9986d0 AS uv
-FROM docker:29.9.2-cli@sha256:5e6baf67325a79f64ed3bed6863954d5e05d0f3d4e57cbdb14809346814bbfdb AS dockercli
 
 FROM debian:13-slim@sha256:f6b08b09a05725f9431502d3b5714f5c4576e82c1a84fa1debe0c24a7e0c3ec4
 
 LABEL org.opencontainers.image.source="https://github.com/east4ming/homelab2" \
-      org.opencontainers.image.description="Homelab2 CI toolchain (mise + uv)"
+      org.opencontainers.image.description="Homelab2 CI static checks (pre-commit)"
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
@@ -16,7 +15,6 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
         curl \
         diffutils \
         git \
-        make \
         unzip \
         xz-utils
 
@@ -25,7 +23,6 @@ RUN curl -fsSL -o /tmp/mise-install.sh https://mise.run \
     && rm -f /tmp/mise-install.sh
 
 COPY --from=uv /uv /uvx /usr/local/bin/
-COPY --from=dockercli /usr/local/bin/docker /usr/local/bin/docker
 
 ENV MISE_DATA_DIR=/opt/mise \
     MISE_CACHE_DIR=/tmp/mise-cache \
@@ -39,17 +36,13 @@ ENV MISE_DATA_DIR=/opt/mise \
 WORKDIR /src
 
 COPY .mise.toml .python-version pyproject.toml uv.lock ./
-# CI 只需要工具子集；版本仍来自 .mise.toml（bare name 解析配置版本）。
+# 只保留 pre-commit 需要的工具（helm/helmlint、shellcheck、dyff 供 helm-diff）。
+# 版本仍来自 .mise.toml（bare name 解析配置版本）。
 # 缓存目录使用 BuildKit cache mount，不进入镜像层。
 RUN --mount=type=cache,target=/tmp/mise-cache \
     --mount=type=cache,target=/tmp/uv-cache \
     mise install --yes \
         helm \
-        kubectl \
-        kustomize \
-        opentofu \
-        go \
-        gotestsum \
         dyff \
         shellcheck \
-    && uv sync --frozen --only-group ci --only-group scripts
+    && uv sync --frozen --only-group ci

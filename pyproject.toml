@@ -20,9 +20,8 @@ dev = [
   "pre-commit>=4.5,<5",
   "yamllint>=1.37",
 ]
-# CI 只需要 ansible-core（不跑 playbook/collections）与 pre-commit
+# CI 只需要 pre-commit（Go/ansible/opentofu 已从 CI 镜像移除）
 ci = [
-  "ansible-core>=2.21,<2.22",
   "pre-commit>=4.5,<5",
 ]
 docs = [

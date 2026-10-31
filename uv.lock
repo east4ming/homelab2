@@ -725,7 +725,6 @@ source = { virtual = "." }
 
 [package.dev-dependencies]
 ci = [
-    { name = "ansible-core" },
     { name = "pre-commit" },
 ]
 dev = [
@@ -777,10 +776,7 @@ scripts = [
 [package.metadata]
 
 [package.metadata.requires-dev]
-ci = [
-    { name = "ansible-core", specifier = ">=2.21,<2.22" },
-    { name = "pre-commit", specifier = ">=4.5,<5" },
-]
+ci = [{ name = "pre-commit", specifier = ">=4.5,<5" }]
 dev = [
     { name = "ansible", specifier = ">=14.5,<15" },
     { name = "ansible-lint", specifier = ">=26,<27" },

@@ -34,6 +34,7 @@
 - Q: 自建 CI 镜像采用哪种形态？ → A: 单个预构建镜像，static-checks 与 helm-diff 两条流水线共用。
 - Q: Python 依赖如何组织（uv 的清单形态）？ → A: 根 `pyproject.toml` + 受版本控制的 `uv.lock`，文档与脚本依赖用 dependency groups。
 - Q: CI 镜像在哪里构建？ → A: 在宿主机手动构建并推送（CI agent 为 k8s backend，不承担镜像构建），CI 只拉取 GHCR 镜像。
+- Q: CI 镜像进一步精简的范围？ → A: 移除 go/opentofu/ansible 及其相关 CI 步骤与静态检查；static-checks 只保留 pre-commit（跳过依赖 opentofu 的 tofu_fmt），工具版本测试仅在本地运行。
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -64,10 +65,10 @@
 
 **Acceptance Scenarios**:
 
-1. **Given** static-checks 流水线，**When** 在 PR 上运行，**Then** tools-versions 与 pre-commit 两个步骤都运行在非 Nix 镜像上，且检查项与迁移前完全一致（9 个工具版本检查 + 全部 pre-commit hooks）。
+1. **Given** static-checks 流水线，**When** 在 PR 上运行，**Then** 只有 pre-commit 步骤，运行全部 hooks 并显式跳过依赖 opentofu 的 `tofu_fmt`；镜像中不含 go/ansible/opentofu。
 2. **Given** helm-diff 流水线，**When** 对任一 stack 提交 PR，**Then** 在非 Nix 镜像上完成 Helm 渲染与 dyff 对比，输出格式与迁移前一致。
 3. **Given** 现有公共镜像满足不了某一步骤的工具组合，**When** 采用自建镜像，**Then** 镜像定义在仓库内、构建可复现（固定基础镜像与工具版本）、发布到 GHCR，static-checks 与 helm-diff 共用这一个预构建镜像；镜像由维护者在宿主机按文档化命令重建并推送，CI 不承担构建；镜像内不包含也不调用 Nix。
-4. **Given** CI 运行环境与本地开发环境，**When** 执行工具版本检查，**Then** 两边满足同一组版本约束，且由同一份测试实现校验。
+4. **Given** 本地开发环境，**When** 执行工具版本检查，**Then** 满足约束；CI 不再运行 Go 版本测试（镜像不含 Go），仅校验 pre-commit 工具链可用。
 5. **Given** 无镜像缓存的冷启动，**When** 运行任一条 pipeline，**Then** 总时长相对迁移前实测基线不劣化超过 20%。
 
 ---
@@ -95,7 +96,8 @@
 - **mise 无对应后端的工具**（如 docker 守护进程、iproute2、locales、OpenSSH、bmake、libisoburn 一类系统级组件）：必须显式列为系统前置条件，或改用可被版本管理的等价工具；不得出现"旧 devShell 有、新环境没有且无说明"的情况。
 - **平台差异**：仅部分平台可用的工具（如 bmake、libisoburn）需在文档中写明，测试如需跳过必须显式标注原因，不得静默跳过。
 - **镜像仓库不可达或凭据缺失**：CI 必须明确失败并指出缺失的凭据/仓库，不得回退到 `nixos/nix` 或 `nixery.dev`。
-- **工具版本更新**：更新 mise 声明的版本或 CI 镜像内版本时，版本约束测试必须在同一 PR 内同时暴露本地与 CI 的不兼容。
+- **工具版本更新**：更新 mise 声明的版本或 CI 镜像内版本时，本地版本约束测试必须在同一 PR 内暴露不兼容；CI 只保留 pre-commit 所需工具，不能用 CI 通过代替本地工具版本检查。
+- **CI 镜像不含 go/ansible/opentofu**：`TestToolsVersions`/`TestToolsDevEnv` 与 `tofu_fmt` 只在本地运行；CI 必须显式 `SKIP=tofu_fmt`，不得把跳过当成通过。
 - **历史文档中出现 Nix**：changelog、既有 ADR、旧 spec 属于历史记录，不视为违规；防回潮门禁需要准确排除这些路径。
 - **工具版本变更但忘记重建镜像**：CI 会继续使用 GHCR 上的旧镜像；需在快速验证文档中把“重建并推送”列为工具版本变更 PR 的必做项，并在 PR 描述中记录镜像 digest。
 - **Python 依赖分裂**：文档构建依赖与脚本运行依赖来源不同；两者 MUST 通过根 `pyproject.toml` 的 dependency groups 合并为同一份清单，`uv.lock` MUST 入库（修正当前 `.gitignore` 忽略它的现状），不能依赖 Nix 提供。
@@ -111,11 +113,11 @@
 - **FR-002**: 本地开发环境的非 Python 工具 MUST 由仓库内受版本控制的 mise 配置声明；Python 解释器、虚拟环境、依赖以及 Python 编写的 CLI 工具 MUST 由 uv 管理；MUST 提供一条文档化命令完成两者安装。
 - **FR-003**: 新本地环境 MUST 与旧 devShell 工具集等价：旧 devShell 的每个非 Python 工具要么由 mise 提供，要么显式列为系统前置条件（含最低版本），不允许静默缺失。
 - **FR-004**: Python 解释器版本与依赖 MUST 由 uv 从仓库根部的 `pyproject.toml` 解析，并由受版本控制的 `uv.lock` 锁定；文档构建与脚本运行依赖 MUST 通过 dependency groups 纳入同一清单；本地开发、CI 镜像与文档镜像 MUST 从同一来源安装；MUST NOT 依赖 Nix 提供 Python 包。
-- **FR-005**: 现有工具版本约束测试 MUST 在 mise 环境与 CI 中继续执行；`TestToolsNixShell` MUST 被替换为同时验证 mise 工具与 uv Python 环境可用的等价检查。
+- **FR-005**: 现有工具版本约束测试 MUST 在本地 mise 环境继续执行；CI 镜像不含 Go，MUST NOT 在 CI 运行该 Go 测试。`TestToolsNixShell` MUST 被替换为验证 mise 工具与 uv Python 环境可用的等价检查。
 - **FR-006**: CI 的所有步骤 MUST 运行在不含 Nix 的镜像上；镜像 MUST 来自公共主流/开源镜像，或由本仓库构建并发布到 GHCR 的镜像。
 - **FR-007**: 若需要自建 CI 镜像：定义 MUST 存于仓库；MUST 为单个预构建镜像，static-checks 与 helm-diff 两条流水线 MUST 共用同一镜像与同一工具版本；构建 MUST 可复现（固定基础镜像与工具版本）；MUST 发布到 GHCR（`ghcr.io`；集群未配置 Gitea registry，不作为发布目标）；镜像 MUST 由维护者在宿主机通过文档化命令重建并推送，CI MUST NOT 承担镜像构建；推送凭据 MUST 仅存于宿主机 Docker 凭据存储，不得进入仓库或日志。
-- **FR-008**: CI 工具版本 MUST 与本地声明（mise 与 uv）满足同一组版本约束，并由同一实现校验。
-- **FR-009**: CI 检查能力 MUST 保持等价：static-checks 的 9 个工具版本检查与全部 pre-commit hooks、helm-diff 的 3 个 stack 对比，不得通过减少检查换取通过。
+- **FR-008**: CI 镜像 MUST 只包含 pre-commit 与 helm-diff 所需工具（helm、dyff、shellcheck、git、diffutils、Python/pre-commit）；其版本 MUST 与本地 `.mise.toml`/`uv.lock` 声明一致。
+- **FR-009**: CI 检查能力 MUST 与精简后的镜像能力一致：static-checks 只运行 pre-commit（显式 `SKIP=tofu_fmt`），helm-diff 保持 3 个 stack 对比；go/ansible/opentofu 相关检查 MUST 只在本地执行。
 - **FR-010**: 用户文档 MUST 更新：开发环境页（改为 mise + uv）、sandbox 前置条件、production deployment/configuration、onboarding、README 技术栈表、`docs/reference/roadmap.md` 的 NIX 小节、test README、脚本中的 Nix TODO；文档 MUST NOT 再要求安装 Nix 或 flakes。
 - **FR-011**: MUST 新增 ADR 记录迁移决策与取代关系；历史 changelog 与既有 ADR 保留（可标注 superseded），不重写历史。
 - **FR-012**: MUST 提供自动门禁防止 Nix 回潮：检测 Nix 制品、`nix` 命令、Nix 镜像引用；排除历史记录与 `specs/` 目录。
@@ -137,8 +139,8 @@
 
 - **SC-001**: 一台未安装 Nix 的 Ubuntu 机器（已安装 mise 与 uv）按文档操作，在 15 分钟内（含首次下载）获得可用环境，且 `make -C test filter=Tools` 与 `pre-commit run --all-files` 通过。
 - **SC-002**: 活动文件（代码、配置、脚本、用户文档）中的 Nix 引用数为 0；扫描命中仅限历史记录与本次 spec 目录。
-- **SC-003**: PR 上的 static-checks 与 helm-diff 流水线全部通过，0 个步骤使用 `nixos/nix` 或 `nixery.dev` 镜像，检查项数量与迁移前一致（9 个工具 + 全部 hooks + 3 个 stack）。
-- **SC-004**: 本地与 CI 的工具版本检查 0 处越界；更新版本来源的 PR 在本地与 CI 两边同时通过。
+- **SC-003**: PR 上的 static-checks 与 helm-diff 流水线全部通过，0 个步骤使用 `nixos/nix` 或 `nixery.dev` 镜像；static-checks 运行 pre-commit hooks（跳过 `tofu_fmt`），helm-diff 覆盖 3 个 stack。
+- **SC-004**: 本地工具版本检查 0 处越界；CI 不运行 Go 版本测试，CI 中 helm/dyff/shellcheck/pre-commit 可用。
 - **SC-005**: 冷启动 pipeline 总时长相对迁移前实测基线不劣化超过 20%。
 - **SC-006**: 新贡献者按文档操作全程执行 0 条 `nix` 命令；文档中"安装 Nix"类步骤数为 0。
 - **SC-007**: 提交包含 Nix 引用的测试 PR 时，防回潮门禁在 1 次流水线内失败并指出具体文件与行号。
@@ -156,6 +158,7 @@
 - 旧 devShell 的工具清单即为迁移基线；裁剪"看似未使用"的工具属于独立决策，不在本特性范围内。
 - 依赖更新自动化（如 Renovate）需覆盖 mise 配置与镜像版本；若工具不支持，则采用文档化的手动更新流程。
 - CI agent（k8s backend）可拉取公共镜像；镜像构建由宿主机 Docker 完成，不依赖 CI 的 buildkit。
+- CI 镜像只保留 pre-commit（helm/dyff/shellcheck）与 helm-diff 所需组件；go/ansible/opentofu 及相关检查仅在本地运行（用户 2026-10-31 决定）。
 
 ## 不在本次范围
 

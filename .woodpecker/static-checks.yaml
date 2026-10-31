@@ -2,29 +2,16 @@ when:
   branch: ${CI_REPO_DEFAULT_BRANCH}
 
 steps:
-  tools-versions:
-    image: ghcr.io/east4ming/homelab2-ci:latest
-    pull: true
-    commands:
-      # TestToolsVersions（9 个工具）+ TestToolsDevEnv（mise/uv 环境）
-      - make -C test filter=Tools
-    when:
-      - event: pull_request
-        path:
-          include:
-            - '.mise.toml'
-            - 'pyproject.toml'
-            - 'uv.lock'
-            - '.woodpecker/ci/**'
-            - 'test/**'
-    depends_on: []
   pre-commit:
     image: ghcr.io/east4ming/homelab2-ci:latest
     pull: true
     commands:
+      # Go/ansible/opentofu 已从 CI 镜像移除：
+      # - 不运行 TestToolsVersions（需要 Go）
+      # - 跳过依赖 opentofu 的 tofu_fmt（本地 pre-commit 仍会执行）
       # --all-files: without it pre-commit only checks staged files and passes
       # vacuously on a fresh CI clone
-      - pre-commit run --all-files --color=always
+      - SKIP=tofu_fmt pre-commit run --all-files --color=always
     when:
       - event: pull_request
     depends_on: []
