@@ -75,7 +75,7 @@ scripts/build-ci-image         # 新增：宿主机构建并推送 CI 镜像（l
 ├── ci/Dockerfile              # 新增：CI 镜像定义
 ├── static-checks.yaml         # 修改：改用 latest 镜像 + pull: true + 路径触发
 └── helm-diff.yaml             # 修改：改用 latest 镜像 + pull: true
-Dockerfile                     # 修改：文档构建改用 uv + docs group
+docs/Dockerfile               # 修改：文档构建改用 uv + docs group
 .pre-commit-config.yaml        # 修改：新增 no-nix 本地 hook
 .gitignore                     # 修改：不再忽略 uv.lock
 test/
@@ -105,7 +105,7 @@ AGENTS.md                      # 修改：Spec Kit 当前 Plan 指针
 1. **工具分工**：mise 管理非 Python 工具（精确版本），uv 管理 Python 生态；操作系统包承担 git/make/docker/iproute2 等宿主机能力。
 2. **kanidm 例外**：`bin/kanidm` 包装 `kanidm/tools:1.11.2`；不引入 cargo 编译或第三方 PPA。
 3. **Python 布局**：根 `pyproject.toml` + 入库 `uv.lock`，groups 为 `scripts`/`dev`/`docs`；`requirements.txt` 删除。
-4. **CI 镜像**：单个 Debian 13 基础镜像，构建时按需 `mise install <tool...>`（版本仍来自 `.mise.toml`）+ `uv sync --frozen --only-group dev --only-group scripts`；docker CLI 从 `docker:29.9.2-cli` 复制；GHCR public package；由 `scripts/build-ci-image` 在宿主机构建，同时推送 `latest` 与 `sha-<short>`。首版全量镜像 3.57GB 导致 k8s agent 拉取超时，故 CI 镜像只装所需子集。
+4. **CI 镜像**：单个 Debian 13 基础镜像，构建时按需 `mise install <tool...>`（版本仍来自 `.mise.toml`）+ `uv sync --frozen --only-group ci --only-group scripts`；docker CLI 从 `docker:29.9.2-cli` 复制；GHCR public package；由 `scripts/build-ci-image` 在宿主机构建，同时推送 `latest` 与 `sha-<short>`。首版全量镜像 3.57GB 导致 k8s agent 拉取超时，故 CI 镜像只装所需子集。
 5. **流水线**：不再新增镜像构建 workflow；`static-checks` 与 `helm-diff` 使用 `ghcr.io/east4ming/homelab2-ci:latest` 并设置 `pull: true`，不使用 Woodpecker secret 或特权步骤。
 6. **测试**：`TestToolsDevEnv` 验证 mise 环境与 uv 导入；git 约束放宽到 `>=2.47`，9 项检查数量不变。
 7. **门禁**：pre-commit 本地 hook + `scripts/check-no-nix`，白名单只含历史记录与 `specs/`。

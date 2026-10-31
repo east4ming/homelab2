@@ -20,6 +20,11 @@ dev = [
   "pre-commit>=4.5,<5",
   "yamllint>=1.37",
 ]
+# CI 只需要 ansible-core（不跑 playbook/collections）与 pre-commit
+ci = [
+  "ansible-core>=2.21,<2.22",
+  "pre-commit>=4.5,<5",
+]
 docs = [
   "babel==2.18.0",
   "certifi==2026.10.23",

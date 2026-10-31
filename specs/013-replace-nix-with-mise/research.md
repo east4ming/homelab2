@@ -95,7 +95,7 @@
 
 - 基础镜像：`debian:13-slim`（按 digest 固定），apt 安装 `git make diffutils ca-certificates curl xz-utils unzip`。
 - mise：用官方安装脚本并固定 `MISE_VERSION=v2026.10.22`；`COPY .mise.toml` 后按需 `mise install <tool...>`。
-- uv：从官方 `ghcr.io/astral-sh/uv:<0.13.6>` 镜像复制二进制；`UV_PROJECT_ENVIRONMENT=/opt/venv`、`uv sync --frozen --only-group dev --only-group scripts`。
+- uv：从官方 `ghcr.io/astral-sh/uv:<0.13.6>` 镜像复制二进制；`UV_PROJECT_ENVIRONMENT=/opt/venv`、`uv sync --frozen --only-group ci --only-group scripts`。
 - docker CLI：从 `docker:29.9.2-cli`（digest 固定）复制 `/usr/local/bin/docker`，满足 `docker --version` 检查。
 - PATH：`/opt/venv/bin`、`$MISE_DATA_DIR/shims` 在前；`MISE_TRUSTED_CONFIG_PATHS` 覆盖构建目录与 Woodpecker workspace（`/woodpecker`）。
 - 内容：CI 所需的 mise 子集（helm、kubectl、kustomize、opentofu、go、gotestsum、dyff、shellcheck；版本仍由 `.mise.toml` 解析）+ uv `dev`/`scripts` 组。排除 argocd/k9s/k3d/neovim 与 `docs` 组：首版全量镜像 3.57GB，k8s agent 拉取超时（`trying and failing to pull image`）。

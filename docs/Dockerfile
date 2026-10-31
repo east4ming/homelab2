@@ -1,5 +1,8 @@
 # syntax=docker/dockerfile:1
 
+# 文档站镜像（mkdocs build → nginx）。
+# 构建：docker build -f docs/Dockerfile .
+
 FROM ghcr.io/astral-sh/uv:0.13.6 AS uv
 
 FROM docker.io/library/python:3.13-slim AS build

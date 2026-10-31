@@ -5,7 +5,12 @@ FROM docker:29.9.2-cli@sha256:5e6baf67325a79f64ed3bed6863954d5e05d0f3d4e57cbdb14
 
 FROM debian:13-slim@sha256:f6b08b09a05725f9431502d3b5714f5c4576e82c1a84fa1debe0c24a7e0c3ec4
 
-RUN apt-get update \
+LABEL org.opencontainers.image.source="https://github.com/east4ming/homelab2" \
+      org.opencontainers.image.description="Homelab2 CI toolchain (mise + uv)"
+
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
         curl \
@@ -13,8 +18,7 @@ RUN apt-get update \
         git \
         make \
         unzip \
-        xz-utils \
-    && rm -rf /var/lib/apt/lists/*
+        xz-utils
 
 RUN curl -fsSL -o /tmp/mise-install.sh https://mise.run \
     && MISE_VERSION=v2026.10.22 MISE_INSTALL_PATH=/usr/local/bin/mise sh /tmp/mise-install.sh \
@@ -24,10 +28,10 @@ COPY --from=uv /uv /uvx /usr/local/bin/
 COPY --from=dockercli /usr/local/bin/docker /usr/local/bin/docker
 
 ENV MISE_DATA_DIR=/opt/mise \
-    MISE_CACHE_DIR=/opt/mise-cache \
+    MISE_CACHE_DIR=/tmp/mise-cache \
     MISE_TRUSTED_CONFIG_PATHS=/src:/woodpecker \
     MISE_EXEC_AUTO_INSTALL=0 \
-    UV_CACHE_DIR=/opt/uv-cache \
+    UV_CACHE_DIR=/tmp/uv-cache \
     UV_PYTHON_INSTALL_DIR=/opt/uv-python \
     UV_PROJECT_ENVIRONMENT=/opt/venv \
     PATH=/opt/venv/bin:/opt/mise/shims:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
@@ -35,8 +39,11 @@ ENV MISE_DATA_DIR=/opt/mise \
 WORKDIR /src
 
 COPY .mise.toml .python-version pyproject.toml uv.lock ./
-# CI 只需要工具子集；版本仍来自 .mise.toml（bare name 解析配置版本）
-RUN mise install --yes \
+# CI 只需要工具子集；版本仍来自 .mise.toml（bare name 解析配置版本）。
+# 缓存目录使用 BuildKit cache mount，不进入镜像层。
+RUN --mount=type=cache,target=/tmp/mise-cache \
+    --mount=type=cache,target=/tmp/uv-cache \
+    mise install --yes \
         helm \
         kubectl \
         kustomize \
@@ -45,4 +52,4 @@ RUN mise install --yes \
         gotestsum \
         dyff \
         shellcheck \
-    && uv sync --frozen --only-group dev --only-group scripts
+    && uv sync --frozen --only-group ci --only-group scripts
