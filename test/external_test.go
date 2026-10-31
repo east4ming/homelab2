@@ -16,7 +16,7 @@ func TestTerraformExternal(t *testing.T) {
 
 	terraformOptions := terraform.WithDefaultRetryableErrors(t, &terraform.Options{
 		TerraformDir: exampleFolder,
-		// The devShell ships OpenTofu, not Terraform (flake.nix)
+		// The mise environment provides OpenTofu, not Terraform (.mise.toml)
 		TerraformBinary: "tofu",
 	})
 

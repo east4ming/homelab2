@@ -114,7 +114,7 @@
 
 ### Homelab Blog
 
-### NIX Packages
+### 开发工具
 
 - [ ] ping
 - [ ] nslookup

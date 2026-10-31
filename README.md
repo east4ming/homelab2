@@ -225,9 +225,14 @@ They can't capture all the project's features, but they are sufficient to get a 
         <td>Log aggregation system</td>
     </tr>
     <tr>
-        <td><img width="32" src="https://raw.githubusercontent.com/NixOS/nixos-artwork/refs/heads/master/logo/nix-snowflake-colours.svg"></td>
-        <td><a href="https://nixos.org">Nix</a></td>
-        <td>Convenient development shell</td>
+        <td><img width="32" src="https://mise.jdx.dev/logo.svg"></td>
+        <td><a href="https://mise.jdx.dev">mise</a></td>
+        <td>Development tool version manager</td>
+    </tr>
+    <tr>
+        <td><img width="32" src="https://docs.astral.sh/uv/assets/logo-letter.svg"></td>
+        <td><a href="https://docs.astral.sh/uv/">uv</a></td>
+        <td>Python environment and dependency manager</td>
     </tr>
     <tr>
         <td><img width="32" src="https://ntfy.sh/_next/static/media/logo.077f6a13.svg"></td>

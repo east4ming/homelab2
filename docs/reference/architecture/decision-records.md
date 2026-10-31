@@ -106,6 +106,8 @@ Moreover, Tailscale Operator is still in a relatively early stage, many features
 
 ## Remove the Docker wrapper for Nix shell
 
+> **Superseded** (2026-10-31) by [Remove Nix in favor of mise and uv](#remove-nix-in-favor-of-mise-and-uv).
+
 **Context**
 
 The Docker wrapper was originally added because not everyone has Nix installed.
@@ -171,6 +173,8 @@ Update secret references in `kind: ExternalSecret`:
 
 ## Manage package versions in development shell
 
+> **Superseded** (2026-10-31) by [Remove Nix in favor of mise and uv](#remove-nix-in-favor-of-mise-and-uv).
+
 **Context**
 
 While Nix is reproducible, we need a way to control the versions of the tools and keep them up-to-date.
@@ -202,6 +206,8 @@ We have the rail guard from the tests to ensure that we don't upgrade to a new m
 and we can make a conscious decision to take the necessary steps prior to upgrading to the new major version.
 
 ## Refactor the tools container from plain Dockerfile to [Nix](https://nixos.org)
+
+> **Superseded** (2026-10-31) by [Remove Nix in favor of mise and uv](#remove-nix-in-favor-of-mise-and-uv).
 
 **Context**
 
@@ -299,3 +305,42 @@ Use Fedora as the base OS.
 **Consequences**
 
 `¯\_(ツ)_/¯`
+
+## Remove Nix in favor of mise and uv
+
+**Context**
+
+The development environment and CI depended on Nix: `flake.nix` defined the devShell,
+Woodpecker ran `nixos/nix` / `nixery.dev` images, and the tests assumed `nix develop`.
+Installing Nix (plus flakes) was a heavy prerequisite for contributors, and CI cold
+starts depended on Nix stores and on-demand image builds. The server side had no direct
+Nix dependency, but the installation docs asked the initial controller to install it.
+
+Alternatives considered:
+
+- Keep Nix for reproducibility: rejected because the local/CI packaging and maintenance
+  cost outweighed the benefit for this repository.
+- Keep the Docker wrapper around the Nix shell: rejected earlier and now unnecessary.
+
+**Decision**
+
+- Local tools: mise manages every non-Python tool with exact versions in `.mise.toml`;
+  uv manages Python 3.13, dependencies and Python CLI tools via the root `pyproject.toml`
+  and a committed `uv.lock`. `mise run setup` prepares both.
+- `kanidm` has no mise backend or prebuilt release binary, so `bin/kanidm` wraps the
+  official `kanidm/tools:1.11.2` container; the deployed server stays at 1.3.3.
+- CI: a single image `ghcr.io/east4ming/homelab2-ci:latest` is built from the same
+  `.mise.toml` / `uv.lock` on the host via `scripts/build-ci-image` and pushed to GHCR.
+  Woodpecker agents (Kubernetes backend) only pull it; they do not build images and do
+  not need secrets or privileged steps.
+- A `no-nix` pre-commit hook scans tracked files and rejects Nix artifacts, commands and
+  image references outside the historical records and `specs/`.
+
+**Consequences**
+
+- Contributors need mise and uv instead of Nix; the docs and onboarding were updated.
+- The image tag is a mutable `latest` pointer with an additional `sha-<short>` audit tag.
+  Rebuilding is manual: changes to `.mise.toml`, `pyproject.toml`, `uv.lock` or the CI
+  Dockerfile require running `scripts/build-ci-image` before merging.
+- Tool version guardrails remain in `test/tools_test.go`; the git lower bound was
+  re-baselined to the CI base image (2.47) instead of the old nixpkgs pin.

@@ -124,4 +124,4 @@ sudo sysctl --system
   `failed to validate secondaryNodeIP`，hostNetwork Pod 的 IPv6 endpoint 指向不存在的
   地址。**已于 2026-10-30 修复**：节点 IPv6 改用固定站点 ULA，见
   [节点 IPv6 前缀漂移](node-ipv6-drift.md) 与
-  [specs/012](../../specs/012-stable-node-ula-ipv6/plan.md)。
+  [specs/012](https://github.com/east4ming/homelab2/blob/master/specs/012-stable-node-ula-ipv6/plan.md)。

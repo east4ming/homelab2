@@ -1,7 +1,7 @@
 # Homelab2
 
 <!-- SPECKIT START -->
-当前 Plan: [specs/012-stable-node-ula-ipv6/plan.md](specs/012-stable-node-ula-ipv6/plan.md)
+当前 Plan: [specs/013-replace-nix-with-mise/plan.md](specs/013-replace-nix-with-mise/plan.md)
 <!-- SPECKIT END -->
 
 ## 版本管理
