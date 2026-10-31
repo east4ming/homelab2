@@ -23,6 +23,9 @@ if ! grep -q '"ghcr.io"' "${docker_config}" 2>/dev/null; then
 fi
 
 docker buildx build --platform linux/amd64 --push \
+    --provenance=false \
+    --annotation "manifest:org.opencontainers.image.source=https://github.com/east4ming/homelab2" \
+    --annotation "manifest:org.opencontainers.image.description=Homelab2 CI static checks (pre-commit)" \
     -f .woodpecker/ci/Dockerfile \
     -t "${image}:latest" \
     -t "${image}:${tag}" \

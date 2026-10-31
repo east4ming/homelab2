@@ -5,6 +5,7 @@ FROM ghcr.io/astral-sh/uv:0.13.6@sha256:af22a52f5eafef3d78e551599d405c02df61919d
 FROM debian:13-slim@sha256:f6b08b09a05725f9431502d3b5714f5c4576e82c1a84fa1debe0c24a7e0c3ec4
 
 LABEL org.opencontainers.image.source="https://github.com/east4ming/homelab2" \
+      org.opencontainers.image.url="https://github.com/east4ming/homelab2" \
       org.opencontainers.image.description="Homelab2 CI static checks (pre-commit)"
 
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
