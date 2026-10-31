@@ -33,6 +33,7 @@
 
 - Q: 自建 CI 镜像采用哪种形态？ → A: 单个预构建镜像，static-checks 与 helm-diff 两条流水线共用。
 - Q: Python 依赖如何组织（uv 的清单形态）？ → A: 根 `pyproject.toml` + 受版本控制的 `uv.lock`，文档与脚本依赖用 dependency groups。
+- Q: CI 镜像在哪里构建？ → A: 在宿主机手动构建并推送（CI agent 为 k8s backend，不承担镜像构建），CI 只拉取 GHCR 镜像。
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -65,7 +66,7 @@
 
 1. **Given** static-checks 流水线，**When** 在 PR 上运行，**Then** tools-versions 与 pre-commit 两个步骤都运行在非 Nix 镜像上，且检查项与迁移前完全一致（9 个工具版本检查 + 全部 pre-commit hooks）。
 2. **Given** helm-diff 流水线，**When** 对任一 stack 提交 PR，**Then** 在非 Nix 镜像上完成 Helm 渲染与 dyff 对比，输出格式与迁移前一致。
-3. **Given** 现有公共镜像满足不了某一步骤的工具组合，**When** 采用自建镜像，**Then** 镜像定义在仓库内、构建可复现（固定基础镜像与工具版本）、发布到 GHCR，static-checks 与 helm-diff 共用这一个预构建镜像，并在镜像定义或工具版本变化时自动重建；镜像内不包含也不调用 Nix。
+3. **Given** 现有公共镜像满足不了某一步骤的工具组合，**When** 采用自建镜像，**Then** 镜像定义在仓库内、构建可复现（固定基础镜像与工具版本）、发布到 GHCR，static-checks 与 helm-diff 共用这一个预构建镜像；镜像由维护者在宿主机按文档化命令重建并推送，CI 不承担构建；镜像内不包含也不调用 Nix。
 4. **Given** CI 运行环境与本地开发环境，**When** 执行工具版本检查，**Then** 两边满足同一组版本约束，且由同一份测试实现校验。
 5. **Given** 无镜像缓存的冷启动，**When** 运行任一条 pipeline，**Then** 总时长相对迁移前实测基线不劣化超过 20%。
 
@@ -96,6 +97,7 @@
 - **镜像仓库不可达或凭据缺失**：CI 必须明确失败并指出缺失的凭据/仓库，不得回退到 `nixos/nix` 或 `nixery.dev`。
 - **工具版本更新**：更新 mise 声明的版本或 CI 镜像内版本时，版本约束测试必须在同一 PR 内同时暴露本地与 CI 的不兼容。
 - **历史文档中出现 Nix**：changelog、既有 ADR、旧 spec 属于历史记录，不视为违规；防回潮门禁需要准确排除这些路径。
+- **工具版本变更但忘记重建镜像**：CI 会继续使用 GHCR 上的旧镜像；需在快速验证文档中把“重建并推送”列为工具版本变更 PR 的必做项，并在 PR 描述中记录镜像 digest。
 - **Python 依赖分裂**：文档构建依赖与脚本运行依赖来源不同；两者 MUST 通过根 `pyproject.toml` 的 dependency groups 合并为同一份清单，`uv.lock` MUST 入库（修正当前 `.gitignore` 忽略它的现状），不能依赖 Nix 提供。
 - **工具与已部署服务的兼容性**：旧 devShell 中个别工具版本是按线上服务校准的（如 kanidm CLI 对应已部署服务端），迁移时不能只求"装得上"，必须保留这些兼容约束。
 - **本机没有 docker 守护进程**：依赖容器的目标（k3d、docker compose、镜像构建）必须给出清晰错误或文档化前置条件。
@@ -111,7 +113,7 @@
 - **FR-004**: Python 解释器版本与依赖 MUST 由 uv 从仓库根部的 `pyproject.toml` 解析，并由受版本控制的 `uv.lock` 锁定；文档构建与脚本运行依赖 MUST 通过 dependency groups 纳入同一清单；本地开发、CI 镜像与文档镜像 MUST 从同一来源安装；MUST NOT 依赖 Nix 提供 Python 包。
 - **FR-005**: 现有工具版本约束测试 MUST 在 mise 环境与 CI 中继续执行；`TestToolsNixShell` MUST 被替换为同时验证 mise 工具与 uv Python 环境可用的等价检查。
 - **FR-006**: CI 的所有步骤 MUST 运行在不含 Nix 的镜像上；镜像 MUST 来自公共主流/开源镜像，或由本仓库构建并发布到 GHCR 的镜像。
-- **FR-007**: 若需要自建 CI 镜像：定义 MUST 存于仓库；MUST 为单个预构建镜像，static-checks 与 helm-diff 两条流水线 MUST 共用同一镜像与同一工具版本；构建 MUST 可复现（固定基础镜像与工具版本）；MUST 发布到 GHCR（`ghcr.io`；集群未配置 Gitea registry，不作为发布目标）；MUST 在定义或工具版本变化时自动重建；凭据 MUST 仅通过 CI secret 注入。
+- **FR-007**: 若需要自建 CI 镜像：定义 MUST 存于仓库；MUST 为单个预构建镜像，static-checks 与 helm-diff 两条流水线 MUST 共用同一镜像与同一工具版本；构建 MUST 可复现（固定基础镜像与工具版本）；MUST 发布到 GHCR（`ghcr.io`；集群未配置 Gitea registry，不作为发布目标）；镜像 MUST 由维护者在宿主机通过文档化命令重建并推送，CI MUST NOT 承担镜像构建；推送凭据 MUST 仅存于宿主机 Docker 凭据存储，不得进入仓库或日志。
 - **FR-008**: CI 工具版本 MUST 与本地声明（mise 与 uv）满足同一组版本约束，并由同一实现校验。
 - **FR-009**: CI 检查能力 MUST 保持等价：static-checks 的 9 个工具版本检查与全部 pre-commit hooks、helm-diff 的 3 个 stack 对比，不得通过减少检查换取通过。
 - **FR-010**: 用户文档 MUST 更新：开发环境页（改为 mise + uv）、sandbox 前置条件、production deployment/configuration、onboarding、README 技术栈表、`docs/reference/roadmap.md` 的 NIX 小节、test README、脚本中的 Nix TODO；文档 MUST NOT 再要求安装 Nix 或 flakes。
@@ -148,11 +150,12 @@
 - 平台范围已确认（用户澄清）：Linux x86_64（Ubuntu 24.04+/26.04）为验收范围；macOS 等平台不在本特性验收范围内。
 - 工具分工已确认（用户澄清）：Python 解释器、虚拟环境、依赖与 Python 编写的 CLI 工具由 uv 管理，mise 只管理 Python 以外的工具；mise 不接管 Python。
 - docker/containerd、iproute2、locales、SSH 客户端等宿主机能力继续由操作系统提供，并在文档中列明；mise 与 uv 均不负责守护进程。
-- 自建 CI 镜像发布目标已确认（用户澄清）：GHCR；homelab2 集群未配置 Gitea registry，不作为发布目标，CI 需具备 GHCR 推送凭据。
+- 自建 CI 镜像发布目标已确认（用户澄清）：GHCR；homelab2 集群未配置 Gitea registry，不作为发布目标。镜像由维护者在宿主机构建并推送，推送凭据存于宿主机 Docker 凭据存储；CI 只拉取 public package。
+- CI 镜像 tag 策略：`latest` 为可变指针供 CI 拉取，同时推送 `sha-<short>` 作为审计 tag；工具版本或镜像定义变更时由维护者重建 `latest`。
 - 历史 changelog、既有 ADR 与旧 spec 不重写；迁移决策通过新增 ADR 表达取代关系。
 - 旧 devShell 的工具清单即为迁移基线；裁剪"看似未使用"的工具属于独立决策，不在本特性范围内。
 - 依赖更新自动化（如 Renovate）需覆盖 mise 配置与镜像版本；若工具不支持，则采用文档化的手动更新流程。
-- CI runner 可拉取公共镜像，并具备构建镜像所需的 docker/buildkit 能力。
+- CI agent（k8s backend）可拉取公共镜像；镜像构建由宿主机 Docker 完成，不依赖 CI 的 buildkit。
 
 ## 不在本次范围
 

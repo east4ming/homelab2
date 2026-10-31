@@ -35,9 +35,10 @@
   因此 spec 保留了这些名称；具体镜像组成、mise 配置写法、pipeline YAML 结构调整留给 plan。
 - 用户澄清已并入：Python 生态（解释器、虚拟环境、依赖、Python CLI 工具）由 uv 管理，
   mise 只管理 Python 以外的工具；验收平台为 Linux x86_64；自建 CI 镜像发布到 GHCR
-  （集群未配置 Gitea registry）。
+  （集群未配置 Gitea registry），由宿主机手动构建并推送，CI 只拉取。
 - `/speckit-clarify` 追加决定：CI 使用单个预构建镜像供两条流水线共用；Python 依赖采用
-  根 `pyproject.toml` + 入库的 `uv.lock`，文档与脚本依赖用 dependency groups。
+  根 `pyproject.toml` + 入库的 `uv.lock`，文档与脚本依赖用 dependency groups；CI 镜像在
+  宿主机构建（`scripts/build-ci-image`），FR-007 已改为“文档化手动重建”。
 - 目标读者是项目维护者与贡献者（开发者工具链），"非技术干系人"按此范围理解。
 - 未使用 [NEEDS CLARIFICATION]：历史文档保留、`uv.lock` 需纳入版本控制等默认值
   已记录在 Assumptions / 不在本次范围。
