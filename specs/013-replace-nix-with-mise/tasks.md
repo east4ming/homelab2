@@ -93,7 +93,7 @@
 - [X] T024 [US2] 在宿主机执行 `scripts/build-ci-image`，记录 `latest` 与 `sha-<short>` 的 digest 到 `specs/013-replace-nix-with-mise/quickstart.md`（依赖 T020、T021）
 - [X] T025 [US2] 首次推送后把 GHCR package `homelab2-ci` 设为 public：已通过 GitHub UI 切换；匿名 `docker pull` 验证通过，记录在 `specs/013-replace-nix-with-mise/quickstart.md`
 - [X] T026 [US2] 本地镜像冒烟：`docker run -e MISE_TRUSTED_CONFIG_PATHS=/woodpecker -v "$PWD:/woodpecker/src" -w /woodpecker/src ghcr.io/east4ming/homelab2-ci:latest sh -c 'make -C test filter=Tools && pre-commit run --all-files'`（验证 `.woodpecker/ci/Dockerfile`；依赖 T024）
-- [ ] T027 [US2] 推送分支并创建 PR，确认两条 pipeline 只拉取镜像、无构建步骤，检查项与迁移前一致；记录冷启动耗时并与 T001 基线比较（≤ ×1.2）；结果写入 `specs/013-replace-nix-with-mise/quickstart.md`（依赖 T022–T026；阻塞：T025 未完成前 CI 无法匿名拉取镜像）
+- [X] T027 [US2] 推送分支并创建 PR（#600），pipeline #2702 success（423s，≤ 基线 ×1.2）；static-checks 两项检查成功、无镜像构建步骤；helm-diff 的 diff 步骤按 path 过滤跳过；结果已写入 `specs/013-replace-nix-with-mise/quickstart.md`
 
 **Checkpoint**: US2 独立可用；CI 无 Nix 镜像
 
@@ -129,9 +129,9 @@
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T040 按 `specs/013-replace-nix-with-mise/quickstart.md` 第 5 节的 SC 映射逐项验证，把结果与耗时写入 quickstart.md（本地 SC-001/002/004/006/008 已通过；SC-003/005/007 的 CI 部分待 T025/T027）
-- [ ] T041 将 `specs/013-replace-nix-with-mise/spec.md` 的 Status 改为 `Implemented`，并在 checklists/requirements.md Notes 记录最终验收结论（依赖 T040）
-- [ ] T042 复核 `git status`/`git diff` 无范围外改动；确认 `test/README.md`、`docs/concepts/development-shell.md` 中的命令与实际一致；准备 PR 描述（含镜像 digest、基线耗时、SC-00x 证据）
+- [X] T040 按 `specs/013-replace-nix-with-mise/quickstart.md` 第 5 节的 SC 映射逐项验证，结果与耗时已写入 quickstart.md（SC-003/004/005 由 pipeline #2702 验证；SC-007 为本地/镜像内验证）
+- [X] T041 将 `specs/013-replace-nix-with-mise/spec.md` 的 Status 改为 `Implemented`，并在 checklists/requirements.md Notes 记录最终验收结论
+- [X] T042 复核 `git status`/`git diff`；确认 `test/README.md`、`docs/concepts/development-shell.md` 命令与实际一致；PR #600 描述已包含镜像 digest、基线耗时与验证结果
 
 ---
 

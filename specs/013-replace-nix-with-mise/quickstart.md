@@ -84,14 +84,13 @@ scripts/build-ci-image
 
 预期：推送 `ghcr.io/east4ming/homelab2-ci:latest` 与 `:sha-<short>`，并打印 digest（记录到 PR 描述）。首次推送后把 package 设为 public：GitHub → Packages → `homelab2-ci` → Settings → Change visibility。
 
-2026-10-31 首次构建结果：
+2026-10-31 构建记录：
 
-- digest: `sha256:c13aa641d124d8dc7b095a3d9a74e010fa61ce6fd56608fa48319326ea8aee6c`
-- tags: `latest`、`sha-78394bf3`
-- 镜像内工具冒烟通过（helm 3.20.2 / kubectl 1.36.6 / tofu 1.11.14 / ansible 2.21.5 / pre-commit 4.7.0）
+- 首版全量镜像（argocd/k9s/k3d/neovim + docs 组）3.57GB，k8s agent 拉取超时，pipeline #2701 失败
+- 精简镜像（CI 工具子集 + uv `dev`/`scripts` 组）：digest `sha256:a4ab2fa0b703230722470f9ec673f53e5270f7a4302a14b61db0e9d825c5e55b`，tags `latest`、`sha-776ad98e`
+- 匿名 `docker pull` 通过（package 已 public）
 - 镜像内 `make -C test filter=Tools` + `pre-commit run --all-files` 通过
-- **package 已设为 public**：匿名 `docker pull` 验证通过（REST PATCH 曾返回 404，最终用 GitHub UI 切换）
-- 构建脚本现在要求工作区干净（sha tag 必须对应提交）；本次构建来自未提交工作区，提交后需重跑 `scripts/build-ci-image` 生成与 `HEAD` 对应的 `sha-<short>`
+- `scripts/build-ci-image` 要求工作区干净；后续仅文档提交不会改变镜像内容，但 `sha-<short>` 会落后于 `HEAD`
 
 ### 3.3 PR 验证
 
@@ -101,6 +100,12 @@ scripts/build-ci-image
 4. 记录冷启动耗时，与第 0 步基线比较，应 ≤ 基线 × 1.2。
 5. 构造一个包含 `nixos/nix` 或 `flake.nix` 的测试 PR，确认 `no-nix` hook 失败并指出文件/行号。
 6. 若 PR 改动 `.mise.toml`、`pyproject.toml`、`uv.lock` 或 `.woodpecker/ci/Dockerfile`：合并前必须重跑 `scripts/build-ci-image`，并让 CI 在重建后的镜像上通过。
+
+2026-10-31 结果（PR #600）：
+
+- pipeline #2702 **success**；总耗时 423s（基线 1174s，SC-005 通过）
+- `static-checks`：`tools-versions` + `pre-commit` 均成功；pipeline 中无镜像构建步骤
+- `helm-diff`：三个 matrix workflow 均只执行 clone；`diff` 步骤因改动不涉及 `system/`/`platform/`/`apps/` 被 path 过滤跳过（符合预期）
 
 ## 4. 回滚
 
@@ -114,9 +119,9 @@ scripts/build-ci-image
 | --- | --- | --- |
 | SC-001 | 第 1 节全部通过，记录 setup 耗时 ≤ 15 分钟 | 本地通过：首次工具安装约 113s，`TestToolsVersions`/`TestToolsDevEnv`、pre-commit、`mkdocs --strict` 均通过 |
 | SC-002 | `scripts/check-no-nix` 无命中（历史记录与 `specs/` 除外） | 通过 |
-| SC-003 | 第 3 节 pipeline 通过；无 `nixos/nix`/`nixery.dev` 镜像 | 待 CI：镜像已推送，package 需先改 public |
-| SC-004 | 同一 PR 中本地与 CI 的 `ToolsVersions` 都通过 | 本地通过；CI 待 |
-| SC-005 | 冷启动耗时 ≤ 基线 × 1.2 | 待 CI 实测 |
+| SC-003 | 第 3 节 pipeline 通过；无 `nixos/nix`/`nixery.dev` 镜像 | 通过：pipeline #2702 success，步骤镜像仅 GHCR 自建镜像 |
+| SC-004 | 同一 PR 中本地与 CI 的 `ToolsVersions` 都通过 | 通过：本地 + CI `tools-versions` 均成功 |
+| SC-005 | 冷启动耗时 ≤ 基线 × 1.2 | 通过：423s ≤ 1409s |
 | SC-006 | 第 1 节无 `nix` 命令；文档无安装步骤 | 通过（门禁扫描） |
-| SC-007 | 测试 PR 被门禁阻断 | 本地用测试文件验证通过；CI 待 |
+| SC-007 | 测试 PR 被门禁阻断 | 通过（本地 + 镜像内验证违规文件被 `no-nix` 拒绝；未单独构造失败 PR） |
 | SC-008 | `uv sync --frozen --all-groups` 在干净环境成功；`uv.lock` 已入库 | 通过 |

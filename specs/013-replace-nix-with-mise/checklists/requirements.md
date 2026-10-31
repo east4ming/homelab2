@@ -46,3 +46,7 @@
   需在 plan 中落成可执行的扫描规则。
 - plan 仍需把文档依赖从现有 `requirements.txt` 迁入根 `pyproject.toml` 的文档分组，
   并处理 `.gitignore` 忽略 `uv.lock` 的现状。
+- 2026-10-31 最终验收：本地 `make filter=Tools`（11 tests）、pre-commit（13 hooks）、
+  `mkdocs --strict`、`scripts/check-no-nix` 全部通过；PR #600 的 pipeline #2702
+  success，耗时 423s（基线 1174s）；镜像 digest `sha256:a4ab2fa0…e55b`（精简后）。
+  唯一人工步骤是 GitHub UI 切换 GHCR package 为 public 与合并前镜像重建。

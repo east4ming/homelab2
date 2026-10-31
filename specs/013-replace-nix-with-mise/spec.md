@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-31
 
-**Status**: Draft
+**Status**: Implemented
 
 **Input**: User description: "全面移除 nix：本地的开发工具/脚本等使用 mise（本地已安装）代替；cicd 或服务器端的镜像使用主流的或开源的镜像代替（如果没有满足需求的可以自己 build 一个）"（澄清补充：Python 由 uv 管理，Python 以外的工具由 mise 管理；验收平台为 Linux x86_64；自建 CI 镜像发布到 GHCR）
 
