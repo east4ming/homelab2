@@ -1,3 +1,3 @@
 {
-  "feature_directory": "specs/011-fix-apparmor-signal"
+  "feature_directory": "specs/013-replace-nix-with-mise"
 }
