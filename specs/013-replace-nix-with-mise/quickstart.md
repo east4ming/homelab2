@@ -90,7 +90,7 @@ scripts/build-ci-image
 - tags: `latest`、`sha-78394bf3`
 - 镜像内工具冒烟通过（helm 3.20.2 / kubectl 1.36.6 / tofu 1.11.14 / ansible 2.21.5 / pre-commit 4.7.0）
 - 镜像内 `make -C test filter=Tools` + `pre-commit run --all-files` 通过
-- **package 当前仍为 private**：REST `PATCH /user/packages/...` 返回 404，需要在 GitHub UI 手动改为 public，CI 才能匿名拉取
+- **package 已设为 public**：匿名 `docker pull` 验证通过（REST PATCH 曾返回 404，最终用 GitHub UI 切换）
 - 构建脚本现在要求工作区干净（sha tag 必须对应提交）；本次构建来自未提交工作区，提交后需重跑 `scripts/build-ci-image` 生成与 `HEAD` 对应的 `sha-<short>`
 
 ### 3.3 PR 验证

@@ -91,7 +91,7 @@
 ### Implementation for User Story 2
 
 - [X] T024 [US2] 在宿主机执行 `scripts/build-ci-image`，记录 `latest` 与 `sha-<short>` 的 digest 到 `specs/013-replace-nix-with-mise/quickstart.md`（依赖 T020、T021）
-- [ ] T025 [US2] 首次推送后把 GHCR package `homelab2-ci` 设为 public：GitHub → Packages → Settings → Change visibility（或 `gh api`）；在 `specs/013-replace-nix-with-mise/quickstart.md` 记录可见性状态（阻塞：REST PATCH 返回 404，需在 https://github.com/users/east4ming/packages/container/homelab2-ci/settings 手动切换）
+- [X] T025 [US2] 首次推送后把 GHCR package `homelab2-ci` 设为 public：已通过 GitHub UI 切换；匿名 `docker pull` 验证通过，记录在 `specs/013-replace-nix-with-mise/quickstart.md`
 - [X] T026 [US2] 本地镜像冒烟：`docker run -e MISE_TRUSTED_CONFIG_PATHS=/woodpecker -v "$PWD:/woodpecker/src" -w /woodpecker/src ghcr.io/east4ming/homelab2-ci:latest sh -c 'make -C test filter=Tools && pre-commit run --all-files'`（验证 `.woodpecker/ci/Dockerfile`；依赖 T024）
 - [ ] T027 [US2] 推送分支并创建 PR，确认两条 pipeline 只拉取镜像、无构建步骤，检查项与迁移前一致；记录冷启动耗时并与 T001 基线比较（≤ ×1.2）；结果写入 `specs/013-replace-nix-with-mise/quickstart.md`（依赖 T022–T026；阻塞：T025 未完成前 CI 无法匿名拉取镜像）
 

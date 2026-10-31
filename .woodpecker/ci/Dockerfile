@@ -26,6 +26,7 @@ COPY --from=dockercli /usr/local/bin/docker /usr/local/bin/docker
 ENV MISE_DATA_DIR=/opt/mise \
     MISE_CACHE_DIR=/opt/mise-cache \
     MISE_TRUSTED_CONFIG_PATHS=/src:/woodpecker \
+    MISE_EXEC_AUTO_INSTALL=0 \
     UV_CACHE_DIR=/opt/uv-cache \
     UV_PYTHON_INSTALL_DIR=/opt/uv-python \
     UV_PROJECT_ENVIRONMENT=/opt/venv \
@@ -34,5 +35,14 @@ ENV MISE_DATA_DIR=/opt/mise \
 WORKDIR /src
 
 COPY .mise.toml .python-version pyproject.toml uv.lock ./
+# CI 只需要工具子集；版本仍来自 .mise.toml（bare name 解析配置版本）
 RUN mise install --yes \
-    && uv sync --frozen --all-groups
+        helm \
+        kubectl \
+        kustomize \
+        opentofu \
+        go \
+        gotestsum \
+        dyff \
+        shellcheck \
+    && uv sync --frozen --only-group dev --only-group scripts
