@@ -2,6 +2,42 @@
 
 版本号格式与发布流程见 [版本管理](versioning.md)。新条目置顶，标题即 git 标签名。
 
+## v2026.10.31
+
+全面移除 Nix：本地开发环境改用 mise（非 Python 工具）+ uv（Python 环境），CI 改用
+宿主机构建的 GHCR 镜像，删除全部 Nix 制品并加入防回潮门禁。本次不改动集群资源清单，
+合并后 ArgoCD 同步不产生工作负载变化。
+
+### 变更
+
+- `feat(tooling)`：新增 `.mise.toml`（精确版本）、`pyproject.toml`（`scripts`/`dev`/`ci`/`docs`
+  groups）、入库 `uv.lock`、`.python-version`；本地一条 `mise run setup` 安装工具并同步 uv。
+- `feat(tooling)`：新增 `bin/kanidm`，通过官方 `kanidm/tools:1.11.2` 容器提供 CLI；
+  服务端仍为 1.3.3。
+- `build(ci)`：新增宿主机构建的 CI 镜像 `ghcr.io/east4ming/homelab2-ci`（Debian 13、
+  mise/uv、helm/dyff/shellcheck + pre-commit），发布到 GHCR 并链接到本仓库；
+  `--provenance=false` 移除 `unknown/unknown` attestation，manifest annotation 补全
+  description；镜像 842MB。
+- `ci`：`static-checks` 只保留 pre-commit（`SKIP=tofu_fmt`）；移除 go/opentofu/ansible
+  及依赖它们的 CI 步骤与工具版本检查（改为本地执行）；`helm-diff` 保持。
+- `test`：`TestToolsNixShell` → `TestToolsDevEnv`；git 版本下限按 Debian 13 基线改为 2.47；
+  `TestToolsVersions`/`TestToolsDevEnv` 仅在本地运行。
+- `docs`：重写开发环境页，更新安装/onboarding/README/roadmap/test README；新增 ADR
+  并标注旧 Nix ADR superseded；`Dockerfile` 移到 `docs/Dockerfile`。
+- `chore(tooling)`：删除 `flake.nix`、`flake.lock`、`.envrc`、`run_nix_develop.sh`、
+  `requirements.txt`；新增 `scripts/check-no-nix` 与 pre-commit `no-nix` hook。
+- `chore(deps)`：Renovate 全量非主版本依赖更新（`0abcbf8a`）。
+
+### 线上状态
+
+- 集群资源无变更；4 台节点保持 Ready，无新增/删除工作负载。
+- PR #600：pipeline #2708 success；镜像 `latest` digest
+  `sha256:f67fe52e9670e95006816bf7c2ec77d3109792898a37f8352f58d4f7f6e81999`，
+  audit tag `sha-2b16b323`。
+- 本地验收：`make -C test filter=Tools`（11 tests）、`pre-commit run --all-files`
+  （13 hooks）、`uv run --frozen mkdocs build --strict` 通过；`scripts/check-no-nix` 无命中。
+- CI 不再校验工具版本与 tofu 格式：工具版本测试与 `tofu_fmt` 只在本地执行。
+
 ## v2026.10.30
 
 把 4 台节点的 IPv6 身份（`node-ip` 的 IPv6、Node 的 IPv6 InternalIP、`CiliumNode`
