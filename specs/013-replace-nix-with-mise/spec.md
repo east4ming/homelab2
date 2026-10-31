@@ -27,6 +27,13 @@
 
 **目标**：Nix 从本地工具链、CI 镜像、测试与用户文档中彻底消失。本地由 mise（非 Python 工具）与 uv（Python 解释器、依赖与 Python 工具）提供等价工具集；CI 使用公共主流/开源镜像，必要时由本仓库构建并发布到 GHCR；服务器侧不再出现 Nix。
 
+## Clarifications
+
+### Session 2026-10-31
+
+- Q: 自建 CI 镜像采用哪种形态？ → A: 单个预构建镜像，static-checks 与 helm-diff 两条流水线共用。
+- Q: Python 依赖如何组织（uv 的清单形态）？ → A: 根 `pyproject.toml` + 受版本控制的 `uv.lock`，文档与脚本依赖用 dependency groups。
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - 在没有 Nix 的机器上获得等价的本地开发环境（Priority: P1）
@@ -41,7 +48,7 @@
 
 1. **Given** 一台没有 Nix 的 Ubuntu 机器且已安装 mise 与 uv，**When** 按开发环境文档执行环境准备，**Then** 旧 devShell 中的每个非 Python 工具由 mise 提供或明确列为系统前置条件（含最低版本），Python 解释器、依赖与 Python 编写的 CLI 工具由 uv 提供，且没有工具静默缺失。
 2. **Given** 环境已准备，**When** 运行 `make -C test filter=Tools`，**Then** 工具版本检查与"开发环境可用"检查通过，且过程中没有调用 `nix`。
-3. **Given** 需要构建文档，**When** 运行文档中给出的文档构建命令，**Then** mkdocs 可用，且其依赖来自受版本控制、由 uv 解析的同一份清单。
+3. **Given** 需要构建文档，**When** 运行文档中给出的文档构建命令，**Then** mkdocs 可用，且其依赖来自根 `pyproject.toml` 的文档依赖组并由 `uv.lock` 锁定。
 4. **Given** 第一次接触项目的新贡献者，**When** 只阅读开发环境文档，**Then** 文档中不存在安装或运行 Nix 的步骤。
 
 ---
@@ -58,7 +65,7 @@
 
 1. **Given** static-checks 流水线，**When** 在 PR 上运行，**Then** tools-versions 与 pre-commit 两个步骤都运行在非 Nix 镜像上，且检查项与迁移前完全一致（9 个工具版本检查 + 全部 pre-commit hooks）。
 2. **Given** helm-diff 流水线，**When** 对任一 stack 提交 PR，**Then** 在非 Nix 镜像上完成 Helm 渲染与 dyff 对比，输出格式与迁移前一致。
-3. **Given** 现有公共镜像满足不了某一步骤的工具组合，**When** 采用自建镜像，**Then** 镜像定义在仓库内、构建可复现（固定基础镜像与工具版本）、发布到 GHCR，并在镜像定义或工具版本变化时自动重建；镜像内不包含也不调用 Nix。
+3. **Given** 现有公共镜像满足不了某一步骤的工具组合，**When** 采用自建镜像，**Then** 镜像定义在仓库内、构建可复现（固定基础镜像与工具版本）、发布到 GHCR，static-checks 与 helm-diff 共用这一个预构建镜像，并在镜像定义或工具版本变化时自动重建；镜像内不包含也不调用 Nix。
 4. **Given** CI 运行环境与本地开发环境，**When** 执行工具版本检查，**Then** 两边满足同一组版本约束，且由同一份测试实现校验。
 5. **Given** 无镜像缓存的冷启动，**When** 运行任一条 pipeline，**Then** 总时长相对迁移前实测基线不劣化超过 20%。
 
@@ -89,7 +96,7 @@
 - **镜像仓库不可达或凭据缺失**：CI 必须明确失败并指出缺失的凭据/仓库，不得回退到 `nixos/nix` 或 `nixery.dev`。
 - **工具版本更新**：更新 mise 声明的版本或 CI 镜像内版本时，版本约束测试必须在同一 PR 内同时暴露本地与 CI 的不兼容。
 - **历史文档中出现 Nix**：changelog、既有 ADR、旧 spec 属于历史记录，不视为违规；防回潮门禁需要准确排除这些路径。
-- **Python 依赖分裂**：文档构建依赖（`requirements.txt`）与脚本运行依赖（rich/kubernetes/pexpect/jinja2/netaddr 等）来源不同；两者都必须纳入 uv 管理的受控清单并锁定，`uv.lock` 被 `.gitignore` 忽略的现状必须修正，不能依赖 Nix 提供。
+- **Python 依赖分裂**：文档构建依赖与脚本运行依赖来源不同；两者 MUST 通过根 `pyproject.toml` 的 dependency groups 合并为同一份清单，`uv.lock` MUST 入库（修正当前 `.gitignore` 忽略它的现状），不能依赖 Nix 提供。
 - **工具与已部署服务的兼容性**：旧 devShell 中个别工具版本是按线上服务校准的（如 kanidm CLI 对应已部署服务端），迁移时不能只求"装得上"，必须保留这些兼容约束。
 - **本机没有 docker 守护进程**：依赖容器的目标（k3d、docker compose、镜像构建）必须给出清晰错误或文档化前置条件。
 - **受限网络/离线**：首次环境准备需要访问工具下载源；文档必须说明这一前置条件。
@@ -101,10 +108,10 @@
 - **FR-001**: 仓库 MUST NOT 再包含 Nix 制品（`flake.nix`、`flake.lock`、`.envrc`、`run_nix_develop.sh`）或调用 `nix` 的入口脚本。
 - **FR-002**: 本地开发环境的非 Python 工具 MUST 由仓库内受版本控制的 mise 配置声明；Python 解释器、虚拟环境、依赖以及 Python 编写的 CLI 工具 MUST 由 uv 管理；MUST 提供一条文档化命令完成两者安装。
 - **FR-003**: 新本地环境 MUST 与旧 devShell 工具集等价：旧 devShell 的每个非 Python 工具要么由 mise 提供，要么显式列为系统前置条件（含最低版本），不允许静默缺失。
-- **FR-004**: Python 解释器版本与依赖 MUST 由 uv 解析；依赖清单与锁定结果 MUST 受版本控制；本地开发、CI 与镜像构建 MUST 使用同一来源；MUST NOT 依赖 Nix 提供 Python 包。
+- **FR-004**: Python 解释器版本与依赖 MUST 由 uv 从仓库根部的 `pyproject.toml` 解析，并由受版本控制的 `uv.lock` 锁定；文档构建与脚本运行依赖 MUST 通过 dependency groups 纳入同一清单；本地开发、CI 镜像与文档镜像 MUST 从同一来源安装；MUST NOT 依赖 Nix 提供 Python 包。
 - **FR-005**: 现有工具版本约束测试 MUST 在 mise 环境与 CI 中继续执行；`TestToolsNixShell` MUST 被替换为同时验证 mise 工具与 uv Python 环境可用的等价检查。
 - **FR-006**: CI 的所有步骤 MUST 运行在不含 Nix 的镜像上；镜像 MUST 来自公共主流/开源镜像，或由本仓库构建并发布到 GHCR 的镜像。
-- **FR-007**: 若需要自建 CI 镜像：定义 MUST 存于仓库；构建 MUST 可复现（固定基础镜像与工具版本）；MUST 发布到 GHCR（`ghcr.io`；集群未配置 Gitea registry，不作为发布目标）；MUST 在定义或工具版本变化时自动重建；凭据 MUST 仅通过 CI secret 注入。
+- **FR-007**: 若需要自建 CI 镜像：定义 MUST 存于仓库；MUST 为单个预构建镜像，static-checks 与 helm-diff 两条流水线 MUST 共用同一镜像与同一工具版本；构建 MUST 可复现（固定基础镜像与工具版本）；MUST 发布到 GHCR（`ghcr.io`；集群未配置 Gitea registry，不作为发布目标）；MUST 在定义或工具版本变化时自动重建；凭据 MUST 仅通过 CI secret 注入。
 - **FR-008**: CI 工具版本 MUST 与本地声明（mise 与 uv）满足同一组版本约束，并由同一实现校验。
 - **FR-009**: CI 检查能力 MUST 保持等价：static-checks 的 9 个工具版本检查与全部 pre-commit hooks、helm-diff 的 3 个 stack 对比，不得通过减少检查换取通过。
 - **FR-010**: 用户文档 MUST 更新：开发环境页（改为 mise + uv）、sandbox 前置条件、production deployment/configuration、onboarding、README 技术栈表、`docs/reference/roadmap.md` 的 NIX 小节、test README、脚本中的 Nix TODO；文档 MUST NOT 再要求安装 Nix 或 flakes。
@@ -117,8 +124,8 @@
 ### Key Entities *(include if feature involves data)*
 
 - **开发工具清单（Dev Tool Manifest）**：仓库内由 mise 声明的非 Python 工具集；关键属性是工具名、固定版本、后端、适用平台，以及对应的版本约束测试。
-- **Python 环境（uv）**：由 uv 管理的解释器版本、依赖清单、锁文件与 Python CLI 工具；关键属性是解释器版本、依赖来源、锁文件是否受版本控制，以及本地、CI、镜像三处是否同源。
-- **CI 镜像（CI Image）**：流水线使用的镜像；关键属性是基础镜像及固定引用、内置工具及版本、构建定义、发布仓库、触发重建的条件。
+- **Python 环境（uv）**：由仓库根 `pyproject.toml` 与 `uv.lock` 管理解释器版本、依赖分组与 Python CLI 工具；关键属性是解释器版本、依赖分组、锁文件是否入库，以及本地、CI、镜像三处是否同源。
+- **CI 镜像（CI Image）**：两条流水线共用的单个镜像；关键属性是基础镜像及固定引用、内置工具及版本、构建定义、发布仓库（GHCR）、触发重建的条件。
 - **流水线步骤（Pipeline Step）**：关键属性是触发路径、使用的镜像、执行命令与所覆盖的检查项。
 - **Nix 引用基线（Nix Reference Baseline）**：允许保留 Nix 字样的历史路径清单（changelog、既有 ADR、`specs/`），供防回潮门禁判定。
 
