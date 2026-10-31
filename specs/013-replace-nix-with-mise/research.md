@@ -93,16 +93,15 @@
 
 **Decision**：一个预构建镜像，`dockerfile: .woodpecker/ci/Dockerfile`，由维护者在宿主机构建并推送到 GHCR；CI 只拉取。
 
-- 基础镜像：`debian:13-slim`（按 digest 固定），apt 安装 `git make diffutils ca-certificates curl xz-utils unzip`。
+- 基础镜像：`debian:13-slim`（按 digest 固定），apt 只安装 `git diffutils ca-certificates curl xz-utils unzip`。
 - mise：用官方安装脚本并固定 `MISE_VERSION=v2026.10.22`；`COPY .mise.toml` 后按需 `mise install <tool...>`。
-- uv：从官方 `ghcr.io/astral-sh/uv:<0.13.6>` 镜像复制二进制；`UV_PROJECT_ENVIRONMENT=/opt/venv`、`uv sync --frozen --only-group ci --only-group scripts`。
-- docker CLI：从 `docker:29.9.2-cli`（digest 固定）复制 `/usr/local/bin/docker`，满足 `docker --version` 检查。
+- uv：从官方 `ghcr.io/astral-sh/uv:<0.13.6>` 镜像复制二进制；`UV_PROJECT_ENVIRONMENT=/opt/venv`、`uv sync --frozen --only-group ci`（`ci` 组只有 pre-commit）。
 - PATH：`/opt/venv/bin`、`$MISE_DATA_DIR/shims` 在前；`MISE_TRUSTED_CONFIG_PATHS` 覆盖构建目录与 Woodpecker workspace（`/woodpecker`）。
-- 内容：CI 所需的 mise 子集（helm、kubectl、kustomize、opentofu、go、gotestsum、dyff、shellcheck；版本仍由 `.mise.toml` 解析）+ uv `ci`/`scripts` 组（`ci` 只含 ansible-core 与 pre-commit，不含 ansible bundle/ansible-lint/yamllint）。排除 argocd/k9s/k3d/neovim 与 `docs` 组：首版全量镜像 3.57GB，k8s agent 拉取超时（`trying and failing to pull image`）。
+- 内容：只保留 pre-commit 与 helm-diff 所需组件——mise 安装 helm、dyff、shellcheck（版本仍由 `.mise.toml` 解析），uv 安装 `ci` 组（仅 pre-commit）。**不安装** go/opentofu/ansible/kubectl/kustomize/gotestsum/docker CLI/argocd/k9s/k3d/neovim 与 `docs`/`scripts` 组。镜像从 2.36GB 降到 **842MB**（`docker image inspect .Size`）。
 - 构建入口：`scripts/build-ci-image`（宿主机执行）：`docker buildx build --platform linux/amd64 --push`，同时推送 `latest` 与 `sha-<short>`；需要宿主机已 `docker login ghcr.io`。
 - 可见性：GHCR package 设为 public，CI 拉取无需凭据；推送凭据仅在维护者宿主机。
 
-**Rationale**：没有任何现成公共镜像同时提供 ansible、go、helm、kubectl、kustomize、tofu、pre-commit、dyff 与 docker CLI；自建镜像同时满足"版本与本地同源"和"单镜像"两个已确认决策。用户选择在宿主机构建，避免为 CI 增加 Docker agent 或 k8s 特权 Pod。
+**Rationale**：静态检查只剩 pre-commit（helm/shellcheck/yamllint 与 no-nix），helm-diff 只需 helm/dyff/python；继续携带 go/opentofu/ansible 会为不再运行的检查付出约 1.5GB 体积。用户 2026-10-31 明确要求移除这些二进制及相关 CI 检查。
 
 **Alternatives considered**：
 
@@ -117,11 +116,11 @@
 
 - 不新增 `ci-image` workflow；CI agent 保持现有 k8s backend，只拉取镜像。
 - `static-checks.yaml`、`helm-diff.yaml` 的步骤镜像改为 `ghcr.io/east4ming/homelab2-ci:latest`，并设置 `pull: true`，避免 agent 使用缓存的旧镜像。
-- `static-checks` 的 tools-versions 路径触发条件改为 `.mise.toml`、`pyproject.toml`、`uv.lock`、`.woodpecker/ci/**`、`test/**`。
-- `TestToolsVersions` 的 9 项检查保持不变；pre-commit 步骤继续 `--all-files`。
+- `static-checks` 只保留 pre-commit 步骤，命令为 `SKIP=tofu_fmt pre-commit run --all-files`；不再有 tools-versions 步骤与 path 触发。
+- `TestToolsVersions`/`TestToolsDevEnv` 只在本地运行（CI 镜像不含 Go）；`tofu_fmt` 只在本地 pre-commit 执行。
 - 重建契约：凡改动 `.mise.toml`、`pyproject.toml`、`uv.lock` 或 `.woodpecker/ci/Dockerfile`，维护者必须在合并前从当前分支执行 `scripts/build-ci-image` 并记录输出的 digest；工具版本 PR 的验证依赖这一步。
 
-**Rationale**：与用户选择的"宿主机 Docker 构建"一致，不需要 Woodpecker secret、特权步骤或额外 agent；CI 只负责拉取与执行。代价是镜像重建不再自动，必须依赖文档化流程。
+**Rationale**：与用户选择的"宿主机 Docker 构建"一致，不需要 Woodpecker secret、特权步骤或额外 agent；CI 只负责拉取与执行。代价是镜像重建与工具版本检查都依赖本地/文档化流程。
 
 **Operational prerequisites（需人工配置）**：
 
@@ -141,7 +140,7 @@
 **Decision**：
 
 - `test/tools_test.go`：删除 `TestToolsNixShell`，新增 `TestToolsDevEnv`：`mise exec -- true`（mise 能解析并加载项目工具环境）+ `uv run --frozen python -c "import rich, kubernetes, pexpect, jinja2, netaddr"`（uv 环境可用）。
-- 保留 `TestToolsVersions` 的 9 项检查；把 git 约束从 `>=2.54` 调整为 `>=2.47,<3`，并在 `test/README.md` 说明版本区间现在来自 `.mise.toml` / `uv.lock` / 基础镜像，而不是 nixpkgs。
+- 保留 `TestToolsVersions` 的 9 项检查，但**只在本地**运行；CI 镜像不含 Go，不再执行该测试。把 git 约束从 `>=2.54` 调整为 `>=2.47,<3`，并在 `test/README.md` 说明版本区间现在来自 `.mise.toml` / `uv.lock` / 基础镜像，而不是 nixpkgs。
 - `test/external_test.go` 的注释改为 mise 环境提供 OpenTofu。
 
 **Rationale**：版本区间本来就绑定 nixpkgs（`test/README.md` 明说）；迁移后必须重新基线化，否则 Debian 13 的 git 2.47.3 无法通过。检查项数量与覆盖面不变。

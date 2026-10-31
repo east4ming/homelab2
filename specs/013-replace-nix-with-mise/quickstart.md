@@ -52,12 +52,13 @@ git ls-files | grep -E '(flake\.(nix|lock)|\.envrc|run_nix_develop\.sh)$'   # �
 
 ```sh
 docker build -f .woodpecker/ci/Dockerfile -t homelab2-ci:local .
-docker run --rm -e MISE_TRUSTED_CONFIG_PATHS=/woodpecker \
+docker run --rm -e MISE_TRUSTED_CONFIG_PATHS=/woodpecker -e SKIP=tofu_fmt \
   -v "$PWD:/woodpecker/src" -w /woodpecker/src homelab2-ci:local \
-  sh -c 'make -C test filter=ToolsVersions && pre-commit run --all-files'
+  sh -c 'helm version --short && dyff version && shellcheck --version >/dev/null && pre-commit run --all-files'
 ```
 
-预期：9 个工具版本通过；pre-commit 全部 hook（含 `no-nix`）通过。
+预期：helm/dyff/shellcheck/pre-commit 可用；pre-commit hooks（跳过 `tofu_fmt`，含 `no-nix`）通过；
+镜像内不存在 go/opentofu/ansible/kubectl/docker。
 
 ## 3. CI 镜像与 PR 验证
 
@@ -89,15 +90,16 @@ scripts/build-ci-image
 - 首版全量镜像（argocd/k9s/k3d/neovim + docs 组）3.57GB，k8s agent 拉取超时，pipeline #2701 失败
 - 精简镜像（CI 工具子集 + uv `ci`/`scripts` 组）：digest `sha256:a4ab2fa0b703230722470f9ec673f53e5270f7a4302a14b61db0e9d825c5e55b`，tags `latest`、`sha-776ad98e`
 - 优化镜像（ansible-core + `ci` 组、BuildKit cache mount，不把 mise/uv 缓存写入层）：digest `sha256:d5bbb18d642c95da9df8cfc0c9ca4967c836b06e68f044f215895da7b2358d9d`，tags `latest`、`sha-ae8f935a`；`docker image inspect` 解压大小 **1.68GB**（上一版 2.36GB）
+- 极简镜像（移除 go/opentofu/ansible/kubectl/kustomize/gotestsum/docker CLI；只留 helm/dyff/shellcheck + pre-commit）：digest `sha256:af68392e106d46374c07e5c7523d004fea4479b759e6514291986be25379019c`，tags `latest`、`sha-728dabba`；解压大小 **842MB**
 - 匿名 `docker pull` 通过（package 已 public）
-- 镜像内 `make -C test filter=Tools` + `pre-commit run --all-files` 通过
+- 镜像内 `SKIP=tofu_fmt pre-commit run --all-files` 通过（Go/ansible/opentofu 已不在镜像内）
 - `scripts/build-ci-image` 要求工作区干净；后续仅文档提交不会改变镜像内容，但 `sha-<short>` 会落后于 `HEAD`
 
 ### 3.3 PR 验证
 
 1. 推送分支并创建 PR（目标 `master`）。
 2. 确认两条 pipeline 的步骤镜像都是 `ghcr.io/east4ming/homelab2-ci:latest` 且 `pull: true`；pipeline 中没有镜像构建步骤。
-3. 确认 `static-checks` 的 tools-versions 与 pre-commit 检查项与迁移前一致；`helm-diff` 对改动 stack 输出 diff。
+3. 确认 `static-checks` 只有 pre-commit 步骤且显式 `SKIP=tofu_fmt`；`helm-diff` 对改动 stack 输出 diff。工具版本测试只在本地运行。
 4. 记录冷启动耗时，与第 0 步基线比较，应 ≤ 基线 × 1.2。
 5. 构造一个包含 `nixos/nix` 或 `flake.nix` 的测试 PR，确认 `no-nix` hook 失败并指出文件/行号。
 6. 若 PR 改动 `.mise.toml`、`pyproject.toml`、`uv.lock` 或 `.woodpecker/ci/Dockerfile`：合并前必须重跑 `scripts/build-ci-image`，并让 CI 在重建后的镜像上通过。
@@ -106,7 +108,7 @@ scripts/build-ci-image
 
 - pipeline #2702 **success**；总耗时 423s（基线 1174s，SC-005 通过）
 - 优化镜像后 pipeline #2704 **success**；总耗时 569s（仍 ≤ 基线 ×1.2）
-- `static-checks`：`tools-versions` + `pre-commit` 均成功；pipeline 中无镜像构建步骤
+- `static-checks`：只有 pre-commit（`SKIP=tofu_fmt`）并成功；pipeline 中无镜像构建步骤
 - `helm-diff`：三个 matrix workflow 均只执行 clone；`diff` 步骤因改动不涉及 `system/`/`platform/`/`apps/` 被 path 过滤跳过（符合预期）
 
 ## 4. 回滚
@@ -121,8 +123,8 @@ scripts/build-ci-image
 | --- | --- | --- |
 | SC-001 | 第 1 节全部通过，记录 setup 耗时 ≤ 15 分钟 | 本地通过：首次工具安装约 113s，`TestToolsVersions`/`TestToolsDevEnv`、pre-commit、`mkdocs --strict` 均通过 |
 | SC-002 | `scripts/check-no-nix` 无命中（历史记录与 `specs/` 除外） | 通过 |
-| SC-003 | 第 3 节 pipeline 通过；无 `nixos/nix`/`nixery.dev` 镜像 | 通过：pipeline #2702 success，步骤镜像仅 GHCR 自建镜像 |
-| SC-004 | 同一 PR 中本地与 CI 的 `ToolsVersions` 都通过 | 通过：本地 + CI `tools-versions` 均成功 |
+| SC-003 | 第 3 节 pipeline 通过；无 `nixos/nix`/`nixery.dev` 镜像；static-checks 只跑 pre-commit（跳过 `tofu_fmt`） | 通过：#2702/#2704/#2706 success，步骤镜像仅 GHCR 自建镜像 |
+| SC-004 | 本地工具版本检查通过；CI 只校验 pre-commit 工具链 | 通过：本地 `ToolsVersions`；CI 不再运行 Go 版本测试 |
 | SC-005 | 冷启动耗时 ≤ 基线 × 1.2 | 通过：423s ≤ 1409s |
 | SC-006 | 第 1 节无 `nix` 命令；文档无安装步骤 | 通过（门禁扫描） |
 | SC-007 | 测试 PR 被门禁阻断 | 通过（本地 + 镜像内验证违规文件被 `no-nix` 拒绝；未单独构造失败 PR） |

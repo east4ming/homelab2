@@ -16,7 +16,7 @@
 
 **Storage**: N/A（版本来源为 `.mise.toml`、`pyproject.toml`、`uv.lock`）。
 
-**Testing**: `go test`（`test/tools_test.go` 的 `TestToolsVersions` + 新的 `TestToolsDevEnv`）；pre-commit 全部 hooks（含 `no-nix`）；Woodpecker 两条既有 pipeline；文档 `mkdocs build --strict`。镜像由宿主机构建，CI 不构建。
+**Testing**: `go test`（`test/tools_test.go` 的 `TestToolsVersions` + 新的 `TestToolsDevEnv`）**只在本地运行**；CI static-checks 只跑 pre-commit（`SKIP=tofu_fmt`，含 `no-nix`）；Woodpecker 两条既有 pipeline（helm-diff 保持）；文档 `mkdocs build --strict`。镜像由宿主机构建，CI 不构建。
 
 **Target Platform**: 开发机 Linux x86_64（Ubuntu 24.04+/26.04）；CI 镜像 Debian 13 slim；CI agent 保持现有 k8s backend；集群侧无变更。
 
@@ -24,7 +24,7 @@
 
 **Performance Goals**: 本地环境准备 ≤ 15 分钟（含首次下载，SC-001）；CI 冷启动 pipeline 总时长 ≤ 迁移前基线 × 1.2（SC-005；不再包含镜像构建，预期更快）。
 
-**Constraints**: 不得包含任何 Nix 制品或调用；CI 单镜像；镜像由维护者在宿主机构建并推送，CI 只拉取 public GHCR 镜像；不使用 Woodpecker secret 或特权步骤；历史 changelog/ADR 不重写；文档优先中文。
+**Constraints**: 不得包含任何 Nix 制品或调用；CI 单镜像且不含 go/opentofu/ansible/kubectl/kustomize/gotestsum/docker CLI；镜像由维护者在宿主机构建并推送，CI 只拉取 public GHCR 镜像；不使用 Woodpecker secret 或特权步骤；历史 changelog/ADR 不重写；文档优先中文。
 
 **Scale/Scope**: 旧 devShell 31 项工具、2 条 CI pipeline、约 15 个文档/配置文件；新增 1 个镜像、1 个构建脚本、2 个小脚本。
 
@@ -104,10 +104,10 @@ AGENTS.md                      # 修改：Spec Kit 当前 Plan 指针
 
 1. **工具分工**：mise 管理非 Python 工具（精确版本），uv 管理 Python 生态；操作系统包承担 git/make/docker/iproute2 等宿主机能力。
 2. **kanidm 例外**：`bin/kanidm` 包装 `kanidm/tools:1.11.2`；不引入 cargo 编译或第三方 PPA。
-3. **Python 布局**：根 `pyproject.toml` + 入库 `uv.lock`，groups 为 `scripts`/`dev`/`docs`；`requirements.txt` 删除。
-4. **CI 镜像**：单个 Debian 13 基础镜像，构建时按需 `mise install <tool...>`（版本仍来自 `.mise.toml`）+ `uv sync --frozen --only-group ci --only-group scripts`；docker CLI 从 `docker:29.9.2-cli` 复制；GHCR public package；由 `scripts/build-ci-image` 在宿主机构建，同时推送 `latest` 与 `sha-<short>`。首版全量镜像 3.57GB 导致 k8s agent 拉取超时，故 CI 镜像只装所需子集。
-5. **流水线**：不再新增镜像构建 workflow；`static-checks` 与 `helm-diff` 使用 `ghcr.io/east4ming/homelab2-ci:latest` 并设置 `pull: true`，不使用 Woodpecker secret 或特权步骤。
-6. **测试**：`TestToolsDevEnv` 验证 mise 环境与 uv 导入；git 约束放宽到 `>=2.47`，9 项检查数量不变。
+3. **Python 布局**：根 `pyproject.toml` + 入库 `uv.lock`，groups 为 `scripts`/`dev`/`ci`/`docs`；`ci` 组只有 pre-commit；`requirements.txt` 删除。
+4. **CI 镜像**：单个 Debian 13 基础镜像，只装 pre-commit/helm-diff 所需组件：mise 安装 helm、dyff、shellcheck（版本来自 `.mise.toml`）+ `uv sync --frozen --only-group ci`（仅 pre-commit）；不装 go/opentofu/ansible/kubectl/kustomize/gotestsum/docker CLI。镜像从 2.36GB 降到 **842MB**；GHCR public package；由 `scripts/build-ci-image` 在宿主机构建，同时推送 `latest` 与 `sha-<short>`。
+5. **流水线**：不再新增镜像构建 workflow；`helm-diff` 使用 `ghcr.io/east4ming/homelab2-ci:latest` 并设置 `pull: true`；`static-checks` 只保留 pre-commit（`SKIP=tofu_fmt`）；不使用 Woodpecker secret 或特权步骤。
+6. **测试**：`TestToolsVersions` / `TestToolsDevEnv` 只在本地运行（CI 镜像不含 Go）；git 约束放宽到 `>=2.47`。
 7. **门禁**：pre-commit 本地 hook + `scripts/check-no-nix`，白名单只含历史记录与 `specs/`。
 8. **文档与历史**：重写开发环境页、更新安装/onboarding/README/roadmap/test README；changelog 不重写，新增 ADR 并标注旧 ADR。
 9. **依赖更新**：Renovate 的 mise / pep621 支持；缺失时加自定义 regex 或文档化手动流程。
@@ -124,6 +124,8 @@ AGENTS.md                      # 修改：Spec Kit 当前 Plan 指针
 | 风险 | 缓解 |
 | --- | --- |
 | 工具版本变更后忘记重建 `latest` | PR 检查清单 + quickstart 必做项；PR 记录 build 输出的 digest；本地 `TestToolsVersions` 兜底 |
+| CI 不再运行工具版本检查 | 本地 `make -C test filter=Tools` 是唯一守卫；版本变更 PR 必须在本地通过并重建镜像 |
+| CI 跳过 `tofu_fmt` | 本地 pre-commit 仍执行；CI 不校验 tofu 格式，合并前由作者本地运行 |
 | `latest` 可变，回滚/审计弱 | 同时推送 `sha-<short>`；回滚时重标 `latest`；保存 digest |
 | GHCR PAT 权限/轮换 | 只存宿主机 docker credential store；package public；定期轮换 |
 | 宿主机 buildx/网络不可用 | Docker 29 自带 buildx；失败明确报错，不推送半成品，不回退 Nix |
