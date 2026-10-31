@@ -26,7 +26,7 @@
 
 - 维护者需先在宿主机执行 `docker login ghcr.io`（PAT 需 `write:packages`，只存 docker credential store）。
 - `scripts/build-ci-image` 执行 `docker buildx build --platform linux/amd64 --push --provenance=false`，同时推送 `latest` 与 `sha-<short>`，并输出 digest；digest 记录到对应 PR。
-- 通过 index/manifest annotation 设置 `org.opencontainers.image.source`（链接到 `east4ming/homelab2`）与 `org.opencontainers.image.description`，使 GHCR package 归到仓库下并有说明；`--provenance=false` 避免产生 `unknown/unknown` 的 attestation manifest。
+- 通过 **manifest annotation** 设置 `org.opencontainers.image.source`（链接到 `east4ming/homelab2`）与 `org.opencontainers.image.description`；`--provenance=false` 避免产生 `unknown/unknown` 的 attestation manifest。GitHub 的 repo Packages 页会显示该 description。
 - 构建失败时不推送半成品；不得回退到 `nixos/nix` 或 `nixery.dev`。
 - 首次推送后把 GHCR package 设为 public；之后 CI 直接匿名拉取。
 

@@ -98,7 +98,7 @@
 - uv：从官方 `ghcr.io/astral-sh/uv:<0.13.6>` 镜像复制二进制；`UV_PROJECT_ENVIRONMENT=/opt/venv`、`uv sync --frozen --only-group ci`（`ci` 组只有 pre-commit）。
 - PATH：`/opt/venv/bin`、`$MISE_DATA_DIR/shims` 在前；`MISE_TRUSTED_CONFIG_PATHS` 覆盖构建目录与 Woodpecker workspace（`/woodpecker`）。
 - 内容：只保留 pre-commit 与 helm-diff 所需组件——mise 安装 helm、dyff、shellcheck（版本仍由 `.mise.toml` 解析），uv 安装 `ci` 组（仅 pre-commit）。**不安装** go/opentofu/ansible/kubectl/kustomize/gotestsum/docker CLI/argocd/k9s/k3d/neovim 与 `docs`/`scripts` 组。镜像从 2.36GB 降到 **842MB**（`docker image inspect .Size`）。
-- 构建入口：`scripts/build-ci-image`（宿主机执行）：`docker buildx build --platform linux/amd64 --push`，同时推送 `latest` 与 `sha-<short>`；需要宿主机已 `docker login ghcr.io`。
+- 构建入口：`scripts/build-ci-image`（宿主机执行）：`docker buildx build --platform linux/amd64 --push --provenance=false` + manifest annotations（`org.opencontainers.image.source`/`description`），同时推送 `latest` 与 `sha-<short>`；需要宿主机已 `docker login ghcr.io`。
 - 可见性：GHCR package 设为 public，CI 拉取无需凭据；推送凭据仅在维护者宿主机。
 
 **Rationale**：静态检查只剩 pre-commit（helm/shellcheck/yamllint 与 no-nix），helm-diff 只需 helm/dyff/python；继续携带 go/opentofu/ansible 会为不再运行的检查付出约 1.5GB 体积。用户 2026-10-31 明确要求移除这些二进制及相关 CI 检查。

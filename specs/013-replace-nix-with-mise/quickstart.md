@@ -91,6 +91,8 @@ scripts/build-ci-image
 - 精简镜像（CI 工具子集 + uv `ci`/`scripts` 组）：digest `sha256:a4ab2fa0b703230722470f9ec673f53e5270f7a4302a14b61db0e9d825c5e55b`，tags `latest`、`sha-776ad98e`
 - 优化镜像（ansible-core + `ci` 组、BuildKit cache mount，不把 mise/uv 缓存写入层）：digest `sha256:d5bbb18d642c95da9df8cfc0c9ca4967c836b06e68f044f215895da7b2358d9d`，tags `latest`、`sha-ae8f935a`；`docker image inspect` 解压大小 **1.68GB**（上一版 2.36GB）
 - 极简镜像（移除 go/opentofu/ansible/kubectl/kustomize/gotestsum/docker CLI；只留 helm/dyff/shellcheck + pre-commit）：digest `sha256:af68392e106d46374c07e5c7523d004fea4479b759e6514291986be25379019c`，tags `latest`、`sha-728dabba`；解压大小 **842MB**
+- 归属/元数据修复：package 已链接到 `east4ming/homelab2`（repo Packages 页），manifest annotation 提供 description/source，`--provenance=false` 移除 `unknown/unknown` attestation；digest `sha256:f67fe52e9670e95006816bf7c2ec77d3109792898a37f8352f58d4f7f6e81999`，tag `sha-2b16b323`
+- GitHub repo package 页：<https://github.com/east4ming/homelab2/pkgs/container/homelab2-ci>（description 已显示）
 - 匿名 `docker pull` 通过（package 已 public）
 - 镜像内 `SKIP=tofu_fmt pre-commit run --all-files` 通过（Go/ansible/opentofu 已不在镜像内）
 - `scripts/build-ci-image` 要求工作区干净；后续仅文档提交不会改变镜像内容，但 `sha-<short>` 会落后于 `HEAD`
@@ -108,6 +110,7 @@ scripts/build-ci-image
 
 - pipeline #2702 **success**；总耗时 423s（基线 1174s，SC-005 通过）
 - 优化镜像后 pipeline #2704 **success**；总耗时 569s（仍 ≤ 基线 ×1.2）
+- 极简/元数据修复后 pipeline #2706、#2707 **success**；#2707 仅 71s（pre-commit only）
 - `static-checks`：只有 pre-commit（`SKIP=tofu_fmt`）并成功；pipeline 中无镜像构建步骤
 - `helm-diff`：三个 matrix workflow 均只执行 clone；`diff` 步骤因改动不涉及 `system/`/`platform/`/`apps/` 被 path 过滤跳过（符合预期）
 
