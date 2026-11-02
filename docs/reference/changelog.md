@@ -38,6 +38,7 @@ CronJob，每 6 小时 `acme.sh --cron`，续期后按证书指纹推腾讯云�
   真实镜像内用 stub 跑通首签/续期/跳过/失败/缺变量五条路径。
 - 集群资源变更：新增 `acme-ewhisper` 命名空间与上述对象；首次签发替换掉台式机签的证书，
   旧证书在 CDN 上保留到新证书生效，无中断。
+- PR #604：pipeline #2727 success（`static-checks` + `helm-diff` ×3）。
 - 台账外待办：首轮 CronJob 的线上指纹对齐后，删除台式机 crontab 行；`~/.acme.sh` 保留作回退。
 
 ## v2026.10.31
