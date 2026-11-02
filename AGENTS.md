@@ -1,7 +1,7 @@
 # Homelab2
 
 <!-- SPECKIT START -->
-当前 Plan: [specs/013-replace-nix-with-mise/plan.md](specs/013-replace-nix-with-mise/plan.md)
+当前 Plan: [specs/014-acme-ewhisper-cronjob/plan.md](specs/014-acme-ewhisper-cronjob/plan.md)
 <!-- SPECKIT END -->
 
 ## 版本管理

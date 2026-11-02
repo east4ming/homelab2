@@ -2,6 +2,44 @@
 
 版本号格式与发布流程见 [版本管理](versioning.md)。新条目置顶，标题即 git 标签名。
 
+## v2026.11.02
+
+ewhisper.cn 证书续期从工作台式机搬进集群：新增 `apps/acme-ewhisper`——bjw-s `app-template` 的
+CronJob，每 6 小时 `acme.sh --cron`，续期后按证书指纹推腾讯云与七牛 CDN。合入即上线，ArgoCD 会
+创建 namespace / ExternalSecret / ConfigMap / PVC / CronJob，首轮运行完成首次签发与 CDN 推送。
+
+### 变更
+
+- `feat(acme-ewhisper)`：新增 `apps/acme-ewhisper`——`app-template` 5.3.0 的 `type: cronjob`，
+  `11 0,6,12,18 * * *`（`Asia/Shanghai`）、`Forbid` + `activeDeadlineSeconds: 1800` +
+  `backoffLimit: 2`，镜像 `docker.io/neilpang/acme.sh:3.1.6`（`AUTO_UPGRADE=0`），
+  PVC `acme-ewhisper-data` 承载 acme.sh 账号、证书与部署指纹。
+- `feat(acme-ewhisper)`：`files/renew.sh` 在状态目录为空时自动 `--issue`，否则 `--cron`；
+  `files/deploy.sh` 以 `fullchain.cer` 的 sha256 判重，只有变化才调腾讯云
+  `UploadCertificate`/`DeployCertificateInstance` 与七牛 `POST /sslcert`/`PUT /domain/<d>/httpsconf`。
+  腾讯云 TC3 签名与七牛双鉴权用镜像自带的 `curl`/`openssl`/`jq` 实现，不再依赖台式机的
+  tccli 与 python 脚本。
+- `feat(acme-ewhisper)`：四把云端密钥经 `ExternalSecret` 从 `global-secrets/external` 注入，
+  仓库内只有 `external/terraform.tfvars.example` 的占位符。
+- `docs`：`docs/concepts/certificate-management.md` 增加 ewhisper.cn 章节（链路图、调度、机密表、
+  运维命令、已知坑、迁移步骤）；新增 `specs/014-acme-ewhisper-cronjob/`。
+- `chore(backup)`：`scripts/backup-coverage` 把 `acme-ewhisper/acme-ewhisper-data` 列入豁免
+  （证书与指纹重签即可，不属于不可恢复数据）。
+- `chore(deps)`：Renovate 非主版本依赖更新与 helm 4 升级（`7e768f74`、`c2520556`、`763644d7`）。
+
+### 线上状态
+
+- 机密已补种：`global-secrets/external` 在原有 `restic-*` 四项上 merge 四个 acme 键，
+  `restic-*` 的值 sha256 前后一致（`scripts/backup` 依赖它们）；`ClusterSecretStore/global-secrets`
+  `Ready=True`。
+- 本地验收：`helm template`/`helm lint`、`pre-commit`（yamllint/shellcheck/helmlint/detect-private-key）、
+  `mkdocs build --strict` 通过；渲染后的 ConfigMap 与 `files/*.sh` 逐字节一致；真实密钥对腾讯
+  `DescribeCertificates` 与七牛 `GET /sslcert`、`GET /domain/<name>` 的只读调用均返回 200；
+  真实镜像内用 stub 跑通首签/续期/跳过/失败/缺变量五条路径。
+- 集群资源变更：新增 `acme-ewhisper` 命名空间与上述对象；首次签发替换掉台式机签的证书，
+  旧证书在 CDN 上保留到新证书生效，无中断。
+- 台账外待办：首轮 CronJob 的线上指纹对齐后，删除台式机 crontab 行；`~/.acme.sh` 保留作回退。
+
 ## v2026.10.31
 
 全面移除 Nix：本地开发环境改用 mise（非 Python 工具）+ uv（Python 环境），CI 改用
