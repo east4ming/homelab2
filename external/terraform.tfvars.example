@@ -17,4 +17,12 @@ extra_secrets = {
   # restic-s3-bucket = "https://s3.amazonaws.com/my-homelab-backup-xxxxxxxxxx"
   # restic-s3-access-key = "xxxxxxxxxxxxxxxx"
   # restic-s3-secret-key = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  #
+  # apps/acme-ewhisper：ewhisper.cn 证书续期 + 腾讯云/七牛 CDN 部署
+  # 腾讯云这对密钥要能调 DNSPod（DNS-01 签发）与 SSL/CDN（上传、部署）；
+  # 七牛的 AK/SK 要能调 /sslcert 与 CDN 域名配置。
+  # acme-ewhisper-tencent-secret-id = "AKIDxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  # acme-ewhisper-tencent-secret-key = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  # acme-ewhisper-qiniu-access-key = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  # acme-ewhisper-qiniu-secret-key = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 }
