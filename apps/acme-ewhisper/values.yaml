@@ -1,0 +1,62 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/bjw-s-labs/helm-charts/app-template-5.0.0/charts/other/app-template/values.schema.json
+app-template:
+  defaultPodOptions:
+    enableServiceLinks: false
+  controllers:
+    main:
+      type: cronjob
+      cronjob:
+        # 与台式机上原来的 crontab 一致：每 6 小时跑一次，真签发时间由 acme.sh
+        # 按 ACME ARI 窗口决定，没到期就什么都不做。
+        schedule: "11 0,6,12,18 * * *"
+        timeZone: Asia/Shanghai
+        # 上一轮没结束就不要叠下一轮
+        concurrencyPolicy: Forbid
+        # 卡住的 Job 不能一直占着 Forbid 的位置，30 分钟远大于正常耗时
+        activeDeadlineSeconds: 1800
+        # 重跑是幂等的：证书没变就只补做 CDN 部署，所以允许重试。
+        backoffLimit: 2
+        successfulJobsHistory: 1
+        failedJobsHistory: 1
+      containers:
+        main:
+          # 官方镜像自带 acme.sh、dnsapi/dns_tencent、curl、openssl、jq。
+          image:
+            repository: docker.io/neilpang/acme.sh
+            tag: 3.1.6
+          # 镜像入口 /entry.sh 只在 `daemon` 子命令下起 supercronic；这里用仓库里的
+          # 脚本，调度交给 CronJob。
+          command: ["/bin/sh"]
+          args: ["/scripts/renew.sh"]
+          env:
+            # 镜像默认让 acme.sh 在 cron 里自我升级，升级结果落在容器可写层、绕过
+            # 上面固定的 tag，所以关掉；版本由 renovate 跟。
+            AUTO_UPGRADE: "0"
+          envFrom:
+            - secret: "{{ .Release.Name }}-secret"
+          resources:
+            requests:
+              cpu: 10m
+              memory: 32Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+  persistence:
+    # acme.sh 的 --config-home：账号密钥、证书、已部署指纹都在这。
+    # 丢了只会导致重签一次证书，因此不备份（见 scripts/backup-coverage）。
+    data:
+      suffix: data
+      type: persistentVolumeClaim
+      accessMode: ReadWriteOnce
+      size: 1Gi
+      advancedMounts:
+        main:
+          main:
+            - path: /acme.sh
+    scripts:
+      type: configMap
+      name: "{{ .Release.Name }}-scripts"
+      advancedMounts:
+        main:
+          main:
+            - path: /scripts
