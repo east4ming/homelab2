@@ -56,7 +56,7 @@ ewhisper.cn 目前用 acme.sh + Let's Encrypt（DNS-01，DNSPod / 腾讯云）�
 **Acceptance Scenarios**:
 
 1. **Given** 证书内容变化，**When** 部署脚本运行，**Then** 腾讯云上传证书记录一次、部署到
-   `ewhisper.cn|off` 与 `www.ewhisper.cn|off` 各一次；七牛上传一次并绑定 `pic-cdn.ewhisper.cn`。
+   `ewhisper.cn|on` 与 `www.ewhisper.cn|on` 各一次；七牛上传一次并绑定 `pic-cdn.ewhisper.cn`。
 2. **Given** 上次部署成功后证书未变，**When** 部署脚本再次运行，**Then** 直接退出，不产生任何云端写入。
 3. **Given** 腾讯云部署失败，**When** Job 结束，**Then** 退出码非零且不记录「已部署指纹」，
    下一轮（或 Job 重试）会把云端的补齐。

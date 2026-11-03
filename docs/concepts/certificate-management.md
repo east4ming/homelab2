@@ -118,7 +118,7 @@ done
 
 搬运自原来的 `acme-ewhisper-certs` 仓库，改脚本前先看一遍：
 
-- 腾讯 `DeployCertificateInstance` 的实例格式是 `域名|计费开关`（`off` = 免费部署通道），数组参数要传 JSON。
+- 腾讯 `DeployCertificateInstance` 的实例格式是 `域名|计费开关`（`off` = 免费部署通道 = CDN -> 域名管理 -> HTTPS服务关）；应设置为 on，即HTTPS服务开. 数组参数要传 JSON。
 - 腾讯 `UploadCertificate --Repeatable true` **不去重**：每次续期都会新增一条证书记录，Alias 固定为
   `ewhisper.cn-acme`，便于定期清理。
 - 七牛是**双域名 + 双鉴权**：证书接口用 `QBox`（路径签名，body 不参与），域名配置用 `Qiniu`

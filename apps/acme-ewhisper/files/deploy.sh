@@ -61,9 +61,9 @@ _cert_id=$(printf '%s' "$_resp" | jq -r '.Response.CertificateId // empty')
 [ -n "$_cert_id" ] || die "腾讯云上传证书后没有拿到 CertificateId"
 log "腾讯云证书已上传：$_cert_id"
 
-# 实例格式是「域名|计费开关」，off = 免费部署通道（见 README 的已知坑）
+# 实例格式是「域名|计费开关」，off = CDN -> 域名管理 -> HTTPS服务关；应设置为 on，即HTTPS服务开。
 _deploy=$(jq -cn --arg id "$_cert_id" \
-  '{CertificateId:$id, ResourceType:"cdn", InstanceIdList:["ewhisper.cn|off","www.ewhisper.cn|off"]}')
+  '{CertificateId:$id, ResourceType:"cdn", InstanceIdList:["ewhisper.cn|on","www.ewhisper.cn|on"]}')
 _resp=$(tc_api DeployCertificateInstance "$_deploy")
 _record=$(printf '%s' "$_resp" | jq -r '.Response.DeployRecordId // empty')
 [ -n "$_record" ] || die "腾讯云 CDN 部署后没有拿到 DeployRecordId"
