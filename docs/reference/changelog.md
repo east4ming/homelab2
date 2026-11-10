@@ -2,6 +2,47 @@
 
 版本号格式与发布流程见 [版本管理](versioning.md)。新条目置顶，标题即 git 标签名。
 
+## v2026.11.10
+
+移除 KubeVirt：`system/kubevirt/` 整块从仓库删除，集群侧残留手工收尾到「零命中」。这是本仓库
+第一次整体下线带 operator + CRD + 准入 webhook 的组件，卡住的资源与正确的清理顺序记在下方
+「线上状态」。同期还带上 k3s 升级频道调整、acme-ewhisper 的 CDN HTTPS 开关修复与依赖更新。
+
+### 变更
+
+- `chore(kubevirt)`：删除 `system/kubevirt/`（36 个文件、−14512 行）——vendored 的
+  `kubevirt-operator.yaml`（8619 行）、`cdi-operator.yaml`（3262 行）、KubeVirt 与 CDI 两个 CR、
+  `values.yaml`、`examples/demo-vm.yaml`，以及 unit/integration/e2e 测试套件（`run.py`、
+  `conftest.py`、资源限制器、报告生成器）；连带清掉 `.gitignore` 的
+  `system/kubevirt/tests/uv.lock`、`.yamllint.yaml` 的 `examples/` 例外、
+  `scripts/backup-coverage` 的 `kubevirt-test/*` 豁免。
+- `docs(kubevirt)`：`docs/how-to-guides/prune-unused-resources.md` 去掉「kubevirt/cdi 对象不删」
+  的 4 条旧结论并补一条变更说明，假阳性表与恢复表移除 VM / DataVolume 语境；
+  `docs/how-to-guides/upgrade-ubuntu-24-04-to-26-04.md` 移除已失效的 `virt-handler` 排查项与
+  `kubectl -n kubevirt` 验证命令（保留当时的现象记录）。
+- `build(k3s)`：`system/system-upgrade/plan.yaml` 的 server/agent 升级频道 `v1.36` → `v1.37`
+  （`f2b5ff44`）。
+- `fix(acme-ewhisper)`：腾讯云 `DeployCertificateInstance` 的实例串由 `域名|off` 改为 `域名|on`，
+  `off` 会把 CDN → 域名管理 → HTTPS 服务关掉（`fa9acdf0`）。
+- `chore(deps)`：Renovate 非主版本依赖更新（`ebefdd34`、`506f722b`、`5c12406a` 等批次）。
+
+### 线上状态
+
+- 集群侧手工清理（2026-11-10，逐项复核均已不存在）：`kubevirt`、`kubevirt-test` 命名空间
+  （含测试遗留的 5 GiB `prod-vm-datadisk` PVC 与 `prod-vm-cloudinit` Secret）；20 个
+  `*.kubevirt.io` CRD；2 个聚合 APIService（`v1/v1alpha3.subresources.kubevirt.io`）；2 个
+  ValidatingWebhookConfiguration + 1 个 MutatingWebhookConfiguration；1 个
+  `ValidatingAdmissionPolicy` 及其 binding；11 个 ClusterRole、8 个 ClusterRoleBinding；
+  4 个节点上每节点 398 个 `*node.kubevirt.io/*` label（合计 1592 个）与
+  `kubevirt.io/{heartbeat,ksm-handler-managed}` annotation；ArgoCD `Application/kubevirt`。
+- 卡住的两个根因：① 聚合 APIService 仍指向已删的 `kubevirt/virt-api` Service，命名空间删除报
+  `stale GroupVersion discovery`；② 3 个准入 webhook 的后端 Service 已删，导致 KubeVirt CR 的
+  `foregroundDeleteKubeVirt` finalizer 连 patch 都被 webhook 拒绝。可行顺序：先删 webhook / VAP →
+  摘 CR finalizer → 删孤儿 APIService → 删 CRD → 删 RBAC，命名空间与 ArgoCD Application 随后结束。
+- 节点 label 没有 PV / 工作负载依赖（唯一相关 PV 的 `nodeAffinity` 为空），删除无副作用。
+- 本地验收：`mkdocs build --strict` 通过。
+- PR #615：pipeline #2766 success（`static-checks` + `helm-diff` ×3）。
+
 ## v2026.11.02
 
 ewhisper.cn 证书续期从工作台式机搬进集群：新增 `apps/acme-ewhisper`——bjw-s `app-template` 的
