@@ -111,8 +111,8 @@ Obsolete conffile /etc/sysctl.conf has been modified by you.
 
 - `fwupd.service` / `fwupd-refresh.service` 每小时失败：
   `Could not initialize inotify, check /proc/sys/fs/inotify/max_user_instances`
-- KubeVirt `virt-handler` 在 inotify 用量高的节点上 CrashLoopBackOff：
-  `Failed to create an inotify watcher ... too many open files`
+- KubeVirt `virt-handler` 在 inotify 用量高的节点上 CrashLoopBackOff
+  （`Failed to create an inotify watcher ... too many open files`；KubeVirt 已于 2026-11 移除，此为当时记录）
 - `net.ipv6.conf.all.forwarding` 从 1 掉回 0、`accept_ra` 从 2 掉回 1
 
 检查与修复：
@@ -256,7 +256,6 @@ systemctl is-active k3s
 kubectl get nodes -o wide                             # 期望：全部 Ready
 kubectl get pods -A | grep -vE 'Running|Completed'
 kubectl -n rook-ceph exec deploy/rook-ceph-tools -- ceph -s
-kubectl -n kubevirt get pods -l kubevirt.io=virt-handler
 ```
 
 !!! warning "Ceph OSD 可能不会被 Rook 自动接管"
@@ -285,12 +284,6 @@ kubectl -n kubevirt get pods -l kubevirt.io=virt-handler
     只要 pool 是 `size=2/min_size=1` 且 PG 全 `active+clean`，数据是安全的，
     但冗余已经降级 —— 升级后务必确认 `ceph -s` 里 **4 个 OSD 全 up/in**。
 
-!!! note "KubeVirt 的 virt-handler 会跟着 inotify 一起挂"
-
-    inotify 实例被耗尽时 `virt-handler` 会在启动阶段 fatal 退出，
-    表现为 CrashLoopBackOff（`Failed to create an inotify watcher`）。
-    修好检查 1 之后删除该 Pod 即可自行恢复。
-
 ## 本仓库需要同步的适配点
 
 升级到 26.04.1 后，仓库里这些位置需要跟上（本次已更新）：
@@ -317,7 +310,7 @@ ansible-playbook --syntax-check --check --limit n100-jumper-0 \
 
 | 现象 | 根因 | 处理 |
 | --- | --- | --- |
-| `fwupd`/`fwupd-refresh` 失败、`virt-handler` CrashLoop | `/etc/sysctl.conf` 被删除，inotify 限制回退 | 检查 1 |
+| `fwupd`/`fwupd-refresh` 失败 | `/etc/sysctl.conf` 被删除，inotify 限制回退 | 检查 1 |
 | 第三方包升不了级 / 被判「废弃」 | `.list` 被升级工具禁用 | 检查 2 |
 | `logrotate.service` failed | 残留 conffile 重复 | 检查 3 |
 | 磁盘被旧内核占满 | `rc` 包 + 孤儿模块目录 | 检查 4 |

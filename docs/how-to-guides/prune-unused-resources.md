@@ -80,10 +80,10 @@ scripts/kor-audit --out /tmp/kor-audit.md
 | --- | --- | --- |
 | Crd | 该 CRD 的所有 served 版本都查不到自定义资源 | CRD 属于已安装的 operator/chart，删了会被重建；且删 CRD 会**级联删掉其全部 CR** |
 | Secret | 没被 Pod 挂载或作为环境变量引用 | VolSync 备份仓库口令、Tailscale TLS 证书（被 Ingress 的 `spec.tls` 引用）、ESO/operator 生成的密钥、k3s etcd 快照凭据 |
-| ConfigMap | 同上 | Grafana dashboard（sidecar 读）、rook/kubevirt 的 operator 配置与 CA（被 CR/webhook 引用） |
+| ConfigMap | 同上 | Grafana dashboard（sidecar 读）、rook 的 operator 配置与 CA（被 CR/webhook 引用） |
 | ClusterRole / Role | 没有任何 RoleBinding/ClusterRoleBinding 引用 | operator 的内置聚合角色、已卸载组件的遗留 |
 | Service | 其 EndpointSlice 为空 | prometheus-operator 的手工 Endpoints 型 headless Service；后端暂时不健康的服务；已 scale 到 0 的工作负载 |
-| Pvc | 没有 Pod 挂载 | **停止中的 VM 的数据盘**（VM 定义里按名引用）、VolSync 的 restic 缓存卷 |
+| Pvc | 没有 Pod 挂载 | VolSync 的 restic 缓存卷 |
 | ReplicaSet | `spec.replicas=0` 且状态全 0 | 无（旧 revision 就是旧 revision） |
 | Job | 已完成 / 失败 / 挂起 | 无（但日志会随对象一起消失） |
 | VolumeAttachment | 它逐条 Get VA 引用的节点，看不到「有没有 Pod 在用」 | **几乎全是假阳性**：RBAC 缺 `nodes`/`csidrivers` 时 Get 失败，于是每条 VA 都被报成 `Node ... does not exist`（2026-10-03 实测 25/25 都是活跃挂载，见 §4.2）；补权限后该 kind 当前为 0 条 |
@@ -140,14 +140,17 @@ U  脚本未覆盖       RESOURCES 表里没有这个 kind，核对不了集群�
 
 ### B 类：需人工确认
 
+!!! note "KubeVirt / CDI 已于 2026-11-10 从集群移除"
+
+    本表原先还有 kubevirt / cdi 的内置 ClusterRole、`kubevirt-*-ca` ConfigMap、
+    `kubevirt-test/prod-vm-datadisk`、`kubevirt/virt-exportproxy` Service 等条目，
+    都已随 KubeVirt 卸载一并清理，故不再列出。
+
 | 对象 | 结论 |
 | --- | --- |
-| kubevirt / cdi 的内置 ClusterRole、`kubevirt-apiserver-auth-delegator`、`kube-apiserver-kubelet-admin` | **不删**：属 kubevirt/CDI 安装的一部分 |
 | `loft-cluster-*` ClusterRole ×4、`pod-impersonation-shell-*` ×2（ClusterRole+Binding） | 已卸载组件的遗留（集群中已无 loft/cattle 命名空间）。可删，但收益几乎为零，建议随下次大扫除一起处理 |
-| `kubevirt-*-ca` 等 ConfigMap ×5、`default/scheduled-jobs`、`grafana/pcp-app-provisioning` | **不删**：被 CR / webhook / 应用按名字引用 |
+| `default/scheduled-jobs`、`grafana/pcp-app-provisioning` | **不删**：被应用按名字引用 |
 | `volsync-src-*-cache` PVC ×17 | 无收益：VolSync 会重建 |
-| `kubevirt-test/prod-vm-datadisk` | **不删**：`virtualmachine/prod-vm`（当前 Stopped）的 `datadisk` 就指向它 |
-| `kubevirt/virt-exportproxy` Service | **不删**：kubevirt-operator 管理 |
 
 ### C 类：禁止删除
 
@@ -305,7 +308,7 @@ scripts/kor-audit
 | 对象来源 | 恢复方式 | 时效 |
 | --- | --- | --- |
 | ArgoCD / Helm 管理（C 类，原则上不该删） | 什么都不用做——`selfHeal` 会在下一个同步周期自动重建；也可在 ArgoCD UI 点 Sync，或 `git revert` 后合入 | 约 3 分钟内自动 |
-| operator/CR 生成（Secret、RBAC、DataVolume 的 PVC） | 删除/重建其父对象（如 `ExternalSecret`、`CephCluster`）触发重建；ESO 与 rook 会重新 reconcile | 分钟级 |
+| operator/CR 生成（Secret、RBAC、CR 派生的 PVC） | 删除/重建其父对象（如 `ExternalSecret`、`CephCluster`）触发重建；ESO 与 rook 会重新 reconcile | 分钟级 |
 | 声明式但不在 Git（A 类） | 用 4.1 ② 的 YAML 导出 `kubectl apply -f`；旧 ReplicaSet 无需恢复（无意义） | 即时 |
 | **PVC 数据**（回收策略 `Delete`） | 只有 VolSync 一条路：`./scripts/backup --action restore ...`。**etcd 快照救不回数据**——它只有对象定义，Ceph 镜像已经没了 | 取决于备份周期 |
 | PVC（已先把 PV 改成 `Retain`） | 手工重建同名 PVC 绑定回那个 PV（`spec.volumeName`），或直接用该 PV 重建工作负载 | 即时 |
