@@ -41,7 +41,7 @@
   摘 CR finalizer → 删孤儿 APIService → 删 CRD → 删 RBAC，命名空间与 ArgoCD Application 随后结束。
 - 节点 label 没有 PV / 工作负载依赖（唯一相关 PV 的 `nodeAffinity` 为空），删除无副作用。
 - 本地验收：`mkdocs build --strict` 通过。
-- PR #615。
+- PR #615：pipeline #2766 success（`static-checks` + `helm-diff` ×3）。
 
 ## v2026.11.02
 
