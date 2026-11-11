@@ -77,7 +77,7 @@ Ingress 得 200；Web UI 的桌面入口可用；模型调用在 US3 配置同�
 
 - [x] T023 [US2] 检查 `apps/deepseek-harness/templates/pvc-*.yaml` 与 `statefulset.yaml` 渲染后的四块 PVC：10/20/20/1 GiB、RWO、`standard-rwo`；独立 PVC 带 keep/prune 注解；dsh-home 来自 volumeClaimTemplate
 - [x] T024 [US2] 按 `quickstart.md` §10 写四个标记、删除 Pod、等待新 Pod，验证四个标记仍在；工具/配置的“无需重做”分别在 T031/T038 复验
-- [ ] T025 [US2] 按 `quickstart.md` §10 在隔离命名空间 `dsh-retention` 执行 install→uninstall，验证 4 块 PVC 保留后清理命名空间
+- [x] T025 [US2] 按 `quickstart.md` §10 在隔离命名空间 `dsh-retention` 执行 install→uninstall，验证 4 块 PVC 保留后清理命名空间
 - [x] T026 [P] [US2] 在 `apps/deepseek-harness/README.md` 记录四块 PVC 名称/容量为后续手动备份对象，并注明不修改 `scripts/backup-coverage`
 - [x] T027 [P] [US2] 执行 `git diff --exit-code scripts/backup-coverage`，确认本特性没有添加任何 PVC 豁免
 
@@ -160,8 +160,8 @@ Ingress 得 200；Web UI 的桌面入口可用；模型调用在 US3 配置同�
 - [x] T048 [US7] 运行 `helm lint apps/deepseek-harness`、`helm template` 断言、`pre-commit run --all-files`，记录结果
 - [x] T049 [US7] 运行 `make -C test filter=Smoke`（`test/smoke_test.go`），确认 DSH Web 401、Desktop 200、原有 5 个应用 200
 - [x] T050 [US7] 更新 `docs/reference/changelog.md`，新增发布日 tag 条目，内容只来自真实提交
-- [ ] T051 [US7] 按 `docs/reference/versioning.md` 在 `master` 上打 annotated tag（发布日，如 `v2026.11.11`；同日第二快照 `.2`），推送并用 `git ls-remote` 双侧核对
-- [ ] T052 [US7] 用 `tea releases create` 与 `gh release create --verify-tag` 在 Gitea/GitHub 创建 Release，正文与 `docs/reference/changelog.md` 一致
+- [x] T051 [US7] 按 `docs/reference/versioning.md` 在 `master` 上打 annotated tag（发布日，如 `v2026.11.11`；同日第二快照 `.2`），推送并用 `git ls-remote` 双侧核对
+- [x] T052 [US7] 用 `tea releases create` 与 `gh release create --verify-tag` 在 Gitea/GitHub 创建 Release，正文与 `docs/reference/changelog.md` 一致
 
 **Checkpoint**: 发布完成，可回滚到 tag。
 
@@ -174,7 +174,7 @@ Ingress 得 200；Web UI 的桌面入口可用；模型调用在 US3 配置同�
 - [x] T053 [P] 完成 `apps/deepseek-harness/README.md`：上游 provenance/diff、values、Secret、两种配置来源、工具/skills、Ingress/noVNC 警告、升级/回滚、已知限制
 - [x] T054 [P] 检查 `scripts/backup-coverage` 未被修改；README 明确四块 PVC 为后续手动备份对象，`backup-coverage` 在备份配置前会列出它们是预期
 - [x] T055 [P] 检查 `apps/deepseek-harness/README.md` 与 `specs/015-deepseek-harness-helm/` 中无 `initContainer`/`configSync`/`DSH_CONFIG_TOKEN` 的正向残留；所有文档链接存在
-- [ ] T056 按 `spec.md` 的 SC-001…SC-011 逐项勾选验收；确认 ArgoCD `deepseek-harness` Synced/Healthy
+- [x] T056 按 `spec.md` 的 SC-001…SC-011 逐项勾选验收；确认 ArgoCD `deepseek-harness` Synced/Healthy
 - [x] T057 按 `specs/015-deepseek-harness-helm/quickstart.md` 清理持久化测试标记与临时命名空间，确认工作区干净
 
 ---
