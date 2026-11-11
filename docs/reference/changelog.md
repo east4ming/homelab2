@@ -2,6 +2,40 @@
 
 版本号格式与发布流程见 [版本管理](versioning.md)。新条目置顶，标题即 git 标签名。
 
+## v2026.11.11
+
+DeepSeek Harness（DSH）以 Helm Chart 上线 homelab2：单用户 Web 实例、四块 RWO PVC、两条 Tailscale
+Ingress（Web + noVNC），工具/配置/skills 采用 Pod 启动后的手动一次性同步。合并后修复了 Tailscale
+Ingress 被 NetworkPolicy 阻断的问题；根因是本集群 Cilium `ipv4NativeRoutingCIDR=192.168.3.0/24`
+把跨节点 Pod 流量 SNAT 成节点 IP，源身份变成 `world`，按 `tailscale/ingress-proxies` 标签的源选择器
+无法匹配。当前策略保留默认拒绝，只按端口放行 3080/6080。
+
+### 变更
+
+- `feat(deepseek-harness)`：新增 `apps/deepseek-harness`（vendored 上游 Chart 0.1.29，镜像
+  `0.2.2-rc.1-r1-market.1`）。四块 PVC（10/20/20/1 GiB）、ClusterIP backend Service、两条 Tailscale
+  Ingress、无 initContainer；新增 `scripts/bootstrap-deepseek-harness`、`install-dsh-tools`、
+  `sync-dsh-config`、`sync-dsh-skills`；Homepage 入口；smoke test 增加 DSH Web 401 / Desktop 200。
+- `fix(deepseek-harness)`：NetworkPolicy 从 proxy 源选择器改为端口级放行；手动脚本修复 tar 解包 PVC
+  根目录 metadata 失败；`yq` 改用 github backend（aqua/cosign 在本集群不可达）；删除 stale
+  `xmanrui-dsh-im` patch 行。PR #617、#618。
+- `docs(015)`：新增 spec/plan/research/data-model/contracts/quickstart/tasks，记录 Cilium SNAT 限制、
+  手动同步流程与备份边界。
+- `chore(deps)`：Renovate 非主版本依赖更新（`faad46bc` 等）。
+
+### 线上状态
+
+- ArgoCD `Application/deepseek-harness` Synced/Healthy；Pod Running；四块 PVC Bound（RWO，
+  `standard-rwo`）。
+- 访问：`https://dsh.west-beta.ts.net` 未认证 401，token URL 换取 Cookie 后 200；
+  `https://dsh-desktop.west-beta.ts.net` 200。`make -C test filter=Smoke` 8/8 通过。
+- 一次性任务：4 个 uv 工具 + 9 个 mise 工具（含 atuin）安装到 20Gi 工具卷；`--source ~/.dsh` 与
+  `--repo east4ming/dsh-config --revision 0d3dc...` 两种配置同步均成功；headless `deepseek-flash`
+  调用返回 `OK`；74 个 skills 同步到 1Gi PVC；四块 PVC 标记跨 Pod 删除保留。
+- 已知限制：NetworkPolicy 只限制端口，不限制源（Cilium SNAT）；noVNC 无认证，仅 tailnet；
+  市场镜像内置 `dshmarket@1.66.9`；四块 PVC 的备份由维护者后续手动配置，`scripts/backup-coverage`
+  未添加豁免；`helm uninstall` 保留演练需人工执行（dcg 拦截）。
+
 ## v2026.11.10
 
 移除 KubeVirt：`system/kubevirt/` 整块从仓库删除，集群侧残留手工收尾到「零命中」。这是本仓库
