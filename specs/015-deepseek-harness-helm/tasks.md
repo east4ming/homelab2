@@ -61,9 +61,9 @@ Ingress 得 200；Web UI 的桌面入口可用；模型调用在 US3 配置同�
 - [x] T017 [P] [US1] 扩展 `test/smoke_test.go`：给 `mainApps` 增加 `expectedStatus`，新增 `deepseek-harness`（401）与 `deepseek-harness-desktop`（200）
 - [x] T018 [P] [US1] 在 `apps/homepage/values.yaml` 的 `Utilities` 增加 `DeepSeek Harness` 与 `DSH Desktop` 入口（MDI 图标）
 - [x] T019 [US1] 用 `helm template deepseek-harness apps/deepseek-harness` 断言：无 initContainers、存在 ClusterIP Service、两条 Ingress 路径正确、NetworkPolicy 两个端口
-- [ ] T020 [US1] 合并/同步后按 `specs/015-deepseek-harness-helm/quickstart.md` §7 验证 Web 401、token 登录与 UI 加载；模型调用在 T038（US3 配置同步后）验证
-- [ ] T021 [US1] 按 `quickstart.md` §7 验证 `https://dsh-desktop.west-beta.ts.net` 返回 200，且 Web UI 内“浏览器桌面”打开同一 noVNC
-- [ ] T022 [US1] 按 `quickstart.md` §8 验证非 `tailscale` 命名空间 Pod 访问 PodIP:3080 得 401、6080 得 200（端口级放行），访问 9222 被拒绝；记录 Cilium SNAT 限制
+- [x] T020 [US1] 合并/同步后按 `specs/015-deepseek-harness-helm/quickstart.md` §7 验证 Web 401、token 登录与 UI 加载；模型调用在 T038（US3 配置同步后）验证
+- [x] T021 [US1] 按 `quickstart.md` §7 验证 `https://dsh-desktop.west-beta.ts.net` 返回 200，且 Web UI 内“浏览器桌面”打开同一 noVNC
+- [x] T022 [US1] 按 `quickstart.md` §8 验证非 `tailscale` 命名空间 Pod 访问 PodIP:3080 得 401、6080 得 200（端口级放行），访问 9222 被拒绝；记录 Cilium SNAT 限制
 
 **Checkpoint**: US1 可独立验收；Web、桌面、网络边界均通。
 
@@ -142,7 +142,7 @@ Ingress 得 200；Web UI 的桌面入口可用；模型调用在 US3 配置同�
 
 **Independent Test**: 无 env 时 bootstrap 失败；有 env 时 Secret 两个键；Pod env 来自 Secret；`git grep` 无真实值。
 
-- [ ] T044 [US6] 按 `quickstart.md` §1 验证 `scripts/bootstrap-deepseek-harness`：缺 env 失败、重复执行幂等、输出不回显值
+- [x] T044 [US6] 按 `quickstart.md` §1 验证 `scripts/bootstrap-deepseek-harness`：缺 env 失败、重复执行幂等、输出不回显值
 - [x] T045 [US6] 验证 `scripts/bootstrap-deepseek-harness` 创建的 `dsh-provider-credentials` 只有 `DEEPSEEK_API_KEY`、`GITHUB_API_TOKEN`；Pod 内无 `GH_TOKEN`、无 `DSH_CONFIG_TOKEN`
 - [x] T046 [US6] 对 `apps/deepseek-harness/` 与 `scripts/` 执行全仓库密钥形态扫描（`git grep`/`detect-private-key`），确认无真实 API Key/token/私钥
 - [x] T047 [P] [US6] 在 `apps/deepseek-harness/README.md` 记录 bootstrap、轮换后重启 Pod、`GITHUB_API_TOKEN` 只用于 mise 限流
@@ -158,8 +158,8 @@ Ingress 得 200；Web UI 的桌面入口可用；模型调用在 US3 配置同�
 **Independent Test**: `git ls-remote --tags` 两侧都有 tag；两侧 Release 存在；Changelog 有条目；ArgoCD Synced/Healthy。
 
 - [x] T048 [US7] 运行 `helm lint apps/deepseek-harness`、`helm template` 断言、`pre-commit run --all-files`，记录结果
-- [ ] T049 [US7] 运行 `make -C test filter=Smoke`（`test/smoke_test.go`），确认 DSH Web 401、Desktop 200、原有 5 个应用 200
-- [ ] T050 [US7] 更新 `docs/reference/changelog.md`，新增发布日 tag 条目，内容只来自真实提交
+- [x] T049 [US7] 运行 `make -C test filter=Smoke`（`test/smoke_test.go`），确认 DSH Web 401、Desktop 200、原有 5 个应用 200
+- [x] T050 [US7] 更新 `docs/reference/changelog.md`，新增发布日 tag 条目，内容只来自真实提交
 - [ ] T051 [US7] 按 `docs/reference/versioning.md` 在 `master` 上打 annotated tag（发布日，如 `v2026.11.11`；同日第二快照 `.2`），推送并用 `git ls-remote` 双侧核对
 - [ ] T052 [US7] 用 `tea releases create` 与 `gh release create --verify-tag` 在 Gitea/GitHub 创建 Release，正文与 `docs/reference/changelog.md` 一致
 
