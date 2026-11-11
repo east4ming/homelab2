@@ -44,7 +44,7 @@
 | Tailscale Backend Service | `deepseek-harness-tailscale` | `type: ClusterIP`；端口 http/desktop；非空 ClusterIP |
 | Ingress | `deepseek-harness` | host `dsh...`；`/`→http，`/novnc-`→desktop |
 | Ingress | `deepseek-harness-desktop` | host `dsh-desktop...`；`/`→desktop |
-| NetworkPolicy | `deepseek-harness` | policyTypes Ingress；仅 3080/6080 来自 ingress-proxies |
+| NetworkPolicy | `deepseek-harness` | policyTypes Ingress；只放行 3080/6080 端口（源选择器受 Cilium SNAT 限制） |
 | PVC | `deepseek-harness-workspace` | 20Gi RWO；keep/prune=false |
 | PVC | `deepseek-harness-tools` | 20Gi RWO；keep/prune=false |
 | PVC | `deepseek-harness-skills` | 1Gi RWO；keep/prune=false |

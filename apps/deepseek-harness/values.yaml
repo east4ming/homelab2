@@ -110,17 +110,17 @@ ingress:
 
 networkPolicy:
   enabled: true
-  # Default deny; only the shared Tailscale ingress proxies may reach DSH.
+  # Default deny for every port except the DSH Web/desktop ports.
+  #
+  # Source selectors (tailscale/ingress-proxies) were evaluated and do not work
+  # in this cluster: Cilium ipv4NativeRoutingCIDR is 192.168.3.0/24, so
+  # cross-node pod traffic is masqueraded to the node IP and arrives with
+  # identity "world". K8s ingress selectors and ipBlock then match nothing.
+  # The Tailscale proxy is the only external path; the ClusterIP is not
+  # published outside the cluster. Tighten this to proxy selectors only after
+  # Cilium native routing covers the pod CIDR (10.42.0.0/16).
   ingress:
-    - from:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: tailscale
-          podSelector:
-            matchLabels:
-              tailscale.com/parent-resource-type: proxygroup
-              tailscale.com/parent-resource: ingress-proxies
-      ports:
+    - ports:
         - protocol: TCP
           port: 3080
         - protocol: TCP

@@ -128,10 +128,10 @@
 
 | 字段 | 值 |
 | --- | --- |
-| source namespace | `tailscale`（`kubernetes.io/metadata.name`） |
-| source pods | `tailscale.com/parent-resource-type=proxygroup`、`tailscale.com/parent-resource=ingress-proxies` |
+| source | 不限制（Cilium SNAT 后源身份为 `world`，源选择器不可匹配） |
 | ports | TCP 3080、TCP 6080 |
 | other ingress | 拒绝（上游默认） |
+| known ceiling | 收紧源需要先调整 Cilium `ipv4NativeRoutingCIDR` 覆盖 Pod CIDR；见 README |
 
 ### BackupTargetSet
 
@@ -151,7 +151,7 @@
 - `ConfigSyncRun` → 本机 `gh`/`~/.dsh` → `kubectl cp` → `DSHHomeVolume`；`pnpm install` 使用镜像 pnpm，
   store 在 dsh-home（镜像 env `npm_config_store_dir`），`ToolsVolume` 只提供 uv/mise 工具。
 - `ToolSet` → `ToolsVolume`；DSH 通过 `PATH` 使用 shims。
-- `TailscaleBackendService` → 两条 Ingress；两条 Ingress 的代理来自 `ingress-proxies`，受 `NetworkPolicyRule` 放行。
+- `TailscaleBackendService` → 两条 Ingress；两条 Ingress 的代理来自 `ingress-proxies`；NetworkPolicy 只按端口放行（源选择器受 Cilium SNAT 限制）。
 - `WorkspaceVolume` / `ToolsVolume` / `SkillsVolume` 挂载到主容器；`DSHHomeVolume` 由 StatefulSet 模板生成。
 - `BackupTargetSet` → 四块 PVC；由用户后续手动接入备份。
 

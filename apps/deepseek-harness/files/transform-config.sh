@@ -77,6 +77,9 @@ rewrite_text
 web_patch="$out/profiles/web/cordis.patch.yml"
 if [ -f "$web_patch" ]; then
   yq -i '(.[] | select(.id == "agent-default-model") | .config.provider) = "deepseek-official"' "$web_patch"
+  # The local patch disables @xmanrui/dsh-im, but that bundle is not in the
+  # profile bundle list, so the override targets a missing entry and DSH warns.
+  yq -i 'del(.[] | select(.id == "xmanrui-dsh-im"))' "$web_patch"
 fi
 
 web_manifest="$out/profiles/web/package.json"

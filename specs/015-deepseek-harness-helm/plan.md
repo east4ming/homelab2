@@ -15,7 +15,7 @@
   Pod，再在容器内 `pnpm install`。集群内不需要配置仓库凭据。
 - 新增 ClusterIP Service 供 Tailscale 使用（上游 Headless 不能做 L7 后端），两条 Tailscale Ingress：
   3080 Web、6080 noVNC；Web Ingress 同时路由 `/novnc-*` 以支持 UI 内桌面入口。
-- NetworkPolicy 保留默认拒绝，仅放行 `tailscale/ingress-proxies` 到 3080/6080。
+- NetworkPolicy 保留默认拒绝，但只按端口放行 3080/6080；源选择器受 Cilium SNAT 限制（见风险）。
 - 密钥走用户指定的 `dsh-provider-credentials` Secret，bootstrap 脚本从本机 env 创建；不进 Git。
 - 四块 PVC 是后续手动备份对象；本特性**不修改** `scripts/backup-coverage` 的豁免表。
 - 按 `docs/reference/versioning.md` 发布。
@@ -123,8 +123,9 @@ Ingress；扁平结构让 values 与上游同名、差异可逐行审阅，ArgoC
 1. **Tailscale L7 Ingress 不接受 Headless Service**：`addIngressBackend` 校验 `ClusterIP`；必须新增
    `deepseek-harness-tailscale` ClusterIP Service，Headless 仅保留给 StatefulSet。
 2. **Tailscale 只支持 Prefix 路径**；同一 Ingress 可有多条 Prefix → 多后端，因此 `/` 与 `/novnc-` 可分流。
-3. **NetworkPolicy 必须放行** `tailscale/ingress-proxies` 的 `parent-resource-type=proxygroup` +
-   `parent-resource=ingress-proxies` 到 3080/6080；否则默认 deny-all 会阻断。
+3. **NetworkPolicy 必须放行 3080/6080 端口**；按 `tailscale/ingress-proxies` 标签的源选择器在本集群无效：
+   Cilium `ipv4NativeRoutingCIDR=192.168.3.0/24` 把跨节点 Pod 流量 SNAT 成节点 IP，源身份变成 `world`。
+   当前只按端口放行，收紧源需要独立修正 Cilium native routing。
 4. **不使用 initContainer**：Pod 直接启动 DSH；工具/配置/skills 通过 `kubectl exec/cp` 手动一次完成，
    避免把长耗时安装放进 Pod 启动路径，也符合用户指定的操作方式。
 5. **配置同步不需要集群凭据**：本机 `gh` 已认证，或直接使用本机 `~/.dsh`；本地改写后 `kubectl cp`。
@@ -182,8 +183,8 @@ Ingress；扁平结构让 values 与上游同名、差异可逐行审阅，ArgoC
 - `ingress-web.yaml`：host `dsh.west-beta.ts.net`，class `tailscale`，annotation proxy-group，
   paths `/`→http、`/novnc-`→desktop，TLS host。
 - `ingress-desktop.yaml`：host `dsh-desktop.west-beta.ts.net`，path `/`→desktop，TLS host。
-- `networkpolicy.yaml`：从 values 读取放行规则；只允许 `tailscale` 命名空间内
-  `parent-resource-type=proxygroup` + `parent-resource=ingress-proxies` 到 3080/6080。
+- `networkpolicy.yaml`：从 values 读取放行规则；默认拒绝其他端口，只放行 3080/6080。源选择器因 Cilium
+  SNAT（`ipv4NativeRoutingCIDR=192.168.3.0/24`）无法匹配，README 记录后续收紧条件。
 - 验证：`helm template` 断言语义；上线后 `curl` 401/200、非 tailscale Pod 被拒。
 
 ### 4. 一次性工具安装
@@ -314,7 +315,7 @@ Ingress；扁平结构让 values 与上游同名、差异可逐行审阅，ArgoC
 | 代码质量 | `pre-commit`（yamllint/helmlint/shellcheck/private-key） | 全部通过 |
 | 镜像 tag | Docker Hub manifest / 渲染值 | `0.2.2-rc.1-r1-market.1` 存在且被引用 |
 | Smoke | `make -C test filter=Smoke` | Web 401、Desktop 200、原有 5 项 200 |
-| NetworkPolicy | 非 tailscale Pod `curl` PodIP:3080/6080 | 失败；tailnet 成功 |
+| NetworkPolicy | 非 tailscale Pod `curl` PodIP:9222 被拒；3080 得 401、6080 得 200；tailnet 成功 |
 | 认证 | 浏览器 token URL | 401→Cookie→UI |
 | 模型 | UI 发一次 `deepseek-flash` | 无登录提示，返回内容 |
 | 工具安装 | `scripts/install-dsh-tools` | 4 + 9 个工具；路径在工具卷 |
@@ -343,6 +344,7 @@ Ingress；扁平结构让 values 与上游同名、差异可逐行审阅，ArgoC
 | 备份尚未配置 | 四块 PVC 保留策略与名称已固定；README 列为后续手动备份对象；`backup-coverage` 会明确列出未覆盖项 |
 | RWO 节点绑定 | 单副本；接受节点不可用时的不可调度；不做多副本 |
 | noVNC 暴露面 | 仅 tailnet Ingress；Tailscale ACL 为唯一边界；不公网、不加 NodePort |
+| NetworkPolicy 只能按端口放行 | Cilium `ipv4NativeRoutingCIDR=192.168.3.0/24` 把跨节点 Pod 流量 SNAT 成节点 IP，源身份变成 `world`；源选择器/ipBlock 均不匹配。当前默认拒绝其他端口、只放行 3080/6080；收紧源需独立修正 Cilium native routing |
 
 **回退**：`git revert` 合并提交；ArgoCD 同步上一个 tag；四块 PVC 保留。镜像降级前确认 DSH 数据卷兼容；
 备份由用户后续配置，必要时先手工保留 `dsh-home`（会话/凭据）再操作。
@@ -358,6 +360,7 @@ Ingress；扁平结构让 values 与上游同名、差异可逐行审阅，ArgoC
 | 删除 profile 的 dshmarket / 版本 1.66.9 | 市场镜像已内置市场，重复行会冲突 | 保留 1.73.17 会与镜像 patch 的 `dsh-market` 行重复，且版本来源不确定 |
 | 四块 PVC 不豁免 backup-coverage | 用户要求备份；备份由用户后续手动配置 | 在脚本里豁免会掩盖未备份事实；VolSync 自动配置超出本次范围 |
 | 4Gi 内存上限 | Constitution IV 要求 limits；Chromium 需要余量 | 沿用上游无 limits 违反宪法；2Gi 可能 OOM |
+| NetworkPolicy 端口级放行 | 实测 Cilium SNAT 使 Tailscale 代理源标签在目标侧不可见；按端口放行是当前唯一可工作的最小策略 | 改 Cilium native routing 覆盖 Pod CIDR 是集群级网络变更，超出本特性；完全关闭 NetworkPolicy 会连端口限制也丢失 |
 
 ## 待确认/前置
 

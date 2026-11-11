@@ -19,7 +19,7 @@ DeepSeek Harness（DSH）单用户 Web 实例，以 vendored 的上游 Helm Char
 | `pvc-workspace` / `pvc-tools` / `pvc-skills` | 20Gi/20Gi/1Gi RWO；带 keep/prune 注解 |
 | StatefulSet 卷与 env | 挂载工作区/工具/skills；把 `XDG_*` 从 `/tmp` 覆盖到工具卷；`desktop.publicPort=443` |
 | `resources.limits` | Constitution 要求显式 limits |
-| `networkPolicy.ingress` | 只放行 `tailscale/ingress-proxies` 到 3080/6080 |
+| `networkPolicy.ingress` | 默认拒绝，只放行 3080/6080；源地址选择器在本集群会被 Cilium SNAT 破坏（见下文） |
 | **无 initContainer** | 工具、配置、skills 由维护者在 Pod 启动后手动一次性执行 |
 
 ## 部署顺序
@@ -115,9 +115,21 @@ skills 内容不提交到 Git。
 - 升级镜像：改 `image.tag`，ArgoCD 同步；PVC 保留。降级前确认 DSH 数据卷兼容性。
 - 回滚：ArgoCD Sync 到上一个 tag；四块 PVC 保留。代码回滚用 `git revert`。
 
+## NetworkPolicy 说明
+
+最初尝试只放行 `tailscale/ingress-proxies`（namespaceSelector + podSelector）。实测该规则在本集群无效：
+Cilium 的 `ipv4NativeRoutingCIDR` 是 `192.168.3.0/24`，跨节点 Pod 流量在到达目标 Pod 前被 masquerade 成节点 IP，
+源身份变成 `world`；ingress 的 namespace/pod selector 与 ipBlock 都匹配不到，Tailscale 代理连接 3080/6080
+超时。临时允许全部 ingress 后立即恢复 401/200。
+
+当前策略因此只限制**端口**：默认拒绝其他端口，放行 3080/6080。DSH 的 ClusterIP 不发布到集群外，Tailscale
+Ingress 仍是唯一外部入口；集群内任意 Pod 可访问这两个端口。若要把源限制收紧回 ingress proxies，需要先把
+Cilium 的 native routing CIDR 调整为覆盖 Pod CIDR（`10.42.0.0/16`），这是独立的集群网络变更，未在本 PR 中做。
+
 ## 已知限制
 
 - noVNC 无认证；仅 tailnet。Tailscale ACL 是唯一边界。
+- NetworkPolicy 只限制端口，不限制源；见上文 Cilium SNAT 说明。
 - `GITHUB_API_TOKEN` 只用于 mise 的 GitHub 安装限流；`gh` 登录需手动完成，本 Chart 不注入 `GH_TOKEN`。
 - 市场镜像内置 `dshmarket@1.66.9`，低于本机 `1.73.17`；升级镜像时统一。
 - `dsh-chat-import` 不同步；`integrations` 中指向本机项目的路径改写为 `/workspace`。

@@ -14,7 +14,7 @@ POD="${POD:-$(kubectl -n "$NAMESPACE" get pod \
 kubectl -n "$NAMESPACE" wait --for=condition=Ready "pod/$POD" --timeout=300s
 tar -C "$SOURCE" -cf - . |
   kubectl -n "$NAMESPACE" exec -i "$POD" -- \
-    tar -C /workspace/.agents/skills --no-same-owner -xf -
+    tar -C /workspace/.agents/skills --no-same-owner --no-overwrite-dir --strip-components=1 -xf -
 
 count="$(find "$SOURCE" -mindepth 1 -maxdepth 1 -type d | wc -l)"
 echo "==> synced $count skill directories to $POD:/workspace/.agents/skills"
