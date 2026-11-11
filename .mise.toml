@@ -1,7 +1,7 @@
 # 开发工具与版本（非 Python 部分）
 # Python 解释器/依赖由 uv 管理，见 pyproject.toml 与 uv.lock。
 [tools]
-argocd = "3.5.7"
+argocd = "3.6.0"
 dyff = "1.12.0"
 go = "1.27.3"
 gotestsum = "1.13.0"
