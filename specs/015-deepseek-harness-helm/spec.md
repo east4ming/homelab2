@@ -337,7 +337,8 @@ Changelog 有条目；ArgoCD 应用为 Synced/Healthy。
   tailnet，用于直接打开完整桌面；不存在公网入口。该桌面无认证是显式接受的设计，不是遗漏；文档必须写明
   tailnet ACL 是唯一访问边界。
 - **FR-014**: 通过 Ingress 访问时，DSH 的启动 token/Cookie 流程必须可用：未认证请求返回 401，携带 Pod 日志中的
-  一次性 token 可换取 Cookie 并加载 UI；WebSocket/流式响应必须可穿过 Tailscale 代理。
+  一次性 token 可换取 Cookie 并加载 UI；WebSocket/流式响应必须可穿过 Tailscale 代理，且 Ingress 主机名必须
+  通过 `--trusted-host` 加入 DSH 的 Host/Origin 信任列表（否则 `/api` WebSocket 返回 403，UI 显示“重新连接中”）。
 - **FR-015**: 必须提供**一次性手动同步流程**：先启动 DSH 容器，再由维护者在本机用已认证的 `gh` 拉取私有
   `east4ming/dsh-config`（或直接选择本机 `/home/casey/.dsh` 的配置），本地完成容器化改写后通过 `kubectl cp`
   写入 `$DSH_HOME`，并在容器内执行 `pnpm install`。集群内不得需要 `DSH_CONFIG_TOKEN` 或任何仓库凭据；同步

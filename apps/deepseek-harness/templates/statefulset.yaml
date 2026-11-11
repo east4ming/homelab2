@@ -40,6 +40,12 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           args:
             {{- toYaml .Values.args | nindent 12 }}
+            {{- if .Values.ingress.web.host }}
+            - --public-url
+            - https://{{ .Values.ingress.web.host }}
+            - --trusted-host
+            - {{ .Values.ingress.web.host }}
+            {{- end }}
           env:
             - name: DSH_HOME
               value: /home/node/.dsh
