@@ -80,7 +80,7 @@ kubectl -n "$NAMESPACE" wait --for=condition=Ready "pod/$POD" --timeout=300s
 echo "==> copying config to $POD:/tmp"
 kubectl -n "$NAMESPACE" cp "$tmp/dsh-config-sync.tar" "$POD:/tmp/dsh-config-sync.tar"
 kubectl -n "$NAMESPACE" exec "$POD" -- \
-  sh -c 'tar --no-same-owner -C /home/node/.dsh -xf /tmp/dsh-config-sync.tar'
+  sh -c 'tar --no-same-owner --no-overwrite-dir --strip-components=1 -C /home/node/.dsh -xf /tmp/dsh-config-sync.tar'
 
 echo "==> installing profile dependencies"
 kubectl -n "$NAMESPACE" exec "$POD" -- \

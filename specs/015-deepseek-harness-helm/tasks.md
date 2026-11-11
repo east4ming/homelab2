@@ -63,7 +63,7 @@ Ingress 得 200；Web UI 的桌面入口可用；模型调用在 US3 配置同�
 - [x] T019 [US1] 用 `helm template deepseek-harness apps/deepseek-harness` 断言：无 initContainers、存在 ClusterIP Service、两条 Ingress 路径正确、NetworkPolicy 两个端口
 - [ ] T020 [US1] 合并/同步后按 `specs/015-deepseek-harness-helm/quickstart.md` §7 验证 Web 401、token 登录与 UI 加载；模型调用在 T038（US3 配置同步后）验证
 - [ ] T021 [US1] 按 `quickstart.md` §7 验证 `https://dsh-desktop.west-beta.ts.net` 返回 200，且 Web UI 内“浏览器桌面”打开同一 noVNC
-- [ ] T022 [US1] 按 `quickstart.md` §8 验证非 `tailscale` 命名空间 Pod 访问 PodIP:3080/6080 被 NetworkPolicy 拒绝
+- [ ] T022 [US1] 按 `quickstart.md` §8 验证非 `tailscale` 命名空间 Pod 访问 PodIP:3080 得 401、6080 得 200（端口级放行），访问 9222 被拒绝；记录 Cilium SNAT 限制
 
 **Checkpoint**: US1 可独立验收；Web、桌面、网络边界均通。
 
@@ -76,7 +76,7 @@ Ingress 得 200；Web UI 的桌面入口可用；模型调用在 US3 配置同�
 **Independent Test**: 写入四个标记 → 删除 Pod → 标记仍在；隔离命名空间 install→uninstall→PVC 仍在；`scripts/backup-coverage` 未被修改。
 
 - [x] T023 [US2] 检查 `apps/deepseek-harness/templates/pvc-*.yaml` 与 `statefulset.yaml` 渲染后的四块 PVC：10/20/20/1 GiB、RWO、`standard-rwo`；独立 PVC 带 keep/prune 注解；dsh-home 来自 volumeClaimTemplate
-- [ ] T024 [US2] 按 `quickstart.md` §10 写四个标记、删除 Pod、等待新 Pod，验证四个标记仍在；工具/配置的“无需重做”分别在 T031/T038 复验
+- [x] T024 [US2] 按 `quickstart.md` §10 写四个标记、删除 Pod、等待新 Pod，验证四个标记仍在；工具/配置的“无需重做”分别在 T031/T038 复验
 - [ ] T025 [US2] 按 `quickstart.md` §10 在隔离命名空间 `dsh-retention` 执行 install→uninstall，验证 4 块 PVC 保留后清理命名空间
 - [x] T026 [P] [US2] 在 `apps/deepseek-harness/README.md` 记录四块 PVC 名称/容量为后续手动备份对象，并注明不修改 `scripts/backup-coverage`
 - [x] T027 [P] [US2] 执行 `git diff --exit-code scripts/backup-coverage`，确认本特性没有添加任何 PVC 豁免
@@ -95,8 +95,8 @@ Ingress 得 200；Web UI 的桌面入口可用；模型调用在 US3 配置同�
 
 - [x] T028 [US4] 新增 `apps/deepseek-harness/files/install-tools.sh`：设置 HOME/XDG/PATH，安装 uv/mise 到 `/workspace/.local/bin`，逐个 `uv tool install`、`mise use -g`（含 `aqua:atuinsh/atuin`）、`mise reshim`，写 `.dsh-tools-version`
 - [x] T029 [US4] 新增 `scripts/install-dsh-tools`：查找 Pod/等待 Ready、`kubectl cp` 脚本到 `/tmp`、`kubectl exec` 执行；失败非零退出
-- [ ] T030 [US4] 按 `quickstart.md` §4 运行安装脚本，验证 4 个 uv 工具 + 9 个 mise 工具（含 atuin）、路径位于 `/workspace/.local` 或 `/workspace/.config`
-- [ ] T031 [US4] 按 `quickstart.md` §10 重启 Pod，验证工具命令仍可用、安装脚本无需重复下载
+- [x] T030 [US4] 按 `quickstart.md` §4 运行安装脚本，验证 4 个 uv 工具 + 9 个 mise 工具（含 atuin）、路径位于 `/workspace/.local` 或 `/workspace/.config`
+- [x] T031 [US4] 按 `quickstart.md` §10 重启 Pod，验证工具命令仍可用、安装脚本无需重复下载
 - [x] T032 [P] [US4] 在 `apps/deepseek-harness/README.md` 记录工具清单、安装命令、工具卷重建后的重跑条件
 
 **Checkpoint**: US4 可独立验收；工具持久化。
@@ -112,9 +112,9 @@ Ingress 得 200；Web UI 的桌面入口可用；模型调用在 US3 配置同�
 - [x] T033 [US3] 新增 `apps/deepseek-harness/files/transform-config.sh`：实现白名单复制矩阵（profiles/local-plugins/local-presets/skills/skills-manager/AGENTS.md/dsh-pet/integrations），跳过 sessions/storages/.credentials/dsh-chat-import/node_modules
 - [x] T034 [US3] 在 `transform-config.sh` 实现改写：`/home/casey/.dsh`→`/home/node/.dsh`、codegraph/atuin/dcg→mise shims、provider→`deepseek-official`、删除 dshmarket 依赖/bundle、置空 StyleFerry post、追加 `onlyBuiltDependencies`、skill lock/integrations 路径
 - [x] T035 [US3] 新增 `scripts/sync-dsh-config`：支持 `--source DIR` 与 `--repo OWNER/REPO --revision REF`（本机 `gh repo clone`）；生成 staging、tar、`kubectl cp`、容器内解包、`CI=true pnpm install --no-frozen-lockfile`、写 `.dsh-config-source`、`kubectl rollout restart`、等待 Ready
-- [ ] T036 [US3] 按 `quickstart.md` §5.1 运行 `scripts/sync-dsh-config --source "$HOME/.dsh"`，验证退出 0、Pod Ready、marker、配置无本机绝对路径
-- [ ] T037 [US3] 按 `quickstart.md` §5.2 运行 `scripts/sync-dsh-config --repo east4ming/dsh-config --revision <ref>`，验证本机 gh 克隆成功、Pod 内无仓库 token
-- [ ] T038 [US3] 按 `quickstart.md` §9 验证插件安装成功、市场页面无重复 `dsh-market` 行、`DEEPSEEK_API_KEY` 路由下模型对话可用
+- [x] T036 [US3] 按 `quickstart.md` §5.1 运行 `scripts/sync-dsh-config --source "$HOME/.dsh"`，验证退出 0、Pod Ready、marker、配置无本机绝对路径
+- [x] T037 [US3] 按 `quickstart.md` §5.2 运行 `scripts/sync-dsh-config --repo east4ming/dsh-config --revision <ref>`，验证本机 gh 克隆成功、Pod 内无仓库 token
+- [x] T038 [US3] 按 `quickstart.md` §9 验证插件安装成功、市场页面无重复 `dsh-market` 行、`DEEPSEEK_API_KEY` 路由下模型对话可用
 - [x] T039 [P] [US3] 在 `apps/deepseek-harness/README.md` 记录配置更新/回滚、`--source` 与 `--repo` 两种模式、`pnpm install` 失败恢复
 
 **Checkpoint**: US3 可独立验收；配置/插件可用且集群无配置凭据。
@@ -128,8 +128,8 @@ Ingress 得 200；Web UI 的桌面入口可用；模型调用在 US3 配置同�
 **Independent Test**: 同步后 `/workspace/.agents/skills` 出现本机同名目录，DSH 能发现新增 skill；删除 Pod 后仍在。
 
 - [x] T040 [US5] 新增 `scripts/sync-dsh-skills`：查找 Pod、等待 Ready、`tar` 本机 skills → `kubectl exec -i ... tar -C /workspace/.agents/skills --no-same-owner -xf -`
-- [ ] T041 [US5] 按 `quickstart.md` §6 运行同步，验证本机同名目录存在、DSH 技能目录发现新增 skill
-- [ ] T042 [US5] 按 `quickstart.md` §10 重启 Pod，验证 skills 仍在 1Gi PVC
+- [x] T041 [US5] 按 `quickstart.md` §6 运行同步，验证本机同名目录存在、DSH 技能目录发现新增 skill
+- [x] T042 [US5] 按 `quickstart.md` §10 重启 Pod，验证 skills 仍在 1Gi PVC
 - [x] T043 [P] [US5] 在 `apps/deepseek-harness/README.md` 记录 skills 同步命令、不提交到 Git、1Gi 容量边界
 
 **Checkpoint**: US5 可独立验收。
@@ -143,7 +143,7 @@ Ingress 得 200；Web UI 的桌面入口可用；模型调用在 US3 配置同�
 **Independent Test**: 无 env 时 bootstrap 失败；有 env 时 Secret 两个键；Pod env 来自 Secret；`git grep` 无真实值。
 
 - [ ] T044 [US6] 按 `quickstart.md` §1 验证 `scripts/bootstrap-deepseek-harness`：缺 env 失败、重复执行幂等、输出不回显值
-- [ ] T045 [US6] 验证 `scripts/bootstrap-deepseek-harness` 创建的 `dsh-provider-credentials` 只有 `DEEPSEEK_API_KEY`、`GITHUB_API_TOKEN`；Pod 内无 `GH_TOKEN`、无 `DSH_CONFIG_TOKEN`
+- [x] T045 [US6] 验证 `scripts/bootstrap-deepseek-harness` 创建的 `dsh-provider-credentials` 只有 `DEEPSEEK_API_KEY`、`GITHUB_API_TOKEN`；Pod 内无 `GH_TOKEN`、无 `DSH_CONFIG_TOKEN`
 - [x] T046 [US6] 对 `apps/deepseek-harness/` 与 `scripts/` 执行全仓库密钥形态扫描（`git grep`/`detect-private-key`），确认无真实 API Key/token/私钥
 - [x] T047 [P] [US6] 在 `apps/deepseek-harness/README.md` 记录 bootstrap、轮换后重启 Pod、`GITHUB_API_TOKEN` 只用于 mise 限流
 

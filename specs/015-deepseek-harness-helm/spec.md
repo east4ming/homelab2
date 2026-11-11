@@ -61,8 +61,11 @@ Gitea/GitHub 双远端发布。
 执行。**上游 Service 是 Headless（`clusterIP: None`），而 Tailscale L7 Ingress 要求后端 Service 有
 ClusterIP，因此不能直接复用，必须新增一个 ClusterIP Service 专供 Ingress。** 上游 Chart 的 `ingress: []`
 是 deny-all，因此**默认 NetworkPolicy 会阻断 Tailscale Ingress**；kubelet 对 `127.0.0.1:3080/6080` 的探针
-不受 Pod 入站策略影响，仍可正常工作。结论：保留默认拒绝，只新增允许 `tailscale/ingress-proxies` 访问
-`3080/TCP` 与 `6080/TCP` 的入站规则，其余入站继续拒绝。
+不受 Pod 入站策略影响，仍可正常工作。**实测发现按 `tailscale/ingress-proxies` 标签放行的规则无效**：本集群
+Cilium 的 `ipv4NativeRoutingCIDR` 是 `192.168.3.0/24`，跨节点 Pod 流量在目标侧已被 masquerade 成节点 IP，
+源身份变成 `world`；namespace/pod selector 与 ipBlock 均匹配不到。结论：保留默认拒绝，但只按**端口**放行
+`3080/TCP` 与 `6080/TCP`，其余入站继续拒绝。把源收紧回 ingress proxies 需要先调整 Cilium native routing
+覆盖 Pod CIDR（`10.42.0.0/16`），属于独立的集群网络变更，不在本特性内。
 
 noVNC 本身没有认证，但本 tailnet 只有维护者一人使用，且 Ingress 不发布到公网；因此接受「tailnet 内任意设备
 可访问桌面」的风险，由 Tailscale ACL 作为唯一网络边界。文档必须明确这一点。为了让 Web UI 里的「浏览器桌面」
@@ -133,15 +136,17 @@ VolSync/备份策略（四块 PVC 必须列为备份对象，备份由用户后�
 
 **Why this priority**: 这是实例可用的最低标准；NetworkPolicy 与 Ingress 的交互是本需求最容易出错的部分。
 
-**Independent Test**: 在 tailnet 外的普通 Pod 访问 DSH Pod 的 3080/6080 被拒绝；在 tailnet 内用浏览器打开
+**Independent Test**: 从非 `tailscale` 命名空间的 Pod 访问 DSH Pod 的 9222 被拒绝，访问 3080 得到 401、
+访问 6080 得到 200（Cilium SNAT 使源选择器失效，策略只按端口放行）；在 tailnet 内用浏览器打开
 `https://dsh.west-beta.ts.net`，未带 token 时返回 401，从 Pod 日志取得一次性 token 后能加载 UI 并完成一次
 模型对话；打开 `https://dsh-desktop.west-beta.ts.net` 可进入 noVNC 桌面；Web UI 内的「浏览器桌面」入口也能
 打开同一桌面。
 
 **Acceptance Scenarios**:
 
-1. **Given** 应用已同步且 Pod Ready，**When** 从非 `tailscale` 命名空间的 Pod 访问 DSH Pod IP:3080 或
-   IP:6080，**Then** 连接被 NetworkPolicy 拒绝。
+1. **Given** 应用已同步且 Pod Ready，**When** 从非 `tailscale` 命名空间的 Pod 访问 DSH Pod IP:9222，
+   **Then** 连接被 NetworkPolicy 拒绝；访问 3080 得到 401、访问 6080 得到 200（源选择器受 Cilium SNAT
+   限制，策略只按端口放行）。
 2. **Given** 同上，**When** 从 tailnet 浏览器访问 Web Ingress 主机名，**Then** Ingress 经
    `ingress-proxies` 到达 DSH，未认证请求返回 401。
 3. **Given** 运维者从 Pod 日志取得带 token 的启动 URL，**When** 打开该 URL，**Then** token 换取 Cookie 并进入
@@ -278,8 +283,9 @@ Changelog 有条目；ArgoCD 应用为 Synced/Healthy。
 
 - **上游 Chart 升级**：上游新增/修改 StatefulSet、NetworkPolicy 或 env 时，本地副本会漂移；必须有明确的升级
   检查清单与 diff 记录，不能直接覆盖本地新增的卷、Ingress 与放行规则。
-- **Tailscale 代理形态变化**：若 `ingress-proxies` 被删除、改名，或 Operator 改为 per-Ingress 代理
-  （`parent-resource-type=ingress`），现有 NetworkPolicy 会阻断访问；需要按代理标签调整规则并在验收中复测。
+- **Cilium SNAT 使源选择器失效**：`ipv4NativeRoutingCIDR=192.168.3.0/24` 会把跨节点 Pod 流量 masquerade
+  成节点 IP，源身份变成 `world`；按 `tailscale/ingress-proxies` 标签或 ipBlock 放行都匹配不到。当前策略
+  只按端口放行；若要收紧源，需要先调整 Cilium native routing 覆盖 Pod CIDR，这是独立集群变更。
 - **Secret 不存在**：Pod 会停在 CreateContainerConfigError；部署顺序必须先建 Secret，ArgoCD 重试后才可用。
 - **配置同步是手动任务**：本机 `gh` 未登录、选择的源目录缺文件、`kubectl cp` 中断或 `pnpm install` 失败时，
   同步脚本必须明确报错；Pod 上的旧配置可能处于部分更新状态，重跑脚本应可收敛；同步后需重启 Pod 才保证
@@ -323,9 +329,10 @@ Changelog 有条目；ArgoCD 应用为 Synced/Healthy。
   `tailscale.com/proxy-group: ingress-proxies`、主机名 `dsh.west-beta.ts.net`、TLS 由 Tailscale 提供；
   `/` 后端指向 DSH 的 3080，版本化 `/novnc-*` 路径（含 `websockify`）后端指向 6080，并把
   `DSH_DESKTOP_PUBLIC_PORT` 设为 `443`，使 Web UI 内的桌面入口构造同源 URL。
-- **FR-012**: 必须保留 NetworkPolicy 的默认拒绝语义，仅放行来自 `tailscale` 命名空间、标签为
-  `tailscale.com/parent-resource-type=proxygroup` 且 `tailscale.com/parent-resource=ingress-proxies` 的 Pod 到
-  3080/TCP 与 6080/TCP 的入站流量；其余入站继续保持拒绝。
+- **FR-012**: 必须保留 NetworkPolicy 的默认拒绝语义，只放行 3080/TCP 与 6080/TCP 的入站流量，其余端口继续
+  拒绝。源限制（仅 `tailscale/ingress-proxies`）在本集群受 Cilium `ipv4NativeRoutingCIDR=192.168.3.0/24`
+  的 SNAT 影响无法生效；必须把这一限制与后续「调整 Cilium native routing 覆盖 Pod CIDR 再收紧」的记录写进
+  文档，不能静默假装源选择器有效。
 - **FR-013**: 必须另建一条 Tailscale Ingress（`dsh-desktop.west-beta.ts.net`）直接把 6080/noVNC 暴露给
   tailnet，用于直接打开完整桌面；不存在公网入口。该桌面无认证是显式接受的设计，不是遗漏；文档必须写明
   tailnet ACL 是唯一访问边界。
@@ -400,8 +407,8 @@ Changelog 有条目；ArgoCD 应用为 Synced/Healthy。
 - **SC-004**: 执行一次性配置同步后，profile 中列出的插件全部安装；DSH 启动日志无插件加载错误；市场页面可
   打开且无重复市场行。
 - **SC-005**: 在 UI 中发起一次 `deepseek-flash` 对话并成功返回，不出现登录提示；证明 API Key 路由生效。
-- **SC-006**: 从非 `tailscale` 命名空间 Pod 到 DSH Pod:3080 与 :6080 的连接都被拒绝；从 tailnet 访问两个
-  端口都成功。
+- **SC-006**: 从非 `tailscale` 命名空间 Pod 到 DSH Pod:9222 的连接被拒绝；3080 返回 401、6080 返回 200
+  （策略只按端口放行，源选择器受 Cilium SNAT 限制）；从 tailnet 访问 3080/6080 都成功。
 - **SC-007**: `git` 历史与工作区中不存在真实 `DEEPSEEK_API_KEY`/`GITHUB_API_TOKEN` 值，也不存在私有
   dsh-config 的凭据；Pod 内两个变量存在且来自 Secret。
 - **SC-008**: 发布后，Gitea 与 GitHub 均存在同一 tag 与 Release；Changelog 有条目；ArgoCD
@@ -446,6 +453,7 @@ Changelog 有条目；ArgoCD 应用为 Synced/Healthy。
 - **风险**：上游 Chart 无 Helm 仓库，vendored 副本需要人工跟进；手动同步/安装依赖维护者本机环境，可能漏跑或
   漂移；pnpm 10 与配置的 pnpm 11 语义差异可能继续出现；第三方插件在无桌面/无外部服务的容器中可能部分失效；
   10Gi home 可能被 node_modules 与会话占满；Headless Service 与两条 Tailscale Ingress 的组合需要在验收中实测；
-  noVNC 无认证，任何 tailnet 设备都可操作浏览器，Tailscale ACL 配置错误会直接扩大暴露面。
+  noVNC 无认证，任何 tailnet 设备都可操作浏览器，Tailscale ACL 配置错误会直接扩大暴露面；NetworkPolicy 只能
+  按端口放行，集群内任意 Pod 都可访问 3080/6080，收紧源需要先修正 Cilium native routing。
 - **边界**：公网不可达；不实现多用户；不修改 DSH 源码；不把 skills 或密钥提交到本仓库；noVNC 仅在 tailnet
   内暴露；备份由用户后续手动配置，本特性只保证 PVC 可被识别。

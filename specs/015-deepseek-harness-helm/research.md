@@ -103,35 +103,43 @@
 **风险/兜底**：若 Tailscale Operator 版本对多后端 Ingress 的行为不符预期，保留独立 Desktop Ingress
 作为必达路径；Web UI 的桌面按钮降级为文档中的直接 URL，并在 README 记录。验收时用实际请求确认两个路径。
 
-## Decision 4：NetworkPolicy 放行
+## Decision 4：NetworkPolicy 放行（实测修正）
 
-**Decision**：保留上游 deny-all，`networkPolicy.ingress` 只放行以下来源到 3080/TCP 与 6080/TCP：
+**Decision**：保留上游默认拒绝，但 `networkPolicy.ingress` 只按**端口**放行 3080/TCP 与 6080/TCP；不使用
+`namespaceSelector`/`podSelector`/`ipBlock` 作为来源限制。
 
 ```yaml
-- from:
-    - namespaceSelector:
-        matchLabels:
-          kubernetes.io/metadata.name: tailscale
-      podSelector:
-        matchLabels:
-          tailscale.com/parent-resource-type: proxygroup
-          tailscale.com/parent-resource: ingress-proxies
-  ports:
-    - { protocol: TCP, port: 3080 }
-    - { protocol: TCP, port: 6080 }
+ingress:
+  - ports:
+      - { protocol: TCP, port: 3080 }
+      - { protocol: TCP, port: 6080 }
 ```
 
-**Rationale**：Tailscale `ProxyGroup/ingress-proxies` 的 Pod 在 `tailscale` 命名空间，实际标签已从线上
-集群核对为 `managed=true`、`parent-resource-type=proxygroup`、`parent-resource=ingress-proxies`。Cilium
-按目的 Pod 执行 NetworkPolicy，因此不放行就必然 502/超时。kubelet 的 `127.0.0.1` 探针不经过 Pod
-入站策略，仍可工作。
+**Rationale**：最初按 `tailscale/ingress-proxies` 的 namespace + pod 标签放行。线上实测 Tailscale 代理访问
+DSH 超时；`ingress-proxies` 日志为 `dial tcp 10.43.158.91:3080: connect: connection timed out`。Cilium
+monitor 显示：
+
+```text
+Policy verdict: ... ingress, action deny, match none, 192.168.3.154:xxx -> 10.42.2.176:3080 tcp SYN
+xx drop (Policy denied) ... identity 6->48792
+```
+
+源地址是节点 IP `192.168.3.154`、身份 `world`，不是代理 Pod 的 `10.42.1.76`/identity 59997。原因是本集群
+Cilium 的 `ipv4NativeRoutingCIDR=192.168.3.0/24`，跨节点 Pod 流量在目标侧已被 masquerade 成节点 IP；K8s
+NetworkPolicy 的 namespace/pod selector 与 ipBlock 都无法匹配。临时允许全部 ingress 后 Web 立即恢复 401、
+桌面 200；只按端口放行的策略同样有效。
 
 **Alternatives considered**：
 
-- 放行整个 `tailscale` 命名空间：范围过大，任何 tailscale 命名空间内 Pod 都能访问 DSH。
-- 关闭 NetworkPolicy：破坏上游默认拒绝，且与“最小暴露”目标冲突。
-- 按 per-Ingress 代理标签（`parent-resource-type=ingress`）放行：本仓库使用共享 `ProxyGroup`，不会创建
-  per-Ingress 代理；按 proxygroup 标签更精确。
+- 放行整个 `tailscale` 命名空间：实测同样超时（源身份已丢失），无法解决问题。
+- 放行节点 CIDR / Pod CIDR 的 ipBlock：实测仍被 deny（源身份为 `world`，policy match none）。
+- 关闭 NetworkPolicy：能工作，但连端口限制也丢失；端口级策略是更小的让步。
+- 修改 Cilium `ipv4NativeRoutingCIDR` 覆盖 Pod CIDR：这是正确的根因修复，但属于集群级网络变更，影响所有
+  Pod-to-Pod 流量，不在本特性内；README 记录为后续收紧条件。
+
+**安全取舍**：ClusterIP 不发布到集群外，Tailscale Ingress 仍是唯一外部入口；集群内任意 Pod 可访问
+3080/6080（Web 仍需 token，noVNC 无认证）。这与「仅 tailnet 外部可达」不冲突，但比原计划的「仅代理 Pod」
+范围宽；必须明确记录，不能假装源选择器有效。
 
 ## Decision 5：不使用 initContainer，改为一次性手动任务
 

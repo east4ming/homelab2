@@ -65,22 +65,17 @@ spec:
       app.kubernetes.io/instance: deepseek-harness
   policyTypes: [Ingress]
   ingress:
-    - from:
-        - namespaceSelector:
-            matchLabels:
-              kubernetes.io/metadata.name: tailscale
-          podSelector:
-            matchLabels:
-              tailscale.com/parent-resource-type: proxygroup
-              tailscale.com/parent-resource: ingress-proxies
-      ports:
+    - ports:
         - { protocol: TCP, port: 3080 }
         - { protocol: TCP, port: 6080 }
 ```
 
-- 不放行则 Tailscale 代理无法到达 Pod（默认 deny-all）。
+- 默认拒绝其他端口；只按端口放行 3080/6080。
+- **不限制源**：本集群 Cilium `ipv4NativeRoutingCIDR=192.168.3.0/24` 把跨节点 Pod 流量 SNAT 成节点 IP，
+  源身份变成 `world`；namespace/pod selector 与 ipBlock 实测都匹配不到，Tailscale 代理会超时。
 - kubelet 探针（127.0.0.1）不受影响。
 - 不限制 egress；DSH 需访问模型/GitHub/npm/PyPI。
+- 收紧源需要先调整 Cilium native routing 覆盖 Pod CIDR，属于独立集群变更。
 
 ## 手动运维契约
 

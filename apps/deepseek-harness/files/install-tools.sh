@@ -42,7 +42,7 @@ echo "==> installing mise tools"
 MISE_YES=1 mise use -g --yes \
   gh@latest \
   jq@latest \
-  yq@latest \
+  'github:mikefarah/yq@latest' \
   'npm:@colbymchenry/codegraph@latest' \
   'npm:clawhub@latest' \
   'github:yusukebe/ax@latest' \
@@ -51,6 +51,15 @@ MISE_YES=1 mise use -g --yes \
   'aqua:atuinsh/atuin@latest'
 MISE_YES=1 mise install --yes
 mise reshim
+
+# mikefarah/yq's GitHub asset is named yq_linux_amd64; expose it as yq.
+# The aqua: backend verifies with cosign, which fails on this cluster's egress.
+if ! command -v yq >/dev/null 2>&1; then
+  yq_asset="$(mise where github:mikefarah/yq 2>/dev/null || true)/yq_linux_amd64"
+  if [ -x "$yq_asset" ]; then
+    ln -sf "$yq_asset" "$HOME/.local/bin/yq"
+  fi
+fi
 
 echo "==> verifying tools"
 for command in uv mise atuin codegraph dcg gh jq yq ax mq clawhub pre-commit pyrefly yamllint; do

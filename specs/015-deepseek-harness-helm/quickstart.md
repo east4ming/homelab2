@@ -157,11 +157,17 @@ POD_IP=$(kubectl -n deepseek-harness get pod -l app.kubernetes.io/name=deepseek-
 kubectl -n default run dsh-np-test --rm -i --restart=Never \
   --image=curlimages/curl --command -- \
   curl -m 3 -sS -o /dev/null -w '%{http_code}\n' "http://${POD_IP}:3080"
-# 预期：超时/连接失败（NetworkPolicy 拒绝），不是 401
+# 预期：401（策略按端口放行；Cilium SNAT 使源选择器失效）
+
+kubectl -n default run dsh-np-deny --rm -i --restart=Never \
+  --image=curlimages/curl --command -- \
+  curl -m 3 -sS -o /dev/null -w '%{http_code}\n' "http://${POD_IP}:9222"
+# 预期：超时/连接失败（9222 不在放行端口列表）
 ```
 
 - 从 tailnet 访问 3080/6080 成功（第 7 步）。
-- 从非 `tailscale` Pod 访问失败。
+- 3080/6080 对集群内 Pod 可达（源身份被 SNAT 成节点 IP，无法只放行 ingress proxies）；9222 等未列端口被拒。
+- 这是已知取舍；收紧源需要先调整 Cilium native routing 覆盖 Pod CIDR。
 
 ## 9. 工具、配置、插件
 
