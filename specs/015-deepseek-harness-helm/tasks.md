@@ -175,7 +175,7 @@ Ingress 得 200；Web UI 的桌面入口可用；模型调用在 US3 配置同�
 - [x] T054 [P] 检查 `scripts/backup-coverage` 未被修改；README 明确四块 PVC 为后续手动备份对象，`backup-coverage` 在备份配置前会列出它们是预期
 - [x] T055 [P] 检查 `apps/deepseek-harness/README.md` 与 `specs/015-deepseek-harness-helm/` 中无 `initContainer`/`configSync`/`DSH_CONFIG_TOKEN` 的正向残留；所有文档链接存在
 - [ ] T056 按 `spec.md` 的 SC-001…SC-011 逐项勾选验收；确认 ArgoCD `deepseek-harness` Synced/Healthy
-- [ ] T057 按 `specs/015-deepseek-harness-helm/quickstart.md` 清理持久化测试标记与临时命名空间，确认工作区干净
+- [x] T057 按 `specs/015-deepseek-harness-helm/quickstart.md` 清理持久化测试标记与临时命名空间，确认工作区干净
 
 ---
 
