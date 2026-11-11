@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "deepseek-harness.fullname" . }}-tailscale
+  labels:
+    {{- include "deepseek-harness.labels" . | nindent 4 }}
+spec:
+  type: ClusterIP
+  ipFamilyPolicy: PreferDualStack
+  selector:
+    {{- include "deepseek-harness.selectorLabels" . | nindent 4 }}
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      protocol: TCP
+      targetPort: http
+    - name: desktop
+      port: {{ .Values.service.desktopPort }}
+      protocol: TCP
+      targetPort: desktop

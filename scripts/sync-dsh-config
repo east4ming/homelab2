@@ -1,0 +1,96 @@
+#!/bin/bash
+# One-time DSH config sync: local gh/~/.dsh -> transform -> kubectl cp -> pnpm install -> restart.
+set -euo pipefail
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd -- "$SCRIPT_DIR/.." && pwd)"
+NAMESPACE="${NAMESPACE:-deepseek-harness}"
+POD="${POD:-}"
+SOURCE="$HOME/.dsh"
+REPO=""
+REVISION=""
+
+usage() {
+  cat <<'EOF'
+Usage: sync-dsh-config [options]
+
+  --source DIR          local DSH home (default: $HOME/.dsh)
+  --repo OWNER/REPO     clone a private dsh-config with the local gh CLI
+  --revision REF        git ref to check out with --repo
+  --namespace NAME      Kubernetes namespace (default: deepseek-harness)
+  --pod NAME            target Pod (default: discovered by label)
+EOF
+}
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --source) SOURCE="${2:?--source needs a value}"; shift 2 ;;
+    --repo) REPO="${2:?--repo needs a value}"; shift 2 ;;
+    --revision) REVISION="${2:?--revision needs a value}"; shift 2 ;;
+    --namespace) NAMESPACE="${2:?--namespace needs a value}"; shift 2 ;;
+    --pod) POD="${2:?--pod needs a value}"; shift 2 ;;
+    -h|--help) usage; exit 0 ;;
+    *) echo "ERROR: unknown argument: $1" >&2; usage >&2; exit 1 ;;
+  esac
+done
+
+command -v kubectl >/dev/null 2>&1 || { echo "ERROR: kubectl is required" >&2; exit 1; }
+command -v tar >/dev/null 2>&1 || { echo "ERROR: tar is required" >&2; exit 1; }
+command -v jq >/dev/null 2>&1 || { echo "ERROR: jq is required" >&2; exit 1; }
+command -v yq >/dev/null 2>&1 || { echo "ERROR: yq is required" >&2; exit 1; }
+
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+
+if [ -n "$REPO" ]; then
+  command -v gh >/dev/null 2>&1 || { echo "ERROR: gh is required with --repo" >&2; exit 1; }
+  gh auth status >/dev/null 2>&1 || { echo "ERROR: gh is not authenticated; run gh auth login" >&2; exit 1; }
+  echo "==> cloning $REPO"
+  gh repo clone "$REPO" "$tmp/repo" >/dev/null
+  SOURCE="$tmp/repo"
+  if [ -n "$REVISION" ]; then
+    git -C "$SOURCE" checkout --detach "$REVISION" >/dev/null
+  fi
+  if git -C "$SOURCE" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    REVISION="$(git -C "$SOURCE" rev-parse HEAD)"
+  fi
+else
+  echo "==> using local source $SOURCE"
+  REVISION="$(git -C "$SOURCE" rev-parse HEAD 2>/dev/null || date -u '+%Y-%m-%dT%H:%M:%SZ')"
+fi
+
+[ -f "$SOURCE/profiles/web/package.json" ] || {
+  echo "ERROR: $SOURCE does not look like a DSH home" >&2
+  exit 1
+}
+
+stage="$tmp/stage"
+mkdir -p "$stage"
+"$REPO_ROOT/apps/deepseek-harness/files/transform-config.sh" "$SOURCE" "$stage"
+
+tar -C "$stage" -cf "$tmp/dsh-config-sync.tar" .
+
+if [ -z "$POD" ]; then
+  POD="$(kubectl -n "$NAMESPACE" get pod -l app.kubernetes.io/name=deepseek-harness \
+    -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)"
+fi
+[ -n "$POD" ] || { echo "ERROR: no deepseek-harness Pod found in $NAMESPACE" >&2; exit 1; }
+kubectl -n "$NAMESPACE" wait --for=condition=Ready "pod/$POD" --timeout=300s
+
+echo "==> copying config to $POD:/tmp"
+kubectl -n "$NAMESPACE" cp "$tmp/dsh-config-sync.tar" "$POD:/tmp/dsh-config-sync.tar"
+kubectl -n "$NAMESPACE" exec "$POD" -- \
+  sh -c 'tar --no-same-owner -C /home/node/.dsh -xf /tmp/dsh-config-sync.tar'
+
+echo "==> installing profile dependencies"
+kubectl -n "$NAMESPACE" exec "$POD" -- \
+  sh -c 'cd /home/node/.dsh/profiles/web && CI=true pnpm install --no-frozen-lockfile'
+
+printf 'source=%s\nrevision=%s\nsynced_at=%s\n' \
+  "${REPO:-$SOURCE}" "$REVISION" "$(date -u '+%Y-%m-%dT%H:%M:%SZ')" |
+  kubectl -n "$NAMESPACE" exec -i "$POD" -- \
+    sh -c 'cat > /home/node/.dsh/.dsh-config-source'
+
+echo "==> restarting StatefulSet"
+kubectl -n "$NAMESPACE" rollout restart statefulset/deepseek-harness
+kubectl -n "$NAMESPACE" rollout status statefulset/deepseek-harness --timeout=300s

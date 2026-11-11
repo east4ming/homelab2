@@ -1,0 +1,134 @@
+image:
+  repository: docker.io/runzhliu/deepseek-harness
+  tag: 0.2.2-rc.1-r1-market.1
+  pullPolicy: IfNotPresent
+  pullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  port: 3080
+  desktopPort: 6080
+
+desktop:
+  shmSizeLimit: 1Gi
+  # Browser-reachable port used by the Web UI to build the noVNC URL.
+  # The Ingress terminates TLS on 443 and routes /novnc-* to the desktop port.
+  publicPort: 443
+
+persistence:
+  enabled: true
+  storageClass: standard-rwo
+  accessModes:
+    - ReadWriteOnce
+  size: 10Gi
+  annotations: {}
+
+workspace:
+  # Created by this chart unless an existing claim is supplied.
+  create: true
+  existingClaim: deepseek-harness-workspace
+  size: 20Gi
+  storageClass: standard-rwo
+  subPath: ""
+
+tools:
+  size: 20Gi
+  storageClass: standard-rwo
+
+skills:
+  size: 1Gi
+  storageClass: standard-rwo
+
+# Every key in this Secret is exposed as a runtime environment variable. Use
+# it for provider credentials; never put secret values directly in values.yaml.
+credentials:
+  existingSecret: dsh-provider-credentials
+
+extraEnv: []
+extraEnvFrom: []
+
+args:
+  - web
+  - --patch
+  - /opt/deepseek-harness/web.cordis.patch.yml
+  - --no-open
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  fsGroupChangePolicy: OnRootMismatch
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 1Gi
+  limits:
+    cpu: 2
+    memory: 4Gi
+
+startupProbe:
+  periodSeconds: 2
+  timeoutSeconds: 2
+  failureThreshold: 30
+
+livenessProbe:
+  initialDelaySeconds: 20
+  periodSeconds: 20
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+readinessProbe:
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 6
+
+ingress:
+  className: tailscale
+  annotations:
+    tailscale.com/proxy-group: ingress-proxies
+  web:
+    host: dsh.west-beta.ts.net
+  desktop:
+    host: dsh-desktop.west-beta.ts.net
+
+networkPolicy:
+  enabled: true
+  # Default deny; only the shared Tailscale ingress proxies may reach DSH.
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: tailscale
+          podSelector:
+            matchLabels:
+              tailscale.com/parent-resource-type: proxygroup
+              tailscale.com/parent-resource: ingress-proxies
+      ports:
+        - protocol: TCP
+          port: 3080
+        - protocol: TCP
+          port: 6080
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+topologySpreadConstraints: []
+
+terminationGracePeriodSeconds: 30

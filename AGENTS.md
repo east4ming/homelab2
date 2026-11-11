@@ -1,7 +1,7 @@
 # Homelab2
 
 <!-- SPECKIT START -->
-当前 Plan: [specs/014-acme-ewhisper-cronjob/plan.md](specs/014-acme-ewhisper-cronjob/plan.md)
+当前 Plan: [specs/015-deepseek-harness-helm/plan.md](specs/015-deepseek-harness-helm/plan.md)
 <!-- SPECKIT END -->
 
 ## 版本管理
