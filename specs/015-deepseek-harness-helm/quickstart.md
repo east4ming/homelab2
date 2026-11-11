@@ -146,6 +146,9 @@ curl -k -sS -o /dev/null -w '%{http_code}\n' https://dsh-desktop.west-beta.ts.ne
 
 - Web UI 侧栏的“浏览器桌面”入口应打开同一 noVNC；它走
   `https://dsh.west-beta.ts.net/novnc-...`。
+- UI 左下角不应显示“重新连接中”；若显示，说明 `/api/remote.mux` WebSocket 被 403，检查 Chart 是否把
+  `ingress.web.host` 传给了 `--trusted-host`（设置页权限报 `permission catalog has no active Host connection`
+  是同一根因）。
 - noVNC 无认证是预期行为；只能从 tailnet 访问。
 
 ## 8. NetworkPolicy 正反例

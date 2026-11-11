@@ -115,6 +115,19 @@ skills 内容不提交到 Git。
 - 升级镜像：改 `image.tag`，ArgoCD 同步；PVC 保留。降级前确认 DSH 数据卷兼容性。
 - 回滚：ArgoCD Sync 到上一个 tag；四块 PVC 保留。代码回滚用 `git revert`。
 
+## Ingress 与 Host/Origin
+
+DSH 的 `/api` 浏览器信任栅栏要求 `Host` 是回环、绑定 IP，或 `--trusted-host` 声明的 authority；否则
+`/api/remote.mux` WebSocket 返回 403，UI 左下角一直“重新连接中”，权限页报
+`permission catalog has no active Host connection`。Chart 在 `args` 中自动追加：
+
+```text
+--public-url https://<ingress.web.host>
+--trusted-host <ingress.web.host>
+```
+
+新增/修改 Ingress 主机名时无需改模板；改 `ingress.web.host` 即可。
+
 ## NetworkPolicy 说明
 
 最初尝试只放行 `tailscale/ingress-proxies`（namespaceSelector + podSelector）。实测该规则在本集群无效：
