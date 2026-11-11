@@ -10,12 +10,14 @@
 `workspace.existingClaim` 挂载另一块 20Gi RWO 工作区 PVC；配置 Tailscale Ingress，并评估该 chart 默认的
 拒绝 Pod 入站流量 NetworkPolicy 对 Tailscale Ingress 的影响；另建一条 Tailscale Ingress 暴露无认证的 noVNC
 桌面（仅 tailnet 内可达）；显式使用市场变体镜像 `0.2.2-rc.1-r1-market.1`；按给定方式从本机环境变量注入
-`DEEPSEEK_API_KEY`、`GITHUB_API_TOKEN` 到 `dsh-provider-credentials` Secret；从私有仓库
-<https://github.com/east4ming/dsh-config.git> 同步本机 DSH 配置并处理与容器环境的不兼容；安装配置中涉及的
+`DEEPSEEK_API_KEY`、`GITHUB_API_TOKEN` 到 `dsh-provider-credentials` Secret；先启动 DSH 容器，再通过
+`kubectl exec` 执行一次性工具安装与 DSH 配置更新（配置来源为本机 `gh` 拉取的私有仓库或本机
+`/home/casey/.dsh`，用 `kubectl cp` 同步）并处理与容器环境的不兼容；安装配置中涉及的
 DSH 插件；持久化安装 uv 与 mise 以及它们管理的工具（uv：
 specify-cli、pre-commit、pyrefly、yamllint；mise：gh、jq、codegraph、yq、clawhub、ax、dcg、mq，并核实 atuin
-是否可由 mise 安装）；工具目录 20Gi RWO；同步 `/home/casey/.agents/skills` 并持久化到 1Gi RWO；按
-`docs/reference/versioning.md` 完成分支、提交、标签、Changelog 与 Gitea/GitHub 双远端发布。
+是否可由 mise 安装）；工具目录 20Gi RWO；同步 `/home/casey/.agents/skills` 并持久化到 1Gi RWO；四块 PVC 是
+备份对象（备份由用户后续手动配置）；按 `docs/reference/versioning.md` 完成分支、提交、标签、Changelog 与
+Gitea/GitHub 双远端发布。
 
 ## 背景与现状
 
@@ -36,7 +38,7 @@ specify-cli、pre-commit、pyrefly、yamllint；mise：gh、jq、codegraph、yq�
 | Ingress | **没有 Ingress 模板** | 需在本仓库交付层新增两条 Tailscale Ingress（Web 3080、桌面 6080） |
 | 额外卷 | **没有 extraVolumes / extraVolumeMounts** | 工具 20Gi、skills 1Gi 两块 PVC 无法只靠 values 挂载，必须扩展 Chart |
 | NetworkPolicy | 默认 `networkPolicy.enabled=true`、`ingress: []`，即拒绝所有入站 | 会阻断 Tailscale Ingress 代理到 DSH Pod 的流量，需显式放行 3080 与 6080 |
-| Service | `clusterIP: None` 的 Headless Service | Tailscale 代理按 Service 后端访问 Pod |
+| Service | `clusterIP: None` 的 Headless Service | Tailscale L7 Ingress 要求后端 Service 有 ClusterIP，不能直接复用；交付层需新增 ClusterIP Service |
 | 安全上下文 | 非 root UID/GID 1000、只读根文件系统、drop ALL、`/tmp` 与 `/dev/shm` 为 emptyDir | 工具与配置只能写入显式挂载的 PVC |
 | 容器环境 | `HOME=/workspace`、`DSH_HOME=/home/node/.dsh`、`XDG_CACHE_HOME=/tmp/.cache`、`XDG_CONFIG_HOME=/tmp/.config`、`XDG_DATA_HOME=/tmp/.local/share` | uv/mise 默认会写 `/tmp`，仅挂 PVC 不足以持久化，必须覆盖 XDG 路径 |
 | Web 端口 | 3080（DSH Web）；6080（noVNC 桌面，上游明确无认证） | 两者都通过 Tailscale Ingress 暴露；6080 无认证，但仅 tailnet 内可达，不发布到公网 |
@@ -56,9 +58,11 @@ specify-cli、pre-commit、pyrefly、yamllint；mise：gh、jq、codegraph、yq�
 
 现有应用都通过 `ingressClassName: tailscale` + `tailscale.com/proxy-group: ingress-proxies` 暴露。Ingress
 代理最终访问 DSH Pod 的 `3080`（Web）与 `6080`（noVNC 桌面）端口，在 Cilium 下入站 NetworkPolicy 按目的 Pod
-执行。上游 Chart 的 `ingress: []` 是 deny-all，因此**默认 NetworkPolicy 会阻断 Tailscale Ingress**；kubelet
-对 `127.0.0.1:3080/6080` 的探针不受 Pod 入站策略影响，仍可正常工作。结论：保留默认拒绝，只新增允许
-`tailscale/ingress-proxies` 访问 `3080/TCP` 与 `6080/TCP` 的入站规则，其余入站继续拒绝。
+执行。**上游 Service 是 Headless（`clusterIP: None`），而 Tailscale L7 Ingress 要求后端 Service 有
+ClusterIP，因此不能直接复用，必须新增一个 ClusterIP Service 专供 Ingress。** 上游 Chart 的 `ingress: []`
+是 deny-all，因此**默认 NetworkPolicy 会阻断 Tailscale Ingress**；kubelet 对 `127.0.0.1:3080/6080` 的探针
+不受 Pod 入站策略影响，仍可正常工作。结论：保留默认拒绝，只新增允许 `tailscale/ingress-proxies` 访问
+`3080/TCP` 与 `6080/TCP` 的入站规则，其余入站继续拒绝。
 
 noVNC 本身没有认证，但本 tailnet 只有维护者一人使用，且 Ingress 不发布到公网；因此接受「tailnet 内任意设备
 可访问桌面」的风险，由 Tailscale ACL 作为唯一网络边界。文档必须明确这一点。为了让 Web UI 里的「浏览器桌面」
@@ -69,12 +73,14 @@ noVNC 本身没有认证，但本 tailnet 只有维护者一人使用，且 Ingr
 ### 本机 DSH 配置与容器环境的不兼容点
 
 `east4ming/dsh-config` 是**私有仓库**，跟踪 profile、local plugin、local preset 与部分 skills；运行时状态/
-凭据被 `.gitignore` 排除。容器启动时需要只读凭据克隆该仓库（不能匿名 clone）。容器与本机
-（`/home/casey/.dsh`）的差异已逐项核对：
+凭据被 `.gitignore` 排除。配置同步不再在集群内 clone：先启动 DSH 容器，再由维护者在本机用已认证的 `gh`
+拉取私库（或直接选择本机 `/home/casey/.dsh` 的配置），本地完成容器化改写后用 `kubectl cp` 写入 Pod 的
+`$DSH_HOME`，最后在容器内执行一次 `pnpm install`。因此集群侧不需要 `DSH_CONFIG_TOKEN` 或任何仓库凭据。
+容器与本机（`/home/casey/.dsh`）的差异已逐项核对：
 
 | 项目 | 本机配置现状 | 容器中的差异 | 处理要求 |
 | --- | --- | --- | --- |
-| 配置仓库 | `east4ming/dsh-config` 是私有仓库 | 容器启动时不能匿名 clone | 使用只读凭据（优先复用有 repo 读权限的 `GITHUB_API_TOKEN`；不足时增加只读 token/deploy key），不得把凭据写入 URL、`.git/config` 或日志 |
+| 配置来源 | 私有仓库 + 本机 `/home/casey/.dsh` | 集群内不做 Git 认证 | 本机 `gh repo clone` 或直接选本机目录；本地改写后 `kubectl cp`；不需要 `DSH_CONFIG_TOKEN` |
 | 本地插件/预设依赖 | `profiles/web/package.json` 使用 `link:/home/casey/.dsh/local-plugins/...`、`link:/home/casey/.dsh/local-presets` | 容器内 DSH home 是 `/home/node/.dsh` | 同步后改写为容器路径或相对路径 |
 | 预设组件 | `local-presets/cordis.patch.yml` 用绝对路径引用 `/home/casey/.dsh/local-presets/components/*.mjs` | 同上 | 同步后改写 |
 | dcg 守卫 | tool-hooks 直接指向 `/home/casey/.local/share/mise/installs/.../dcg` | 工具改由容器内 mise 安装 | 改写为容器内 shim/路径 |
@@ -114,8 +120,9 @@ Conventional Commits；合并并通过线上验证后打 annotated tag `vYYYY.MM
 Tailscale 网络可访问 Web UI 与 noVNC 桌面；本机 DSH 配置、插件、工具和 skills 在容器内可用且重启不丢；密钥
 不进入 Git。
 
-**非目标**：多副本/多租户高可用；公网暴露；给 noVNC 增加认证（接受 tailnet 内无认证，见风险）；DSH 会话数据
-备份；在集群内重建本机全部开发工具链；修改上游 DSH 源码；把本机 `~/.agents/skills` 提交到 public 仓库。
+**非目标**：多副本/多租户高可用；公网暴露；给 noVNC 增加认证（接受 tailnet 内无认证，见风险）；自动配置
+VolSync/备份策略（四块 PVC 必须列为备份对象，备份由用户后续手动完成）；在集群内重建本机全部开发工具链；
+修改上游 DSH 源码；把本机 `~/.agents/skills` 提交到 public 仓库。
 
 ## User Scenarios & Testing
 
@@ -172,21 +179,22 @@ Tailscale 网络可访问 Web UI 与 noVNC 桌面；本机 DSH 配置、插件�
 
 **Why this priority**: 没有配置同步，这个实例只是一个空白 DSH，无法承载我的实际工作流。
 
-**Independent Test**: 记录同步的配置提交 SHA；Pod 启动后该 SHA 可在 Pod 内读到；profile 中列出的插件全部
-出现在插件列表且启动日志没有加载错误；市场页面存在；`deepseek-flash` 对话可用。
+**Independent Test**: 在 Pod 运行后执行一次同步脚本（本机 `gh` 或 `/home/casey/.dsh` + `kubectl cp`），
+Pod 内 `$DSH_HOME` 出现同步来源标记；profile 中列出的插件全部出现在插件列表且启动日志没有加载错误；市场
+页面存在；`deepseek-flash` 对话可用。
 
 **Acceptance Scenarios**:
 
-1. **Given** 固定的 dsh-config 提交与只读凭据，**When** Pod 启动，**Then** 私有仓库克隆成功，
-   `profiles/web`、`profiles/headless`、`local-plugins`、`local-presets`、`skills` 等配置已落到 `$DSH_HOME`，
-   且 `/home/casey/...` 绝对路径已不存在；日志与 `.git/config` 中没有凭据明文。
+1. **Given** DSH Pod 已运行，且本机有可用的 `gh` 认证或 `~/.dsh` 配置源，**When** 执行一次性同步脚本，
+   **Then** `profiles/web`、`profiles/headless`、`local-plugins`、`local-presets`、`skills` 等配置已落到
+   `$DSH_HOME`，且 `/home/casey/...` 绝对路径已不存在；集群内没有配置仓库凭据。
 2. **Given** 配置中包含 `@local/dsh-tool-hooks`，**When** Agent 执行一次破坏性 bash 命令，**Then** dcg 守卫
    能拦截或拒绝；StyleFerry 的 post hook 因目标仓库不存在而被禁用，不产生每次工具调用的失败日志。
-3. **Given** 插件清单包含第三方插件，**When** 启动完成，**Then** 插件均安装成功；确实无法在容器运行的插件被
-   显式禁用并在文档中记录原因，其余插件不受影响。
+3. **Given** 插件清单包含第三方插件，**When** 同步脚本完成 `pnpm install` 并重启 Pod，**Then** 插件均安装
+   成功；确实无法在容器运行的插件被显式禁用并在文档中记录原因，其余插件不受影响。
 4. **Given** 市场变体镜像，**When** 打开插件市场，**Then** 市场 UI 可用且不出现重复 `dsh-market` 行。
-5. **Given** 配置仓库的提交 SHA 变化，**When** 更新 values 并同步，**Then** Pod 自动滚动重建并应用新配置，
-   会话/凭据等运行时状态未被清空。
+5. **Given** 本机配置发生变化，**When** 重新执行同步脚本，**Then** 新配置覆盖旧配置，会话/凭据等运行时
+   状态未被清空；同步来源与时间可在 Pod 内审计。
 
 ---
 
@@ -201,12 +209,13 @@ Tailscale 网络可访问 Web UI 与 noVNC 桌面；本机 DSH 配置、插件�
 
 **Acceptance Scenarios**:
 
-1. **Given** 首次启动完成，**When** 检查工具，**Then** 四个 uv 工具与九个 mise 工具都已安装，`atuin` 也由
+1. **Given** 首次手动安装完成，**When** 检查工具，**Then** 四个 uv 工具与九个 mise 工具都已安装，`atuin` 也由
    mise 安装。
 2. **Given** 工具已安装，**When** 通过 DSH bash 工具执行命令，**Then** PATH 包含工具 bin 与 mise shims，
    Agent 无需绝对路径即可调用。
 3. **Given** 工具卷已填充且网络不可用，**When** Pod 重启，**Then** 已有工具仍可执行；安装器不应重复下载。
-4. **Given** 工具安装失败，**When** 查看 Pod 状态，**Then** 启动失败可见且可诊断，而不是静默缺少工具。
+4. **Given** 工具安装脚本失败，**When** 查看脚本输出，**Then** 非零退出并指出失败项；Pod 仍可运行，但工具
+   不完整，重跑脚本应能收敛。
 
 ---
 
@@ -272,8 +281,11 @@ Changelog 有条目；ArgoCD 应用为 Synced/Healthy。
 - **Tailscale 代理形态变化**：若 `ingress-proxies` 被删除、改名，或 Operator 改为 per-Ingress 代理
   （`parent-resource-type=ingress`），现有 NetworkPolicy 会阻断访问；需要按代理标签调整规则并在验收中复测。
 - **Secret 不存在**：Pod 会停在 CreateContainerConfigError；部署顺序必须先建 Secret，ArgoCD 重试后才可用。
-- **配置安装需要网络与私有仓库凭据**：首次启动需要带只读凭据 clone 私有 dsh-config、pnpm 安装与下载工具；
-  凭据缺失/过期时启动失败必须可诊断；离线重启必须复用 PVC 上的结果。
+- **配置同步是手动任务**：本机 `gh` 未登录、选择的源目录缺文件、`kubectl cp` 中断或 `pnpm install` 失败时，
+  同步脚本必须明确报错；Pod 上的旧配置可能处于部分更新状态，重跑脚本应可收敛；同步后需重启 Pod 才保证
+  DSH 以新 profile 启动。
+- **工具安装是手动任务**：工具卷为空或重建后，必须重新执行一次性安装脚本；未执行时 DSH 仍可启动，但
+  codegraph/atuin/dcg 等工具不可用，插件按降级规则处理。
 - **插件无法加载**：单个第三方插件（如依赖 Electron/外部服务）失败不应拖垮整个 profile；必须显式禁用并记录。
 - **10Gi DSH home 增长**：profile `node_modules`、会话、缓存共用 10Gi；需要监控并在文档给出扩容方式。
 - **RWO 卷与节点**：StatefulSet 单副本，PVC 与节点绑定；节点不可用时 Pod 可能无法调度，需接受这一限制。
@@ -319,20 +331,20 @@ Changelog 有条目；ArgoCD 应用为 Synced/Healthy。
   tailnet ACL 是唯一访问边界。
 - **FR-014**: 通过 Ingress 访问时，DSH 的启动 token/Cookie 流程必须可用：未认证请求返回 401，携带 Pod 日志中的
   一次性 token 可换取 Cookie 并加载 UI；WebSocket/流式响应必须可穿过 Tailscale 代理。
-- **FR-015**: 必须从**私有** `east4ming/dsh-config` 同步 DSH 配置，并固定到明确的提交 SHA；克隆必须使用只读
-  凭据（优先复用具备 repo 读权限的 `GITHUB_API_TOKEN`，权限不足时增加只读 token/deploy key），且凭据不得
-  出现在 URL、`.git/config`、日志或 values；同步必须幂等，且不得删除 `sessions/`、`storages/`、
-  `.credentials.yaml` 等运行时数据。
+- **FR-015**: 必须提供**一次性手动同步流程**：先启动 DSH 容器，再由维护者在本机用已认证的 `gh` 拉取私有
+  `east4ming/dsh-config`（或直接选择本机 `/home/casey/.dsh` 的配置），本地完成容器化改写后通过 `kubectl cp`
+  写入 `$DSH_HOME`，并在容器内执行 `pnpm install`。集群内不得需要 `DSH_CONFIG_TOKEN` 或任何仓库凭据；同步
+  不得删除 `sessions/`、`storages/`、`.credentials.yaml` 等运行时数据。
 - **FR-016**: 同步必须处理已确认的容器不兼容点：绝对路径改写、provider 改为 API Key 路由、
   `dshmarket` 去重、StyleFerry 钩子禁用、pnpm 10 的构建批准、dsh-pet peer 兼容、skill lock 路径改写。
 - **FR-017**: 同步后的 web/headless profile 中列出的 DSH 插件必须完成安装并可被 DSH 加载；确实无法在容器运行
   的插件必须显式禁用并在文档记录原因与影响，不能让单个插件失败导致整个 profile 无法启动。
 - **FR-018**: 市场变体必须可用：插件市场页面能打开，且不出现重复的市场配置行；镜像内置的 dshmarket 版本与
   本机配置版本的差异必须记录在文档中。
-- **FR-019**: 必须在工具卷上持久化安装 uv 与 mise，并通过它们安装
+- **FR-019**: 必须提供**一次性手动安装流程**，在容器内把 uv/mise 及工具安装到持久化的工具卷，并通过它们安装
   `specify-cli`、`pre-commit`、`pyrefly`、`yamllint`（uv）以及
   `gh`、`jq`、`@colbymchenry/codegraph`、`yq`、`clawhub`、`yusukebe/ax`、
-  `Dicklesworthstone/destructive_command_guard`、`harehare/mq`、`atuin`（mise）。
+  `Dicklesworthstone/destructive_command_guard`、`harehare/mq`、`atuin`（mise）；工具卷重建后重跑同一流程。
 - **FR-020**: `atuin` 必须通过 mise 安装（registry 已提供 `aqua:atuinsh/atuin` 与 `cargo:atuin`）；本机配置中的
   MCP 路径必须改写为容器内可执行路径。若 `atuin mcp` 在容器内不可用，可禁用该 MCP 行，但 CLI 本身必须可用。
 - **FR-021**: 工具 bin 目录与 mise shims 必须进入 DSH 进程及其子进程的 PATH，使 Agent 的 bash 工具能直接调用
@@ -344,15 +356,18 @@ Changelog 有条目；ArgoCD 应用为 Synced/Healthy。
 - **FR-024**: `GITHUB_API_TOKEN` 必须作为环境变量暴露给 DSH 进程；mise 会原生读取它用于 GitHub 安装限流
   （token 优先级中位于 `MISE_GITHUB_TOKEN` 之后），不得改名为 `GH_TOKEN`，也不得为 `gh` 额外注入认证变量；
   `gh` 登录由用户后续手动完成，文档只需说明该变量用途。
-- **FR-025**: 配置提交 SHA 或镜像 tag 变化时，Pod 模板必须变化以触发滚动重启；仅改 values 而 Pod 不重建是不
-  可接受的。
-- **FR-026**: 必须提供运维文档，覆盖：首次部署顺序（Secret → 同步/安装）、私有配置克隆凭据、Web Ingress 与
-  401/token 使用、noVNC 桌面入口与无认证风险、配置 SHA 升级、skills 同步、工具清单、PVC 容量、备份/回滚
-  边界、已知不兼容与禁用项。
+- **FR-025**: 配置同步完成后必须重启 Pod（或明确验证 HMR 已加载新配置）才视为生效；工具安装不要求重启，
+  但工具卷重建后必须重跑；镜像 tag 变化时 Pod 模板必须变化以触发滚动重启。
+- **FR-026**: 必须提供运维文档，覆盖：首次部署顺序（Secret → 启动 → 工具安装 → 配置同步 → 重启）、
+  本机 `gh`/`~/.dsh` 两种配置来源、`kubectl cp` 同步命令、Web Ingress 与 401/token 使用、noVNC 桌面入口与
+  无认证风险、skills 同步、工具清单、PVC 容量与手动备份、回滚边界、已知不兼容与禁用项。
 - **FR-027**: 必须按 `docs/reference/versioning.md` 完成主题分支、Conventional Commits、PR、annotated tag、
   `docs/reference/changelog.md` 条目，以及 Gitea 与 GitHub 双远端 Release；两侧 tag 必须指向同一提交。
 - **FR-028**: 必须提供可回滚路径：上一个 tag 可用于 ArgoCD Sync；回滚不得删除或重建四块 PVC；文档必须说明
   镜像降级时 DSH 数据卷的兼容边界。
+- **FR-029**: 四块 PVC 必须作为备份对象记录在运维文档中；**不得**在 `scripts/backup-coverage` 的
+  `is_exempt()` 中为它们添加豁免。备份配置由用户后续手动完成，本特性只保证 PVC 名称/容量/保留策略可被备份
+  工具识别。
 
 ### Key Entities
 
@@ -361,12 +376,14 @@ Changelog 有条目；ArgoCD 应用为 Synced/Healthy。
 - **Tools PVC**：20Gi RWO，保存 uv/mise 及所有全局工具、shim、缓存与配置。
 - **Skills PVC**：1Gi RWO，保存从本机同步的 `~/.agents/skills` 内容。
 - **Provider credentials Secret**：`dsh-provider-credentials`，至少包含 `DEEPSEEK_API_KEY` 与
-  `GITHUB_API_TOKEN`；Chart 仅引用其名称。若该 token 无私有仓库读权限，另加只读 config 凭据（同 Secret 或
-  单独 Secret）。
-- **Config clone credential**：私有 dsh-config 的只读凭据；可复用 `GITHUB_API_TOKEN` 或单独提供，必须避免
-  写入 URL、`.git/config` 与日志。
+  `GITHUB_API_TOKEN`；Chart 仅引用其名称。集群内不需要私有 dsh-config 的凭据。
+- **Config sync source**：本机 `gh` 拉取的私有仓库目录，或本机 `/home/casey/.dsh` 中选定的配置；只在维护者
+  本机存在，不进集群 Secret。
+- **Manual sync marker**：Pod 内 `$DSH_HOME/.dsh-config-source`，记录同步来源与时间，供审计；不参与自动
+  滚动。
 - **Web Tailscale Ingress**：`dsh.west-beta.ts.net`，`/` → 3080，`/novnc-*` → 6080，经共享 ingress proxies。
 - **Desktop Tailscale Ingress**：`dsh-desktop.west-beta.ts.net` → 6080，仅 tailnet 可达，无认证。
+- **Backup targets**：四块 PVC 全部是后续手动备份对象；不得在 `scripts/backup-coverage` 中豁免。
 - **Config revision**：dsh-config 的固定提交 SHA；写入 values 并反映到 Pod 模板注解。
 - **Release tag**：CalVer 快照，关联 Changelog 与双远端 Release。
 
@@ -380,19 +397,20 @@ Changelog 有条目；ArgoCD 应用为 Synced/Healthy。
   Pod、卸载并重装应用，四份标记文件 100% 仍存在。
 - **SC-003**: Pod 重启后，`uv tool list` 列出 4 个工具，`mise ls --global` 列出 9 个工具（含 atuin），
   `atuin --version`、`codegraph --version`、`dcg --version`、`gh --version` 均成功，且无需重新下载。
-- **SC-004**: 固定配置 SHA 后，profile 中列出的插件全部安装；DSH 启动日志无插件加载错误；市场页面可打开且无
-  重复市场行。
+- **SC-004**: 执行一次性配置同步后，profile 中列出的插件全部安装；DSH 启动日志无插件加载错误；市场页面可
+  打开且无重复市场行。
 - **SC-005**: 在 UI 中发起一次 `deepseek-flash` 对话并成功返回，不出现登录提示；证明 API Key 路由生效。
 - **SC-006**: 从非 `tailscale` 命名空间 Pod 到 DSH Pod:3080 与 :6080 的连接都被拒绝；从 tailnet 访问两个
   端口都成功。
 - **SC-007**: `git` 历史与工作区中不存在真实 `DEEPSEEK_API_KEY`/`GITHUB_API_TOKEN` 值，也不存在私有
-  dsh-config 的克隆凭据；Pod 内两个变量存在且来自 Secret。
+  dsh-config 的凭据；Pod 内两个变量存在且来自 Secret。
 - **SC-008**: 发布后，Gitea 与 GitHub 均存在同一 tag 与 Release；Changelog 有条目；ArgoCD
   `deepseek-harness` 为 Synced/Healthy。
-- **SC-009**: 私有 dsh-config 以固定 SHA 克隆成功；克隆日志、Pod 日志与 `.git/config` 中都不出现凭据明文；
-  凭据缺失/失效时启动失败可读。
+- **SC-009**: 在 Pod 运行后执行一次本机同步脚本（`gh` 或 `/home/casey/.dsh` 来源）即可把配置写入
+  `$DSH_HOME`，`$DSH_HOME/.dsh-config-source` 记录来源/时间；集群内没有配置仓库凭据。
 - **SC-010**: 从 tailnet 打开桌面 Ingress 主机名可进入 noVNC；从 Web UI 的「浏览器桌面」入口也能进入同一
   桌面；非 tailnet 设备不可达。
+- **SC-011**: 四块 PVC 未被 `scripts/backup-coverage` 豁免；文档列出四块 PVC 作为后续手动备份对象。
 
 ## Assumptions
 
@@ -402,10 +420,12 @@ Changelog 有条目；ArgoCD 应用为 Synced/Healthy。
   若 tailnet 扩展给他人使用，需要重新评估（加认证或停止暴露）。
 - 工作区 PVC 由本应用创建并命名为 `deepseek-harness-workspace`（20Gi RWO），再通过
   `workspace.existingClaim` 引用；若维护者已有 PVC，可在 values 中替换名称。
-- 配置同步固定到实现时 `east4ming/dsh-config` 的 HEAD 提交；升级配置 = 更新 SHA + 重新同步，而不是跟随
-  分支漂移。
-- 私有 dsh-config 的克隆凭据优先复用 `GITHUB_API_TOKEN`；若该 token 没有 repo 读权限，则增加一个只读
-  token/deploy key。两种情况下凭据都只通过 Secret 提供，不进入 values 或 Git。
+- 配置同步是一次性手动任务：维护者在本机用已认证的 `gh` 拉取私有 dsh-config，或直接选择本机
+  `/home/casey/.dsh` 的配置；本地改写后用 `kubectl cp` 写入 Pod。同步来源与时间写入
+  `$DSH_HOME/.dsh-config-source` 供审计，不要求 values 固定 SHA。
+- 集群内不需要私有 dsh-config 的凭据；本机 `gh` 的登录状态就是私有仓库的访问凭据，不进入集群 Secret。
+- 四块 PVC 是后续手动备份对象；本特性不配置 VolSync/备份策略，也不修改 `scripts/backup-coverage` 的豁免表。
+- 工具安装是一次性手动任务：首次部署或工具卷重建后运行安装脚本；未运行时 DSH 仍可启动，但相关工具缺失。
 - 默认使用 API Key 路由 `deepseek-official`；不把本机 `.credentials.yaml` 账号授权搬到集群。若用户希望账号
   登录，可在 Web 内登录并由 10Gi home 持久化，但这不作为默认验收路径。
 - 市场镜像内置 `dshmarket@1.66.9`，本机配置为 `1.73.17`；以镜像内置版本为准，避免重复配置行；升级镜像时
@@ -415,17 +435,17 @@ Changelog 有条目；ArgoCD 应用为 Synced/Healthy。
 - skills 同步是本机 → 集群 PVC 的一次性/可重复操作，不是 GitOps 内容；原因是 homelab2 public 且 skills 体积
   约 53MB、可能含私有材料。
 - 工具版本沿用 mise/uv 的默认解析（通常为最新稳定版），首次安装后记录实际版本；不额外引入版本锁定机制。
-- 集群具备访问 Docker Hub、npm、GitHub 与 PyPI 的出站能力；首次启动需要网络，之后依赖 PVC 缓存。
+- 集群具备访问 Docker Hub、npm、GitHub 与 PyPI 的出站能力；首次启动与手动安装需要网络，之后依赖 PVC 缓存。
 - 单副本是上游 Chart 的明确设计；本特性不尝试扩容或高可用。
 - 默认 StorageClass `standard-rwo` 可用；不新引入存储类。
 
 ## 依赖、风险与边界
 
 - **依赖**：Tailscale Operator（已存在 `ingress-proxies`）、Cilium NetworkPolicy 执行、ArgoCD ApplicationSet、
-  `standard-rwo` StorageClass、Docker Hub 镜像、私有 dsh-config 的只读凭据、本机环境变量与 skills 目录。
-- **风险**：上游 Chart 无 Helm 仓库，vendored 副本需要人工跟进；pnpm 10 与配置的 pnpm 11 语义差异可能继续出现；
-  第三方插件在无桌面/无外部服务的容器中可能部分失效；10Gi home 可能被 node_modules 与会话占满；Headless
-  Service 与两条 Tailscale Ingress 的组合需要在验收中实测；noVNC 无认证，任何 tailnet 设备都可操作浏览器，
-  Tailscale ACL 配置错误会直接扩大暴露面。
-- **边界**：公网不可达；不备份 PVC；不实现多用户；不修改 DSH 源码；不把 skills 或密钥提交到本仓库；noVNC
-  仅在 tailnet 内暴露。
+  `standard-rwo` StorageClass、Docker Hub 镜像、本机 `gh` 登录状态、本机环境变量与 skills 目录。
+- **风险**：上游 Chart 无 Helm 仓库，vendored 副本需要人工跟进；手动同步/安装依赖维护者本机环境，可能漏跑或
+  漂移；pnpm 10 与配置的 pnpm 11 语义差异可能继续出现；第三方插件在无桌面/无外部服务的容器中可能部分失效；
+  10Gi home 可能被 node_modules 与会话占满；Headless Service 与两条 Tailscale Ingress 的组合需要在验收中实测；
+  noVNC 无认证，任何 tailnet 设备都可操作浏览器，Tailscale ACL 配置错误会直接扩大暴露面。
+- **边界**：公网不可达；不实现多用户；不修改 DSH 源码；不把 skills 或密钥提交到本仓库；noVNC 仅在 tailnet
+  内暴露；备份由用户后续手动配置，本特性只保证 PVC 可被识别。
