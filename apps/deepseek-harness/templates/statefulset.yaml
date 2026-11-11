@@ -1,0 +1,188 @@
+{{- $workspaceClaim := .Values.workspace.existingClaim | default (printf "%s-workspace" (include "deepseek-harness.fullname" .)) -}}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "deepseek-harness.fullname" . }}
+  labels:
+    {{- include "deepseek-harness.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "deepseek-harness.fullname" . }}
+  replicas: 1
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  selector:
+    matchLabels:
+      {{- include "deepseek-harness.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "deepseek-harness.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      automountServiceAccountToken: false
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- with .Values.image.pullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      containers:
+        - name: deepseek-harness
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            {{- toYaml .Values.args | nindent 12 }}
+          env:
+            - name: DSH_HOME
+              value: /home/node/.dsh
+            - name: DSH_TELEMETRY_DISABLED
+              value: "1"
+            - name: DSH_DESKTOP_ENABLED
+              value: "1"
+            - name: DSH_DESKTOP_PUBLIC_PORT
+              value: {{ default .Values.service.desktopPort .Values.desktop.publicPort | quote }}
+            - name: HOME
+              value: /workspace
+            - name: XDG_DATA_HOME
+              value: /workspace/.local/share
+            - name: XDG_CONFIG_HOME
+              value: /workspace/.config
+            - name: XDG_CACHE_HOME
+              value: /workspace/.local/cache
+            - name: XDG_STATE_HOME
+              value: /workspace/.local/state
+            - name: DSH_AGENTS_HOME
+              value: /workspace/.agents
+            - name: PATH
+              value: /workspace/.local/bin:/workspace/.local/share/mise/shims:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- if or .Values.credentials.existingSecret .Values.extraEnvFrom }}
+          envFrom:
+            {{- if .Values.credentials.existingSecret }}
+            - secretRef:
+                name: {{ .Values.credentials.existingSecret }}
+            {{- end }}
+            {{- with .Values.extraEnvFrom }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 3080
+              protocol: TCP
+            - name: desktop
+              containerPort: 6080
+              protocol: TCP
+          startupProbe:
+            exec:
+              command:
+                - node
+                - -e
+                - "Promise.all([fetch('http://127.0.0.1:3080/'), fetch('http://127.0.0.1:6080/vnc.html'), fetch('http://127.0.0.1:9222/json/version')]).then(([web, desktop, cdp]) => { if (web.status !== 401 || !desktop.ok || !cdp.ok) process.exit(1) }).catch(() => process.exit(1))"
+            {{- toYaml .Values.startupProbe | nindent 12 }}
+          livenessProbe:
+            exec:
+              command:
+                - node
+                - -e
+                - "fetch('http://127.0.0.1:3080/').then(response => { if (response.status !== 401) process.exit(1) }).catch(() => process.exit(1))"
+            {{- toYaml .Values.livenessProbe | nindent 12 }}
+          readinessProbe:
+            exec:
+              command:
+                - node
+                - -e
+                - "Promise.all([fetch('http://127.0.0.1:3080/'), fetch('http://127.0.0.1:6080/vnc.html'), fetch('http://127.0.0.1:9222/json/version')]).then(([web, desktop, cdp]) => { if (web.status !== 401 || !desktop.ok || !cdp.ok) process.exit(1) }).catch(() => process.exit(1))"
+            {{- toYaml .Values.readinessProbe | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: dsh-home
+              mountPath: /home/node/.dsh
+            - name: workspace
+              mountPath: /workspace
+              {{- with .Values.workspace.subPath }}
+              subPath: {{ . }}
+              {{- end }}
+            - name: tools
+              mountPath: /workspace/.local
+            - name: tools
+              mountPath: /workspace/.config
+            - name: skills
+              mountPath: /workspace/.agents/skills
+            - name: tmp
+              mountPath: /tmp
+            - name: shm
+              mountPath: /dev/shm
+      volumes:
+        - name: tmp
+          emptyDir:
+            medium: Memory
+            sizeLimit: 512Mi
+        - name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: {{ .Values.desktop.shmSizeLimit }}
+        - name: workspace
+          {{- if or .Values.workspace.existingClaim .Values.workspace.create }}
+          persistentVolumeClaim:
+            claimName: {{ $workspaceClaim }}
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        - name: tools
+          persistentVolumeClaim:
+            claimName: {{ include "deepseek-harness.fullname" . }}-tools
+        - name: skills
+          persistentVolumeClaim:
+            claimName: {{ include "deepseek-harness.fullname" . }}-skills
+        {{- if not .Values.persistence.enabled }}
+        - name: dsh-home
+          emptyDir: {}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- if .Values.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: dsh-home
+        {{- with .Values.persistence.annotations }}
+        annotations:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      spec:
+        accessModes:
+          {{- toYaml .Values.persistence.accessModes | nindent 10 }}
+        {{- with .Values.persistence.storageClass }}
+        storageClassName: {{ . | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.size }}
+  {{- end }}

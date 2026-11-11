@@ -1,0 +1,20 @@
+#!/bin/bash
+# Sync the maintainer's ~/.agents/skills tree into the DSH skills PVC.
+set -euo pipefail
+
+NAMESPACE="${NAMESPACE:-deepseek-harness}"
+SOURCE="${SOURCE:-$HOME/.agents/skills}"
+POD="${POD:-$(kubectl -n "$NAMESPACE" get pod \
+  -l app.kubernetes.io/name=deepseek-harness \
+  -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || true)}"
+
+[ -d "$SOURCE" ] || { echo "ERROR: skills source not found: $SOURCE" >&2; exit 1; }
+[ -n "$POD" ] || { echo "ERROR: no deepseek-harness Pod found in $NAMESPACE" >&2; exit 1; }
+
+kubectl -n "$NAMESPACE" wait --for=condition=Ready "pod/$POD" --timeout=300s
+tar -C "$SOURCE" -cf - . |
+  kubectl -n "$NAMESPACE" exec -i "$POD" -- \
+    tar -C /workspace/.agents/skills --no-same-owner -xf -
+
+count="$(find "$SOURCE" -mindepth 1 -maxdepth 1 -type d | wc -l)"
+echo "==> synced $count skill directories to $POD:/workspace/.agents/skills"

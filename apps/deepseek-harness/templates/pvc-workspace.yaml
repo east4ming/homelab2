@@ -1,0 +1,21 @@
+{{- if .Values.workspace.create }}
+{{- $claim := .Values.workspace.existingClaim | default (printf "%s-workspace" (include "deepseek-harness.fullname" .)) -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $claim }}
+  labels:
+    {{- include "deepseek-harness.labels" . | nindent 4 }}
+  annotations:
+    helm.sh/resource-policy: keep
+    argocd.argoproj.io/sync-options: Prune=false,Delete=false
+spec:
+  accessModes:
+    - ReadWriteOnce
+  {{- with .Values.workspace.storageClass }}
+  storageClassName: {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.workspace.size }}
+{{- end }}

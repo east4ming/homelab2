@@ -17,11 +17,11 @@
 
 **Purpose**: 建立 `apps/deepseek-harness` 的 Chart 骨架，复制上游模板。
 
-- [ ] T001 创建 `apps/deepseek-harness/templates/` 与 `apps/deepseek-harness/files/`，并把上游 `charts/deepseek-harness/{Chart.yaml,values.yaml,values.schema.json,templates/*}` 复制到 `apps/deepseek-harness/`
-- [ ] T002 [P] 更新 `apps/deepseek-harness/Chart.yaml`：`name: deepseek-harness`、`version: 0.1.29-homelab.1`、`appVersion: 0.2.2-rc.1`，annotations 记录上游 `runzhliu/deepseek-harness-docker@04371405`
-- [ ] T003 [P] 更新 `apps/deepseek-harness/values.yaml`：`image.tag: 0.2.2-rc.1-r1-market.1`、`persistence.size: 10Gi`、`workspace.*`、`tools.*`、`skills.*`、`desktop.publicPort: 443`、`credentials.existingSecret`、`ingress.*`、`networkPolicy.ingress`、`resources.limits`
-- [ ] T004 [P] 更新 `apps/deepseek-harness/values.schema.json`，覆盖 `desktop.publicPort`、`workspace.create/size/storageClass`、`tools.*`、`skills.*`、`ingress.*`、`resources.*`
-- [ ] T005 [P] 更新 `apps/deepseek-harness/templates/NOTES.txt`，写清 Web/桌面 URL、401/token、手动工具安装与配置同步步骤
+- [x] T001 创建 `apps/deepseek-harness/templates/` 与 `apps/deepseek-harness/files/`，并把上游 `charts/deepseek-harness/{Chart.yaml,values.yaml,values.schema.json,templates/*}` 复制到 `apps/deepseek-harness/`
+- [x] T002 [P] 更新 `apps/deepseek-harness/Chart.yaml`：`name: deepseek-harness`、`version: 0.1.29-homelab.1`、`appVersion: 0.2.2-rc.1`，annotations 记录上游 `runzhliu/deepseek-harness-docker@04371405`
+- [x] T003 [P] 更新 `apps/deepseek-harness/values.yaml`：`image.tag: 0.2.2-rc.1-r1-market.1`、`persistence.size: 10Gi`、`workspace.*`、`tools.*`、`skills.*`、`desktop.publicPort: 443`、`credentials.existingSecret`、`ingress.*`、`networkPolicy.ingress`、`resources.limits`
+- [x] T004 [P] 更新 `apps/deepseek-harness/values.schema.json`，覆盖 `desktop.publicPort`、`workspace.create/size/storageClass`、`tools.*`、`skills.*`、`ingress.*`、`resources.*`
+- [x] T005 [P] 更新 `apps/deepseek-harness/templates/NOTES.txt`，写清 Web/桌面 URL、401/token、手动工具安装与配置同步步骤
 
 **Checkpoint**: `helm lint apps/deepseek-harness` 能跑通基础 Chart。
 
@@ -33,17 +33,17 @@
 
 **⚠️ CRITICAL**: 本阶段完成前不要开始用户故事。
 
-- [ ] T006 修改 `apps/deepseek-harness/templates/statefulset.yaml`：移除/不添加 `initContainers`；主容器增加 `XDG_DATA_HOME`、`XDG_CONFIG_HOME`、`XDG_CACHE_HOME`、`XDG_STATE_HOME`、`DSH_AGENTS_HOME`、`DSH_DESKTOP_PUBLIC_PORT`、完整 `PATH`
-- [ ] T007 修改 `apps/deepseek-harness/templates/statefulset.yaml`：增加 `workspace`、`tools`（`/workspace/.local` 与 `/workspace/.config`）、`skills`（`/workspace/.agents/skills`）、`tmp`、`shm` 的 volumes/volumeMounts；保持只读根 FS、非 root、drop ALL、`automountServiceAccountToken: false`
-- [ ] T008 修改 `apps/deepseek-harness/templates/statefulset.yaml`：设置 `resources.requests` 与 `resources.limits`（250m/1Gi、2 CPU/4Gi）；`volumeClaimTemplates` 使用 `persistence.size: 10Gi`
-- [ ] T009 [P] 新增 `apps/deepseek-harness/templates/pvc-workspace.yaml`：20Gi RWO、`standard-rwo`、名称 `deepseek-harness-workspace`、`helm.sh/resource-policy: keep`、ArgoCD `Prune=false,Delete=false`
-- [ ] T010 [P] 新增 `apps/deepseek-harness/templates/pvc-tools.yaml`：20Gi RWO、名称 `deepseek-harness-tools`、同样的保留注解
-- [ ] T011 [P] 新增 `apps/deepseek-harness/templates/pvc-skills.yaml`：1Gi RWO、名称 `deepseek-harness-skills`、同样的保留注解
-- [ ] T012 保留 `apps/deepseek-harness/templates/service.yaml` 的 Headless Service；新增 `apps/deepseek-harness/templates/service-tailscale.yaml` ClusterIP（http 3080、desktop 6080）
-- [ ] T013 [P] 新增 `apps/deepseek-harness/templates/ingress-web.yaml`：host `dsh.west-beta.ts.net`、class `tailscale`、annotation `tailscale.com/proxy-group: ingress-proxies`、`/`→http、`/novnc-`→desktop、TLS
-- [ ] T014 [P] 新增 `apps/deepseek-harness/templates/ingress-desktop.yaml`：host `dsh-desktop.west-beta.ts.net`、`/`→desktop、TLS
-- [ ] T015 更新 `apps/deepseek-harness/templates/networkpolicy.yaml`：从 values 读取放行规则，只允许 `tailscale` 命名空间内 `parent-resource-type=proxygroup` + `parent-resource=ingress-proxies` 到 3080/6080
-- [ ] T016 新增 `scripts/bootstrap-deepseek-harness`：校验 `DEEPSEEK_API_KEY`/`GITHUB_API_TOKEN`，用临时 env 文件 + `kubectl create secret ... --from-env-file`、`umask 077`、trap 清理、只输出键名
+- [x] T006 修改 `apps/deepseek-harness/templates/statefulset.yaml`：移除/不添加 `initContainers`；主容器增加 `XDG_DATA_HOME`、`XDG_CONFIG_HOME`、`XDG_CACHE_HOME`、`XDG_STATE_HOME`、`DSH_AGENTS_HOME`、`DSH_DESKTOP_PUBLIC_PORT`、完整 `PATH`
+- [x] T007 修改 `apps/deepseek-harness/templates/statefulset.yaml`：增加 `workspace`、`tools`（`/workspace/.local` 与 `/workspace/.config`）、`skills`（`/workspace/.agents/skills`）、`tmp`、`shm` 的 volumes/volumeMounts；保持只读根 FS、非 root、drop ALL、`automountServiceAccountToken: false`
+- [x] T008 修改 `apps/deepseek-harness/templates/statefulset.yaml`：设置 `resources.requests` 与 `resources.limits`（250m/1Gi、2 CPU/4Gi）；`volumeClaimTemplates` 使用 `persistence.size: 10Gi`
+- [x] T009 [P] 新增 `apps/deepseek-harness/templates/pvc-workspace.yaml`：20Gi RWO、`standard-rwo`、名称 `deepseek-harness-workspace`、`helm.sh/resource-policy: keep`、ArgoCD `Prune=false,Delete=false`
+- [x] T010 [P] 新增 `apps/deepseek-harness/templates/pvc-tools.yaml`：20Gi RWO、名称 `deepseek-harness-tools`、同样的保留注解
+- [x] T011 [P] 新增 `apps/deepseek-harness/templates/pvc-skills.yaml`：1Gi RWO、名称 `deepseek-harness-skills`、同样的保留注解
+- [x] T012 保留 `apps/deepseek-harness/templates/service.yaml` 的 Headless Service；新增 `apps/deepseek-harness/templates/service-tailscale.yaml` ClusterIP（http 3080、desktop 6080）
+- [x] T013 [P] 新增 `apps/deepseek-harness/templates/ingress-web.yaml`：host `dsh.west-beta.ts.net`、class `tailscale`、annotation `tailscale.com/proxy-group: ingress-proxies`、`/`→http、`/novnc-`→desktop、TLS
+- [x] T014 [P] 新增 `apps/deepseek-harness/templates/ingress-desktop.yaml`：host `dsh-desktop.west-beta.ts.net`、`/`→desktop、TLS
+- [x] T015 更新 `apps/deepseek-harness/templates/networkpolicy.yaml`：从 values 读取放行规则，只允许 `tailscale` 命名空间内 `parent-resource-type=proxygroup` + `parent-resource=ingress-proxies` 到 3080/6080
+- [x] T016 新增 `scripts/bootstrap-deepseek-harness`：校验 `DEEPSEEK_API_KEY`/`GITHUB_API_TOKEN`，用临时 env 文件 + `kubectl create secret ... --from-env-file`、`umask 077`、trap 清理、只输出键名
 
 **Checkpoint**: `helm template` 可渲染完整应用；Secret 可由脚本创建。
 
@@ -58,9 +58,9 @@ Ingress 得 200；Web UI 的桌面入口可用；模型调用在 US3 配置同�
 
 ### Implementation for User Story 1
 
-- [ ] T017 [P] [US1] 扩展 `test/smoke_test.go`：给 `mainApps` 增加 `expectedStatus`，新增 `deepseek-harness`（401）与 `deepseek-harness-desktop`（200）
-- [ ] T018 [P] [US1] 在 `apps/homepage/values.yaml` 的 `Utilities` 增加 `DeepSeek Harness` 与 `DSH Desktop` 入口（MDI 图标）
-- [ ] T019 [US1] 用 `helm template deepseek-harness apps/deepseek-harness` 断言：无 initContainers、存在 ClusterIP Service、两条 Ingress 路径正确、NetworkPolicy 两个端口
+- [x] T017 [P] [US1] 扩展 `test/smoke_test.go`：给 `mainApps` 增加 `expectedStatus`，新增 `deepseek-harness`（401）与 `deepseek-harness-desktop`（200）
+- [x] T018 [P] [US1] 在 `apps/homepage/values.yaml` 的 `Utilities` 增加 `DeepSeek Harness` 与 `DSH Desktop` 入口（MDI 图标）
+- [x] T019 [US1] 用 `helm template deepseek-harness apps/deepseek-harness` 断言：无 initContainers、存在 ClusterIP Service、两条 Ingress 路径正确、NetworkPolicy 两个端口
 - [ ] T020 [US1] 合并/同步后按 `specs/015-deepseek-harness-helm/quickstart.md` §7 验证 Web 401、token 登录与 UI 加载；模型调用在 T038（US3 配置同步后）验证
 - [ ] T021 [US1] 按 `quickstart.md` §7 验证 `https://dsh-desktop.west-beta.ts.net` 返回 200，且 Web UI 内“浏览器桌面”打开同一 noVNC
 - [ ] T022 [US1] 按 `quickstart.md` §8 验证非 `tailscale` 命名空间 Pod 访问 PodIP:3080/6080 被 NetworkPolicy 拒绝
@@ -75,11 +75,11 @@ Ingress 得 200；Web UI 的桌面入口可用；模型调用在 US3 配置同�
 
 **Independent Test**: 写入四个标记 → 删除 Pod → 标记仍在；隔离命名空间 install→uninstall→PVC 仍在；`scripts/backup-coverage` 未被修改。
 
-- [ ] T023 [US2] 检查 `apps/deepseek-harness/templates/pvc-*.yaml` 与 `statefulset.yaml` 渲染后的四块 PVC：10/20/20/1 GiB、RWO、`standard-rwo`；独立 PVC 带 keep/prune 注解；dsh-home 来自 volumeClaimTemplate
+- [x] T023 [US2] 检查 `apps/deepseek-harness/templates/pvc-*.yaml` 与 `statefulset.yaml` 渲染后的四块 PVC：10/20/20/1 GiB、RWO、`standard-rwo`；独立 PVC 带 keep/prune 注解；dsh-home 来自 volumeClaimTemplate
 - [ ] T024 [US2] 按 `quickstart.md` §10 写四个标记、删除 Pod、等待新 Pod，验证四个标记仍在；工具/配置的“无需重做”分别在 T031/T038 复验
 - [ ] T025 [US2] 按 `quickstart.md` §10 在隔离命名空间 `dsh-retention` 执行 install→uninstall，验证 4 块 PVC 保留后清理命名空间
-- [ ] T026 [P] [US2] 在 `apps/deepseek-harness/README.md` 记录四块 PVC 名称/容量为后续手动备份对象，并注明不修改 `scripts/backup-coverage`
-- [ ] T027 [P] [US2] 执行 `git diff --exit-code scripts/backup-coverage`，确认本特性没有添加任何 PVC 豁免
+- [x] T026 [P] [US2] 在 `apps/deepseek-harness/README.md` 记录四块 PVC 名称/容量为后续手动备份对象，并注明不修改 `scripts/backup-coverage`
+- [x] T027 [P] [US2] 执行 `git diff --exit-code scripts/backup-coverage`，确认本特性没有添加任何 PVC 豁免
 
 **Checkpoint**: US2 可独立验收；持久化与保留策略符合 spec。
 
@@ -93,11 +93,11 @@ Ingress 得 200；Web UI 的桌面入口可用；模型调用在 US3 配置同�
 
 > 注：US4 放在 US3 前，因为配置中的 dcg/codegraph/atuin 工具需要先存在。
 
-- [ ] T028 [US4] 新增 `apps/deepseek-harness/files/install-tools.sh`：设置 HOME/XDG/PATH，安装 uv/mise 到 `/workspace/.local/bin`，逐个 `uv tool install`、`mise use -g`（含 `aqua:atuinsh/atuin`）、`mise reshim`，写 `.dsh-tools-version`
-- [ ] T029 [US4] 新增 `scripts/install-dsh-tools`：查找 Pod/等待 Ready、`kubectl cp` 脚本到 `/tmp`、`kubectl exec` 执行；失败非零退出
+- [x] T028 [US4] 新增 `apps/deepseek-harness/files/install-tools.sh`：设置 HOME/XDG/PATH，安装 uv/mise 到 `/workspace/.local/bin`，逐个 `uv tool install`、`mise use -g`（含 `aqua:atuinsh/atuin`）、`mise reshim`，写 `.dsh-tools-version`
+- [x] T029 [US4] 新增 `scripts/install-dsh-tools`：查找 Pod/等待 Ready、`kubectl cp` 脚本到 `/tmp`、`kubectl exec` 执行；失败非零退出
 - [ ] T030 [US4] 按 `quickstart.md` §4 运行安装脚本，验证 4 个 uv 工具 + 9 个 mise 工具（含 atuin）、路径位于 `/workspace/.local` 或 `/workspace/.config`
 - [ ] T031 [US4] 按 `quickstart.md` §10 重启 Pod，验证工具命令仍可用、安装脚本无需重复下载
-- [ ] T032 [P] [US4] 在 `apps/deepseek-harness/README.md` 记录工具清单、安装命令、工具卷重建后的重跑条件
+- [x] T032 [P] [US4] 在 `apps/deepseek-harness/README.md` 记录工具清单、安装命令、工具卷重建后的重跑条件
 
 **Checkpoint**: US4 可独立验收；工具持久化。
 
@@ -109,13 +109,13 @@ Ingress 得 200；Web UI 的桌面入口可用；模型调用在 US3 配置同�
 
 **Independent Test**: `scripts/sync-dsh-config --source "$HOME/.dsh"` 退出 0；Pod 内 `.dsh-config-source` 有来源/时间；配置无 `/home/casey`；插件/市场可用；`--repo` 模式用本机 gh 成功且集群无 token。
 
-- [ ] T033 [US3] 新增 `apps/deepseek-harness/files/transform-config.sh`：实现白名单复制矩阵（profiles/local-plugins/local-presets/skills/skills-manager/AGENTS.md/dsh-pet/integrations），跳过 sessions/storages/.credentials/dsh-chat-import/node_modules
-- [ ] T034 [US3] 在 `transform-config.sh` 实现改写：`/home/casey/.dsh`→`/home/node/.dsh`、codegraph/atuin/dcg→mise shims、provider→`deepseek-official`、删除 dshmarket 依赖/bundle、置空 StyleFerry post、追加 `onlyBuiltDependencies`、skill lock/integrations 路径
-- [ ] T035 [US3] 新增 `scripts/sync-dsh-config`：支持 `--source DIR` 与 `--repo OWNER/REPO --revision REF`（本机 `gh repo clone`）；生成 staging、tar、`kubectl cp`、容器内解包、`CI=true pnpm install --no-frozen-lockfile`、写 `.dsh-config-source`、`kubectl rollout restart`、等待 Ready
+- [x] T033 [US3] 新增 `apps/deepseek-harness/files/transform-config.sh`：实现白名单复制矩阵（profiles/local-plugins/local-presets/skills/skills-manager/AGENTS.md/dsh-pet/integrations），跳过 sessions/storages/.credentials/dsh-chat-import/node_modules
+- [x] T034 [US3] 在 `transform-config.sh` 实现改写：`/home/casey/.dsh`→`/home/node/.dsh`、codegraph/atuin/dcg→mise shims、provider→`deepseek-official`、删除 dshmarket 依赖/bundle、置空 StyleFerry post、追加 `onlyBuiltDependencies`、skill lock/integrations 路径
+- [x] T035 [US3] 新增 `scripts/sync-dsh-config`：支持 `--source DIR` 与 `--repo OWNER/REPO --revision REF`（本机 `gh repo clone`）；生成 staging、tar、`kubectl cp`、容器内解包、`CI=true pnpm install --no-frozen-lockfile`、写 `.dsh-config-source`、`kubectl rollout restart`、等待 Ready
 - [ ] T036 [US3] 按 `quickstart.md` §5.1 运行 `scripts/sync-dsh-config --source "$HOME/.dsh"`，验证退出 0、Pod Ready、marker、配置无本机绝对路径
 - [ ] T037 [US3] 按 `quickstart.md` §5.2 运行 `scripts/sync-dsh-config --repo east4ming/dsh-config --revision <ref>`，验证本机 gh 克隆成功、Pod 内无仓库 token
 - [ ] T038 [US3] 按 `quickstart.md` §9 验证插件安装成功、市场页面无重复 `dsh-market` 行、`DEEPSEEK_API_KEY` 路由下模型对话可用
-- [ ] T039 [P] [US3] 在 `apps/deepseek-harness/README.md` 记录配置更新/回滚、`--source` 与 `--repo` 两种模式、`pnpm install` 失败恢复
+- [x] T039 [P] [US3] 在 `apps/deepseek-harness/README.md` 记录配置更新/回滚、`--source` 与 `--repo` 两种模式、`pnpm install` 失败恢复
 
 **Checkpoint**: US3 可独立验收；配置/插件可用且集群无配置凭据。
 
@@ -127,10 +127,10 @@ Ingress 得 200；Web UI 的桌面入口可用；模型调用在 US3 配置同�
 
 **Independent Test**: 同步后 `/workspace/.agents/skills` 出现本机同名目录，DSH 能发现新增 skill；删除 Pod 后仍在。
 
-- [ ] T040 [US5] 新增 `scripts/sync-dsh-skills`：查找 Pod、等待 Ready、`tar` 本机 skills → `kubectl exec -i ... tar -C /workspace/.agents/skills --no-same-owner -xf -`
+- [x] T040 [US5] 新增 `scripts/sync-dsh-skills`：查找 Pod、等待 Ready、`tar` 本机 skills → `kubectl exec -i ... tar -C /workspace/.agents/skills --no-same-owner -xf -`
 - [ ] T041 [US5] 按 `quickstart.md` §6 运行同步，验证本机同名目录存在、DSH 技能目录发现新增 skill
 - [ ] T042 [US5] 按 `quickstart.md` §10 重启 Pod，验证 skills 仍在 1Gi PVC
-- [ ] T043 [P] [US5] 在 `apps/deepseek-harness/README.md` 记录 skills 同步命令、不提交到 Git、1Gi 容量边界
+- [x] T043 [P] [US5] 在 `apps/deepseek-harness/README.md` 记录 skills 同步命令、不提交到 Git、1Gi 容量边界
 
 **Checkpoint**: US5 可独立验收。
 
@@ -144,8 +144,8 @@ Ingress 得 200；Web UI 的桌面入口可用；模型调用在 US3 配置同�
 
 - [ ] T044 [US6] 按 `quickstart.md` §1 验证 `scripts/bootstrap-deepseek-harness`：缺 env 失败、重复执行幂等、输出不回显值
 - [ ] T045 [US6] 验证 `scripts/bootstrap-deepseek-harness` 创建的 `dsh-provider-credentials` 只有 `DEEPSEEK_API_KEY`、`GITHUB_API_TOKEN`；Pod 内无 `GH_TOKEN`、无 `DSH_CONFIG_TOKEN`
-- [ ] T046 [US6] 对 `apps/deepseek-harness/` 与 `scripts/` 执行全仓库密钥形态扫描（`git grep`/`detect-private-key`），确认无真实 API Key/token/私钥
-- [ ] T047 [P] [US6] 在 `apps/deepseek-harness/README.md` 记录 bootstrap、轮换后重启 Pod、`GITHUB_API_TOKEN` 只用于 mise 限流
+- [x] T046 [US6] 对 `apps/deepseek-harness/` 与 `scripts/` 执行全仓库密钥形态扫描（`git grep`/`detect-private-key`），确认无真实 API Key/token/私钥
+- [x] T047 [P] [US6] 在 `apps/deepseek-harness/README.md` 记录 bootstrap、轮换后重启 Pod、`GITHUB_API_TOKEN` 只用于 mise 限流
 
 **Checkpoint**: US6 可独立验收；无密钥泄露。
 
@@ -157,7 +157,7 @@ Ingress 得 200；Web UI 的桌面入口可用；模型调用在 US3 配置同�
 
 **Independent Test**: `git ls-remote --tags` 两侧都有 tag；两侧 Release 存在；Changelog 有条目；ArgoCD Synced/Healthy。
 
-- [ ] T048 [US7] 运行 `helm lint apps/deepseek-harness`、`helm template` 断言、`pre-commit run --all-files`，记录结果
+- [x] T048 [US7] 运行 `helm lint apps/deepseek-harness`、`helm template` 断言、`pre-commit run --all-files`，记录结果
 - [ ] T049 [US7] 运行 `make -C test filter=Smoke`（`test/smoke_test.go`），确认 DSH Web 401、Desktop 200、原有 5 个应用 200
 - [ ] T050 [US7] 更新 `docs/reference/changelog.md`，新增发布日 tag 条目，内容只来自真实提交
 - [ ] T051 [US7] 按 `docs/reference/versioning.md` 在 `master` 上打 annotated tag（发布日，如 `v2026.11.11`；同日第二快照 `.2`），推送并用 `git ls-remote` 双侧核对
@@ -171,9 +171,9 @@ Ingress 得 200；Web UI 的桌面入口可用；模型调用在 US3 配置同�
 
 **Purpose**: 文档收口、备份边界、最终一致性检查。
 
-- [ ] T053 [P] 完成 `apps/deepseek-harness/README.md`：上游 provenance/diff、values、Secret、两种配置来源、工具/skills、Ingress/noVNC 警告、升级/回滚、已知限制
-- [ ] T054 [P] 检查 `scripts/backup-coverage` 未被修改；README 明确四块 PVC 为后续手动备份对象，`backup-coverage` 在备份配置前会列出它们是预期
-- [ ] T055 [P] 检查 `apps/deepseek-harness/README.md` 与 `specs/015-deepseek-harness-helm/` 中无 `initContainer`/`configSync`/`DSH_CONFIG_TOKEN` 的正向残留；所有文档链接存在
+- [x] T053 [P] 完成 `apps/deepseek-harness/README.md`：上游 provenance/diff、values、Secret、两种配置来源、工具/skills、Ingress/noVNC 警告、升级/回滚、已知限制
+- [x] T054 [P] 检查 `scripts/backup-coverage` 未被修改；README 明确四块 PVC 为后续手动备份对象，`backup-coverage` 在备份配置前会列出它们是预期
+- [x] T055 [P] 检查 `apps/deepseek-harness/README.md` 与 `specs/015-deepseek-harness-helm/` 中无 `initContainer`/`configSync`/`DSH_CONFIG_TOKEN` 的正向残留；所有文档链接存在
 - [ ] T056 按 `spec.md` 的 SC-001…SC-011 逐项勾选验收；确认 ArgoCD `deepseek-harness` Synced/Healthy
 - [ ] T057 按 `specs/015-deepseek-harness-helm/quickstart.md` 清理持久化测试标记与临时命名空间，确认工作区干净
 

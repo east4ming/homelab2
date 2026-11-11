@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "image",
+    "service",
+    "desktop",
+    "persistence",
+    "workspace",
+    "tools",
+    "skills",
+    "credentials",
+    "ingress",
+    "networkPolicy"
+  ],
+  "properties": {
+    "image": {
+      "type": "object",
+      "required": ["repository", "tag", "pullPolicy", "pullSecrets"],
+      "properties": {
+        "repository": { "type": "string", "minLength": 1 },
+        "tag": { "type": "string", "minLength": 1 },
+        "pullPolicy": { "enum": ["Always", "IfNotPresent", "Never"] },
+        "pullSecrets": { "type": "array" }
+      }
+    },
+    "service": {
+      "type": "object",
+      "required": ["port", "desktopPort"],
+      "properties": {
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "desktopPort": { "type": "integer", "minimum": 1, "maximum": 65535 }
+      }
+    },
+    "desktop": {
+      "type": "object",
+      "required": ["shmSizeLimit"],
+      "properties": {
+        "shmSizeLimit": { "type": "string", "pattern": "^[0-9]+(Ei|Pi|Ti|Gi|Mi|Ki)$" },
+        "publicPort": { "type": "integer", "minimum": 1, "maximum": 65535 }
+      }
+    },
+    "persistence": {
+      "type": "object",
+      "required": ["enabled", "accessModes", "size"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "storageClass": { "type": "string" },
+        "accessModes": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "size": { "type": "string", "pattern": "^[0-9]+(Ei|Pi|Ti|Gi|Mi|Ki)$" },
+        "annotations": { "type": "object" }
+      }
+    },
+    "workspace": {
+      "type": "object",
+      "required": ["existingClaim", "subPath"],
+      "properties": {
+        "create": { "type": "boolean" },
+        "existingClaim": { "type": "string" },
+        "size": { "type": "string", "pattern": "^[0-9]+(Ei|Pi|Ti|Gi|Mi|Ki)$" },
+        "storageClass": { "type": "string" },
+        "subPath": { "type": "string" }
+      }
+    },
+    "tools": {
+      "type": "object",
+      "required": ["size"],
+      "properties": {
+        "size": { "type": "string", "pattern": "^[0-9]+(Ei|Pi|Ti|Gi|Mi|Ki)$" },
+        "storageClass": { "type": "string" }
+      }
+    },
+    "skills": {
+      "type": "object",
+      "required": ["size"],
+      "properties": {
+        "size": { "type": "string", "pattern": "^[0-9]+(Ei|Pi|Ti|Gi|Mi|Ki)$" },
+        "storageClass": { "type": "string" }
+      }
+    },
+    "credentials": {
+      "type": "object",
+      "required": ["existingSecret"],
+      "properties": {
+        "existingSecret": { "type": "string" }
+      }
+    },
+    "ingress": {
+      "type": "object",
+      "required": ["className", "web", "desktop"],
+      "properties": {
+        "className": { "type": "string" },
+        "annotations": { "type": "object" },
+        "web": {
+          "type": "object",
+          "required": ["host"],
+          "properties": {
+            "host": { "type": "string", "minLength": 1 }
+          }
+        },
+        "desktop": {
+          "type": "object",
+          "required": ["host"],
+          "properties": {
+            "host": { "type": "string", "minLength": 1 }
+          }
+        }
+      }
+    },
+    "resources": { "type": "object" },
+    "networkPolicy": {
+      "type": "object",
+      "required": ["enabled", "ingress"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "ingress": { "type": "array" }
+      }
+    },
+    "terminationGracePeriodSeconds": { "type": "integer", "minimum": 1 }
+  }
+}

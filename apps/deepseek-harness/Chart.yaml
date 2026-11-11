@@ -1,0 +1,27 @@
+apiVersion: v2
+name: deepseek-harness
+description: Homelab2 deployment of a single-user DeepSeek Harness Web instance
+type: application
+version: 0.1.29-homelab.1
+appVersion: "0.2.2-rc.1"
+kubeVersion: ">=1.27.0-0"
+home: https://github.com/runzhliu/deepseek-harness-docker
+keywords:
+  - deepseek
+  - agent
+  - harness
+  - ai
+maintainers:
+  - name: runzhliu
+    url: https://github.com/runzhliu
+sources:
+  - https://github.com/runzhliu/deepseek-harness-docker
+  - https://github.com/deepseek-ai/deepseek-harness
+annotations:
+  artifacthub.io/license: MIT
+  artifacthub.io/images: |
+    - name: deepseek-harness
+      image: docker.io/runzhliu/deepseek-harness:0.2.2-rc.1-r1-market.1
+  homelab2/upstream-repository: https://github.com/runzhliu/deepseek-harness-docker
+  homelab2/upstream-commit: 043714057c0c2ef53a5023a3117c5f25fe5af62c
+  homelab2/upstream-chart-version: "0.1.29"

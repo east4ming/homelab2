@@ -1,0 +1,35 @@
+#!/bin/bash
+# Create/update the provider credentials Secret from the current shell.
+set -euo pipefail
+
+NAMESPACE="${NAMESPACE:-deepseek-harness}"
+SECRET="${SECRET:-dsh-provider-credentials}"
+
+missing=()
+[ -n "${DEEPSEEK_API_KEY:-}" ] || missing+=("DEEPSEEK_API_KEY")
+[ -n "${GITHUB_API_TOKEN:-}" ] || missing+=("GITHUB_API_TOKEN")
+if [ "${#missing[@]}" -gt 0 ]; then
+  printf 'ERROR: missing required environment variable(s): %s\n' "${missing[*]}" >&2
+  exit 1
+fi
+
+command -v kubectl >/dev/null 2>&1 || { echo "ERROR: kubectl is required" >&2; exit 1; }
+
+if ! kubectl get namespace "$NAMESPACE" >/dev/null 2>&1; then
+  kubectl create namespace "$NAMESPACE" >/dev/null
+fi
+
+umask 077
+tmp="$(mktemp)"
+trap 'rm -f "$tmp"' EXIT
+{
+  printf 'DEEPSEEK_API_KEY=%s\n' "$DEEPSEEK_API_KEY"
+  printf 'GITHUB_API_TOKEN=%s\n' "$GITHUB_API_TOKEN"
+} >"$tmp"
+
+kubectl -n "$NAMESPACE" create secret generic "$SECRET" \
+  --from-env-file="$tmp" \
+  --dry-run=client -o yaml |
+  kubectl apply -f - >/dev/null
+
+echo "==> updated Secret $NAMESPACE/$SECRET with DEEPSEEK_API_KEY, GITHUB_API_TOKEN"

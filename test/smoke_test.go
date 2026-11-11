@@ -15,14 +15,19 @@ func TestSmoke(t *testing.T) {
 	t.Parallel()
 
 	var mainApps = []struct {
-		name      string
-		namespace string
+		name           string
+		namespace      string
+		expectedStatus int
 	}{
-		{"argocd-server", "argocd"},
-		{"gitea", "gitea"},
-		{"grafana", "grafana"},
-		{"homepage", "homepage"},
-		{"kanidm", "kanidm"},
+		{"argocd-server", "argocd", 200},
+		{"gitea", "gitea", 200},
+		{"grafana", "grafana", 200},
+		{"homepage", "homepage", 200},
+		{"kanidm", "kanidm", 200},
+		// DSH Web requires its startup token, so anonymous access is a 401.
+		{"deepseek-harness", "deepseek-harness", 401},
+		// noVNC is intentionally unauthenticated inside the tailnet.
+		{"deepseek-harness-desktop", "deepseek-harness", 200},
 	}
 
 	for _, app := range mainApps {
@@ -43,7 +48,7 @@ func TestSmoke(t *testing.T) {
 				InsecureSkipVerify: os.Getenv("INSECURE_SKIP_VERIFY") != "",
 			}
 
-			// Test the endpoint, this will only fail if we timeout waiting for the service to return a 200 response
+			// Test the endpoint with the status expected for this app (DSH returns 401 without a token).
 			http_helper.HttpGetWithRetryWithCustomValidation(
 				t,
 				fmt.Sprintf("https://%s", ingress.Spec.Rules[0].Host),
@@ -51,7 +56,7 @@ func TestSmoke(t *testing.T) {
 				30,
 				60*time.Second,
 				func(statusCode int, body string) bool {
-					return statusCode == 200
+					return statusCode == app.expectedStatus
 				},
 			)
 		})

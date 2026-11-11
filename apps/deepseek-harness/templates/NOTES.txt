@@ -1,0 +1,29 @@
+DeepSeek Harness is running as a single-replica StatefulSet.
+
+Web (tailnet only):
+
+  https://{{ .Values.ingress.web.host }}
+
+Print the authenticated startup URL:
+
+  kubectl --namespace {{ .Release.Namespace }} logs statefulset/{{ include "deepseek-harness.fullname" . }} | grep 'dsh web:'
+
+Open the tokenized URL from that log line. Unauthenticated requests return 401.
+
+noVNC desktop (tailnet only, no authentication):
+
+  https://{{ .Values.ingress.desktop.host }}
+
+The Web UI's browser-desktop entry uses https://{{ .Values.ingress.web.host }}/novnc-* and
+requires the web Ingress path to the desktop Service. Do not expose 6080 via
+NodePort/LoadBalancer or a public Ingress.
+
+After the Pod is Ready, run the one-time manual tasks:
+
+  scripts/install-dsh-tools
+  scripts/sync-dsh-config --source "$HOME/.dsh"
+  scripts/sync-dsh-skills
+
+The dsh-home, workspace, tools and skills PVCs are retained when the Helm
+release is removed. They are manual backup targets; the chart does not create
+VolSync ReplicationSources.

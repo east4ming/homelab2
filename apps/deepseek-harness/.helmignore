@@ -1,0 +1,10 @@
+# Helm ignore patterns
+*.secret.yaml
+secrets/
+.kube/
+kubeconfig*
+*.key
+*.crt
+.DS_Store
+*.swp
+.tmp

@@ -111,6 +111,14 @@ homepage:
               href: https://lobe.west-beta.ts.net
               description: An open-source, modern-design AI chat framework. Supports Multi AI Providers
               icon: https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/light/lobehub-color.png
+          - DeepSeek Harness:
+              href: https://dsh.west-beta.ts.net
+              description: Personal DSH agent runtime (tailnet only)
+              icon: mdi-robot-outline
+          - DSH Desktop:
+              href: https://dsh-desktop.west-beta.ts.net
+              description: noVNC desktop for DeepSeek Harness (tailnet only)
+              icon: mdi-monitor
           - StyleFerry:
               href: https://styleferry.west-beta.ts.net/docs/
               description: AI-powered blog generation service
