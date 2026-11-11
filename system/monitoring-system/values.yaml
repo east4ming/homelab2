@@ -90,7 +90,7 @@ kube-prometheus-stack:
             accessModes: ["ReadWriteOnce"]
             resources:
               requests:
-                storage: 30Gi
+                storage: 36Gi
       resources:
         requests:
           cpu: 160m
