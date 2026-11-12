@@ -1,6 +1,6 @@
 image:
   repository: docker.io/runzhliu/deepseek-harness
-  tag: 0.2.2-rc.1-r1-market.1
+  tag: 0.2.2-rc.2-r1-market.1
   pullPolicy: IfNotPresent
   pullSecrets: []
 

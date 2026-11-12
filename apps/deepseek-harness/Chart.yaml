@@ -21,7 +21,7 @@ annotations:
   artifacthub.io/license: MIT
   artifacthub.io/images: |
     - name: deepseek-harness
-      image: docker.io/runzhliu/deepseek-harness:0.2.2-rc.1-r1-market.1
+      image: docker.io/runzhliu/deepseek-harness:0.2.2-rc.2-r1-market.1
   homelab2/upstream-repository: https://github.com/runzhliu/deepseek-harness-docker
   homelab2/upstream-commit: 043714057c0c2ef53a5023a3117c5f25fe5af62c
   homelab2/upstream-chart-version: "0.1.29"

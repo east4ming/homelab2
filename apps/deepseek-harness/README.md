@@ -6,8 +6,8 @@ DeepSeek Harness（DSH）单用户 Web 实例，以 vendored 的上游 Helm Char
 
 - 上游 commit：`043714057c0c2ef53a5023a3117c5f25fe5af62c`
 - 上游 Chart 版本：`0.1.29`，本目录版本：`0.1.29-homelab.1`
-- 镜像：`docker.io/runzhliu/deepseek-harness:0.2.2-rc.1-r1-market.1`（市场变体；手动 Helm 用
-  `--set image.tag=0.2.2-rc.1-r1-market.1`，ArgoCD 使用 `values.yaml` 的同一值）
+- 镜像：`docker.io/runzhliu/deepseek-harness:0.2.2-rc.2-r1-market.1`（市场变体；手动 Helm 用
+  `--set image.tag=0.2.2-rc.2-r1-market.1`，ArgoCD 使用 `values.yaml` 的同一值）
 - 部署：ArgoCD ApplicationSet 自动发现 `apps/deepseek-harness`，namespace 也是 `deepseek-harness`
 
 ## 与上游的差异
