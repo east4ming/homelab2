@@ -304,7 +304,7 @@ Ingress；扁平结构让 values 与上游同名、差异可逐行审阅，ArgoC
 
 - 更新 Changelog；确认 ArgoCD Synced/Healthy 与全部验收。
 - `git tag -a v2026.11.11`（按发布日；同日第二快照用 `.2`），推送并双侧核对。
-- Gitea `tea releases create` + GitHub `gh release create`（正文与 Changelog 一致）。
+- Gitea `gt release create`（旧名 `tea`）+ GitHub `gh release create`（正文与 Changelog 一致）。
 
 ## 验证计划
 

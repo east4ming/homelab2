@@ -161,7 +161,7 @@ Ingress 得 200；Web UI 的桌面入口可用；模型调用在 US3 配置同�
 - [x] T049 [US7] 运行 `make -C test filter=Smoke`（`test/smoke_test.go`），确认 DSH Web 401、Desktop 200、原有 5 个应用 200
 - [x] T050 [US7] 更新 `docs/reference/changelog.md`，新增发布日 tag 条目，内容只来自真实提交
 - [x] T051 [US7] 按 `docs/reference/versioning.md` 在 `master` 上打 annotated tag（发布日，如 `v2026.11.11`；同日第二快照 `.2`），推送并用 `git ls-remote` 双侧核对
-- [x] T052 [US7] 用 `tea releases create` 与 `gh release create --verify-tag` 在 Gitea/GitHub 创建 Release，正文与 `docs/reference/changelog.md` 一致
+- [x] T052 [US7] 用 `tea releases create` 与 `gh release create --verify-tag` 在 Gitea/GitHub 创建 Release，正文与 `docs/reference/changelog.md` 一致（当时 Gitea CLI 名为 `tea`；现为 `gt release create`，见 [versioning.md](../../docs/reference/versioning.md)）
 
 **Checkpoint**: 发布完成，可回滚到 tag。
 
