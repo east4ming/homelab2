@@ -32,8 +32,8 @@
 
 - [x] T015 主题分支 `016-dsh-cluster-admin` + Conventional Commits
 - [x] T016 推送分支并在 Gitea 开 PR、合入 `master`
-- [ ] T017 ArgoCD 同步后线上验收：`kubectl auth can-i '*' '*' --all-namespaces`、`kubectl get nodes`、
-      维护者机器 `kubectl exec` 同一身份
+- [x] T017 ArgoCD 同步后线上验收：`kubectl auth can-i '*' '*' --all-namespaces`（yes）、`kubectl get nodes`
+      （4 节点）、维护者机器 `kubectl exec` 同一身份——均已通过，同步 revision `4ae578fb`
 
 ## Phase 5: 发布
 

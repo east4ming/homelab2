@@ -2,6 +2,42 @@
 
 版本号格式与发布流程见 [版本管理](versioning.md)。新条目置顶，标题即 git 标签名。
 
+## v2026.11.13
+
+DeepSeek Harness（DSH）取得 homelab2 的 `cluster-admin`：Chart 新增专用 ServiceAccount 与
+ClusterRoleBinding，Pod 挂载 SA token，`kubectl` 直接使用 in-cluster 配置，不需要 kubeconfig。
+同期把 DSH 镜像升到 `0.2.2-rc.2-r1-market.1`、修复 Ingress 主机名信任导致的 WebSocket 403，
+并把发布文档里的 Gitea CLI 从 `tea` 更新为 `gt`。
+
+### 变更
+
+- `feat(deepseek-harness)`：新增 `templates/rbac.yaml`（ServiceAccount + 指向内置 `cluster-admin`
+  的 ClusterRoleBinding），StatefulSet 设置 `serviceAccountName`/`automountServiceAccountToken: true`；
+  Chart 版本 `0.1.29-homelab.2`；`install-tools.sh` 的 mise 清单加入 `kubectl`；README 增加
+  「集群权限（cluster-admin）」章节（验证命令、安全边界、收回方法）。PR #624。
+- `feat(dsh)`：镜像升级到 `0.2.2-rc.2-r1-market.1`（`0146c2be`）。
+- `fix(deepseek-harness)`：`args` 追加 `--public-url` / `--trusted-host`，修复 `/api/remote.mux`
+  WebSocket 403 与「permission catalog has no active Host connection」。PR #621。
+- `docs(016)`：新增 `specs/016-dsh-cluster-admin/{spec,plan,tasks}`，记录「为什么用内置
+  cluster-admin、不用自定义 ClusterRole」与验证计划；`AGENTS.md` 当前 Plan 指向 016。
+- `docs(versioning)`：Gitea Release 命令由 `tea releases create` 改为
+  `gt release create <tag> -R ...`（tag 为位置参数、`--verify-tag`）；`specs/015` 可执行文档同步，
+  历史任务项注明当时的 `tea`。
+- `chore(deps)`：Renovate 非主版本依赖更新（#622、#623）。
+
+### 线上状态
+
+- ArgoCD `Application/deepseek-harness` Synced/Healthy，同步到 `4ae578fb`；StatefulSet 重建一次
+  以挂载 SA token；Pod Running 1/1。
+- Pod 内 `kubectl auth can-i '*' '*' --all-namespaces` 返回 `yes`；`kubectl get nodes` 列出 4 个节点；
+  维护者机器 `kubectl -n deepseek-harness exec statefulset/deepseek-harness -- kubectl get nodes` 同样成功。
+- 集群对象：`ServiceAccount/deepseek-harness`、`ClusterRoleBinding/deepseek-harness`
+  （`roleRef: cluster-admin`），Helm chart `deepseek-harness-0.1.29-homelab.2`。
+- 本地验收：`helm lint`、`helm template` 断言（1 SA / 1 CRB / Pod 身份字段）、`pre-commit run --all-files`、
+  `mkdocs build --strict` 通过；Gitea pipeline #2800（static-checks + helm-diff ×3）成功。
+- 安全边界：DSH 仍只有 Tailscale Ingress 入口；持有 DSH 访问权即等价集群管理员，收回时删除
+  `ClusterRoleBinding/deepseek-harness` 即可。
+
 ## v2026.11.11
 
 DeepSeek Harness（DSH）以 Helm Chart 上线 homelab2：单用户 Web 实例、四块 RWO PVC、两条 Tailscale
