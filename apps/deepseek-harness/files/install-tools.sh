@@ -41,6 +41,7 @@ echo "==> installing mise tools"
 # aqua is explicit for atuin so the prebuilt binary is used instead of cargo.
 MISE_YES=1 mise use -g --yes \
   gh@latest \
+  kubectl@latest \
   jq@latest \
   'github:mikefarah/yq@latest' \
   'npm:@colbymchenry/codegraph@latest' \
@@ -62,7 +63,7 @@ if ! command -v yq >/dev/null 2>&1; then
 fi
 
 echo "==> verifying tools"
-for command in uv mise atuin codegraph dcg gh jq yq ax mq clawhub pre-commit pyrefly yamllint; do
+for command in uv mise atuin codegraph dcg gh kubectl jq yq ax mq clawhub pre-commit pyrefly yamllint; do
   if ! command -v "$command" >/dev/null 2>&1; then
     echo "ERROR: $command is not on PATH" >&2
     exit 1

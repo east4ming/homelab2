@@ -1,0 +1,25 @@
+{{- $name := include "deepseek-harness.fullname" . -}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "deepseek-harness.labels" . | nindent 4 }}
+---
+# The single-user DSH Pod manages this cluster from inside it (kubectl in the
+# Web terminal and desktop). cluster-admin is intentional; see README
+# "集群权限（cluster-admin）" for the security boundary and rollback.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "deepseek-harness.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: ServiceAccount
+    name: {{ $name }}
+    namespace: {{ .Release.Namespace }}

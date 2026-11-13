@@ -26,7 +26,9 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
-      automountServiceAccountToken: false
+      serviceAccountName: {{ include "deepseek-harness.fullname" . }}
+      # cluster-admin for in-cluster kubectl; granted by templates/rbac.yaml.
+      automountServiceAccountToken: true
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       {{- with .Values.image.pullSecrets }}

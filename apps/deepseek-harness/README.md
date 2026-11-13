@@ -5,7 +5,7 @@ DeepSeek Harness（DSH）单用户 Web 实例，以 vendored 的上游 Helm Char
 `charts/deepseek-harness` 的本地副本，追加了 homelab2 需要的卷、Ingress 与 NetworkPolicy 放行规则。
 
 - 上游 commit：`043714057c0c2ef53a5023a3117c5f25fe5af62c`
-- 上游 Chart 版本：`0.1.29`，本目录版本：`0.1.29-homelab.1`
+- 上游 Chart 版本：`0.1.29`，本目录版本：`0.1.29-homelab.2`
 - 镜像：`docker.io/runzhliu/deepseek-harness:0.2.2-rc.2-r1-market.1`（市场变体；手动 Helm 用
   `--set image.tag=0.2.2-rc.2-r1-market.1`，ArgoCD 使用 `values.yaml` 的同一值）
 - 部署：ArgoCD ApplicationSet 自动发现 `apps/deepseek-harness`，namespace 也是 `deepseek-harness`
@@ -20,6 +20,7 @@ DeepSeek Harness（DSH）单用户 Web 实例，以 vendored 的上游 Helm Char
 | StatefulSet 卷与 env | 挂载工作区/工具/skills；把 `XDG_*` 从 `/tmp` 覆盖到工具卷；`desktop.publicPort=443` |
 | `resources.limits` | Constitution 要求显式 limits |
 | `networkPolicy.ingress` | 默认拒绝，只放行 3080/6080；源地址选择器在本集群会被 Cilium SNAT 破坏（见下文） |
+| `rbac` ServiceAccount + ClusterRoleBinding | DSH 在集群内管理集群；Pod 挂载 SA token，绑定内置 `cluster-admin`（见下文） |
 | **无 initContainer** | 工具、配置、skills 由维护者在 Pod 启动后手动一次性执行 |
 
 ## 部署顺序
@@ -53,10 +54,44 @@ DeepSeek Harness（DSH）单用户 Web 实例，以 vendored 的上游 Helm Char
 脚本把 uv/mise 与工具装到工具卷：
 
 - uv：`specify-cli`、`pre-commit`、`pyrefly`、`yamllint`
-- mise：`gh`、`jq`、`yq`、`codegraph`、`clawhub`、`ax`、`dcg`、`mq`、`atuin`
+- mise：`gh`、`kubectl`、`jq`、`yq`、`codegraph`、`clawhub`、`ax`、`dcg`、`mq`、`atuin`
 
 `atuin` 显式使用 `aqua:atuinsh/atuin`，避免容器内没有 Rust 工具链。完成后写入
 `/workspace/.local/.dsh-tools-version`。工具卷重建后重跑同一命令；日常重启不需要。
+
+## 集群权限（cluster-admin）
+
+DSH 是单用户、仅 tailnet 可达的实例，按用户要求授予**整个集群**的管理权限：Pod 内直接跑 `kubectl`
+管理 homelab2，不需要额外的 kubeconfig 或跳板机。
+
+| 资源 | 值 |
+| --- | --- |
+| `ServiceAccount` | `deepseek-harness`（namespace `deepseek-harness`） |
+| `ClusterRoleBinding` | `deepseek-harness` → 内置 `ClusterRole/cluster-admin` |
+| Pod | `serviceAccountName: deepseek-harness`、`automountServiceAccountToken: true` |
+| `kubectl` | 工具卷上的 mise 工具（`scripts/install-dsh-tools` 安装）；客户端自动使用 Pod 内的
+in-cluster 配置，无需 `KUBECONFIG` |
+
+验证（Pod 内任意终端，包括 DSH Web 侧栏终端与桌面）：
+
+```sh
+kubectl auth can-i '*' '*' --all-namespaces   # yes
+kubectl get nodes
+```
+
+从维护者机器验证同一身份：
+
+```sh
+kubectl -n deepseek-harness exec statefulset/deepseek-harness -- kubectl get nodes
+```
+
+安全边界：
+
+- **持有 DSH 访问权 = 持有集群 root。** Web 入口自身 401 + cookie，noVNC 无认证，两者的唯一边界都是
+  tailnet / Tailscale ACL。不要把 DSH 暴露到公网，也不要给不受信的人 tailnet 访问。
+- SA token 由 kubelet 轮换，DSH 重启或 Pod 重建后无需人工续期。
+- 最小权限替代方案（如需收回）：删掉 `deepseek-harness` 的 `ClusterRoleBinding`，改用只读或按 namespace
+  的 Role/RoleBinding；Chart 目前是有意硬编码 `cluster-admin`，没有开关。
 
 ## 一次性配置同步
 
@@ -114,6 +149,8 @@ skills 内容不提交到 Git。
   不要直接覆盖本地差异。镜像 tag 在 `values.yaml` 显式固定，不使用 `latest`。
 - 升级镜像：改 `image.tag`，ArgoCD 同步；PVC 保留。降级前确认 DSH 数据卷兼容性。
 - 回滚：ArgoCD Sync 到上一个 tag；四块 PVC 保留。代码回滚用 `git revert`。
+- 收回集群权限：撤销 `ClusterRoleBinding/deepseek-harness`（或回滚 Chart）；Pod 的 SA token 随即失去权限，
+  已建立的连接在下次 API 调用时被拒。
 
 ## Ingress 与 Host/Origin
 
@@ -148,3 +185,4 @@ Cilium 的 native routing CIDR 调整为覆盖 Pod CIDR（`10.42.0.0/16`），�
 - `dsh-chat-import` 不同步；`integrations` 中指向本机项目的路径改写为 `/workspace`。
 - 工具/配置/skills 都是手动一次性任务；漏跑时 DSH 仍可启动，但工具/插件不完整。
 - 4Gi 内存上限；若 OOM，只调 `values.yaml`。
+- DSH 持有 `cluster-admin`：能访问 DSH 的人就能管理整个集群；见「集群权限（cluster-admin）」。
