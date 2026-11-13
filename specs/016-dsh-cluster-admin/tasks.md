@@ -37,6 +37,7 @@
 
 ## Phase 5: 发布
 
-- [ ] T018 打 annotated tag `v2026.11.13`，推送 Gitea + GitHub 并双侧复核
-- [ ] T019 Gitea（`gt release create`）与 GitHub（`gh release create --verify-tag`）创建 Release，正文与
+- [x] T018 打 annotated tag `v2026.11.13`（指向 `41408a5e`），推送 Gitea + GitHub 并双侧复核（tag 对象
+      `55eca7bf` 两侧一致）
+- [x] T019 Gitea（`gt release create`）与 GitHub（`gh release create --verify-tag`）创建 Release，正文与
       Changelog 一致
