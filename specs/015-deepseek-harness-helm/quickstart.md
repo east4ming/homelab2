@@ -259,8 +259,8 @@ git ls-remote --tags https://github.com/east4ming/homelab2.git | grep v2026.11.1
 4. 双远端 Release：
 
 ```sh
-tea releases create -r ops/homelab2 --tag v2026.11.11 \
-  --title v2026.11.11 --note-file /tmp/release-note.md
+gt release create v2026.11.11 -R ops/homelab2 \
+  --title v2026.11.11 --notes-file /tmp/release-note.md --verify-tag
 gh release create v2026.11.11 -R east4ming/homelab2 --verify-tag \
   --title v2026.11.11 --notes-file /tmp/release-note.md
 ```

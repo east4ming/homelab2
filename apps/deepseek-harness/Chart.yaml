@@ -2,7 +2,7 @@ apiVersion: v2
 name: deepseek-harness
 description: Homelab2 deployment of a single-user DeepSeek Harness Web instance
 type: application
-version: 0.1.29-homelab.1
+version: 0.1.29-homelab.2
 appVersion: "0.2.2-rc.1"
 kubeVersion: ">=1.27.0-0"
 home: https://github.com/runzhliu/deepseek-harness-docker

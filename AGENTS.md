@@ -1,7 +1,7 @@
 # Homelab2
 
 <!-- SPECKIT START -->
-当前 Plan: [specs/015-deepseek-harness-helm/plan.md](specs/015-deepseek-harness-helm/plan.md)
+当前 Plan: [specs/016-dsh-cluster-admin/plan.md](specs/016-dsh-cluster-admin/plan.md)
 <!-- SPECKIT END -->
 
 ## 版本管理
