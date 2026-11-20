@@ -113,7 +113,6 @@ They can't capture all the project's features, but they are sufficient to get a 
 |                       Continuous deployment with [ArgoCD](https://argoproj.github.io/cd)                        |
 |                                          [![][alert-demo]][alert-demo]                                          |
 |                               [ntfy](https://ntfy.sh) displaying received alerts                                |
-|                                             [![][ai-demo]][ai-demo]                                             |
 
 [deploy-demo]: https://asciinema.org/a/xkBRkwC6e9RAzVuMDXH3nGHp7.svg
 [pxe-demo]: https://user-images.githubusercontent.com/27996771/157303477-df2e7410-8f02-4648-a86c-71e6b7e89e35.png
@@ -128,7 +127,6 @@ They can't capture all the project's features, but they are sufficient to get a 
 [woodpecker-demo]: https://github.com/khuedoan/homelab/assets/27996771/5d887688-d20a-44c8-8f77-0c625527dfe4
 [argocd-demo]: https://github.com/khuedoan/homelab/assets/27996771/527e2529-4fe1-4664-ab8a-b9eb3c492d20
 [alert-demo]: https://github.com/user-attachments/assets/64be9415-582f-4893-b37e-59b6bce525b2
-[ai-demo]: https://github.com/khuedoan/homelab/assets/27996771/d77ba511-00b7-47c3-9032-55679a099e70
 
 ### Tech stack
 

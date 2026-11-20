@@ -6,6 +6,7 @@
   `CrashLoopBackOff` 或「Running 但端口没监听」，**日志几乎为空**。
 - 依赖它的应用报连不上库，例如：
   - `casdoor`: `panic: dial tcp 10.43.36.163:5432: connect: no route to host`
+    （该应用属已下线的 `lobe-chat`，见 v2026.11.20；同样的报错会出在任何依赖 `postgres`/`mysql` 的应用上）
   - `semaphore`: `Pinging database on semaphore-mysql port 3306...` 一直重试
 - 宿主机上能看到 `gosu mysql ...` / `gosu postgres ...` 进程**占满一个 CPU 核**，
   但没有真正的 `mysqld` / `postgres` 进程。
@@ -76,7 +77,6 @@ sudo sysctl --system     # 校验 90- 文件覆盖 10-apparmor.conf 的默认值
 **然后必须重建 Pod**：AppArmor 标签在容器创建时确定，已运行的容器不会自愈。
 
 ```sh
-kubectl delete pod -n lobe-chat postgresql-<hash> casdoor-<hash>
 kubectl delete pod -n semaphore semaphore-mysql-<hash> semaphore-<hash>
 kubectl delete pod -n rsshub database-postgres-<hash>
 ```
@@ -91,11 +91,10 @@ done   # 期望：0 / 1
 
 # 数据库级
 kubectl -n rsshub exec deploy/database-postgres -- pg_isready
-kubectl -n lobe-chat exec deploy/postgresql -- pg_isready
 kubectl -n semaphore exec deploy/semaphore-mysql -- mysqladmin ping -h 127.0.0.1 -usemaphore -psemaphore
 
 # 应用级
-kubectl -n lobe-chat logs deploy/lobe --tail=5      # Gateway: Started successfully
+kubectl -n rsshub logs deploy/rsshub --tail=5       # HTTP server 已监听
 kubectl -n semaphore logs deploy/semaphore --tail=5 # Server is running
 ```
 

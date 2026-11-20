@@ -2,6 +2,46 @@
 
 版本号格式与发布流程见 [版本管理](versioning.md)。新条目置顶，标题即 git 标签名。
 
+## v2026.11.20
+
+DSH 接替对话入口后，本仓库第二次整体下线一个应用层组件：`apps/lobe-chat/` 与 `apps/ollama/`
+一并删除，ArgoCD 已 prune 到零命中。同期 Cilium 升到 `1.20.5`、DSH 镜像连升三档到
+`0.2.2-rc.5-r1-market.1`，另有一批依赖更新与两处文档订正。
+
+### 变更
+
+- `chore(lobe-chat)`：删除 `apps/lobe-chat/`（33 个文件，含自研 Chart 模板与 5 份迁移文档）
+  和 `apps/ollama/`（2 个文件），合计 −3232 行；连带清掉 `README.md` 的 Ollama 演示行、
+  `apps/homepage/values.yaml` 的 LobeChat 入口、`.pre-commit-config.yaml` 的 `detect-private-key`
+  例外、`scripts/backup-coverage` 的 `ollama/ollama-data` 豁免（`6bbfff7b`；该提交标题未使用
+  Conventional Commits 前缀，属遗留写法）。
+- `feat(cilium)`：`metal/roles/cilium/defaults/main.yml` 的 `cilium_version` 由 `1.20.4` 升到
+  `1.20.5`（`c64c01f3`）。
+- `feat(dsh)`：`apps/deepseek-harness/values.yaml` 镜像 `0.2.2-rc.2-r1-market.1` →
+  `0.2.2-rc.5-r1-market.1`，三档连续（`3cd0de0c`、`f273887c`、`6d0d09b7`）；Chart 版本未变。
+- `docs(016)`：`specs/016-dsh-cluster-admin/tasks.md` 的 T018/T019 标记完成（`04536bfe`）。
+- `docs(versioning)`：提交信息 `scope` 示例由已删除的 `lobe-chat` 换成 `deepseek-harness`。
+- `docs(troubleshooting)`：AppArmor 信号被拒页面的重建与验证命令改指仍在运行的 `rsshub`、
+  `semaphore`；`lobe-chat` 仅作为原始故障现象保留。
+- `fix(readme)`：删掉下线后遗留的 `[![][ai-demo]]` 无标题图片行与未再引用的 `[ai-demo]` 链接定义。
+- `chore(deps)`：Renovate 非主版本更新——`argo-cd` 10.14.0→10.18.0 且 `argocd-apps`
+  2.0.7→2.0.8、`kube-prometheus-stack` 92.21.1→93.2.2（`e0be4d3c`）、`renovate`
+  46.416.1→46.429.3（`f7e0764f`）、`external-secrets` 2.14.0→2.15.0、`grafana` 14.4.0→14.4.1、
+  `woodpecker` 3.7.6→3.7.7、`kor` 0.2.16→0.2.17；文档工具链 `pymdown-extensions` 12.3→13.1
+  （`50170d57`）、`mkdocs-material` 9.8.0→9.8.1、`click` 8.5.0→8.5.1、`regex`
+  2026.9.29→2026.11.9；`.mise.toml` 的 `go` 1.27.3→1.27.4。
+
+### 线上状态
+
+- 4 个节点 `Ready`（`v1.37.2+k3s1`）；ArgoCD 35 个 Application 全部 Synced/Healthy。
+- `kube-system/daemonset/cilium` 镜像 `v1.20.5`，4/4 Running，即 Cilium 已按 `metal` 角色的版本
+  逐台滚动完成。
+- `deepseek-harness/statefulset` 镜像 `0.2.2-rc.5-r1-market.1`，Pod Running 1/1。
+- 下线复核：`namespace/lobe-chat`、`namespace/ollama` 均 NotFound；全集群无这两个名字相关的
+  PVC/PV、ServiceAccount、ClusterRole、ClusterRoleBinding 残留，ArgoCD prune 已生效，无需手工收尾
+  （对比 v2026.11.10 下线 KubeVirt 时的大量手工清理）。
+- 本地验收：`pre-commit run --all-files`、`mkdocs build --strict` 通过。
+
 ## v2026.11.13
 
 DeepSeek Harness（DSH）取得 homelab2 的 `cluster-admin`：Chart 新增专用 ServiceAccount 与
