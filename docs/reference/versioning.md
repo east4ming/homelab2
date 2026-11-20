@@ -60,7 +60,7 @@ fork 自上游 khuedoan/homelab 的 `0.0.1-alpha` … `0.0.8` 记录，归入 ch
 ```
 
 - `type` 白名单：`feat` `fix` `docs` `chore` `refactor` `perf` `build` `test` `ci` `revert`。
-- `scope` 建议填写模块名，如 `lobe-chat`、`cilium`、`metal/roles/tailscale`。
+- `scope` 建议填写模块名，如 `deepseek-harness`、`cilium`、`metal/roles/tailscale`。
 - `subject` 可以使用中文（见项目 Constitution 原则 V「优先使用中文」）。
 - 破坏性变更：在 `type` 后加 `!`，或在页脚写 `BREAKING CHANGE: ...`。
 
