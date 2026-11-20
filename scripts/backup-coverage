@@ -26,7 +26,6 @@ is_exempt() {
     acme-ewhisper/acme-ewhisper-data) return 0 ;;                              # certs + deploy fingerprint, re-issuable
     jellyfin/pvc-nfs-anothervideos | jellyfin/pvc-nfs-thirdvideos) return 0 ;; # bulk NFS media, not restic material
     monitoring-system/*) return 0 ;;                                           # metrics TSDB and silences, regenerable
-    ollama/ollama-data) return 0 ;;                                            # model cache, re-downloadable
     rsshub/feed-icons | rsshub/redis-data) return 0 ;;                         # caches, re-fetchable
     rustfs/rustfs-logs) return 0 ;;                                            # logs of the backup target itself
     woodpecker/agent-config-*) return 0 ;;                                     # agent workspace, recreated by the agent

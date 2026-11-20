@@ -9,7 +9,6 @@ repos:
         # .specify/ 是 spec-kit 生成并管理的工具目录（含 Windows .ps1），不属本项目代码
         exclude: ^\.specify/
       - id: detect-private-key
-        exclude: ^apps/lobe-chat/casdoor-cm0-configmap.yaml.example$
       - id: end-of-file-fixer
       - id: mixed-line-ending
       - id: trailing-whitespace

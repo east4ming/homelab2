@@ -107,10 +107,6 @@ homepage:
               href: https://speedtest.west-beta.ts.net
               description: Internal network speed test
               icon: openspeedtest.png
-          - LobeChat:
-              href: https://lobe.west-beta.ts.net
-              description: An open-source, modern-design AI chat framework. Supports Multi AI Providers
-              icon: https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/light/lobehub-color.png
           - DeepSeek Harness:
               href: https://dsh.west-beta.ts.net
               description: Personal DSH agent runtime (tailnet only)

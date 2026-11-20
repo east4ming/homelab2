@@ -114,7 +114,6 @@ They can't capture all the project's features, but they are sufficient to get a 
 |                                          [![][alert-demo]][alert-demo]                                          |
 |                               [ntfy](https://ntfy.sh) displaying received alerts                                |
 |                                             [![][ai-demo]][ai-demo]                                             |
-| Self-hosted AI powered by [Ollama](https://ollama.com) (experimental, not very fast because I don't have a GPU) |
 
 [deploy-demo]: https://asciinema.org/a/xkBRkwC6e9RAzVuMDXH3nGHp7.svg
 [pxe-demo]: https://user-images.githubusercontent.com/27996771/157303477-df2e7410-8f02-4648-a86c-71e6b7e89e35.png
